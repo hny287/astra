@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astra — Full Infrastructure</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #060a14;
+    color: #94a3b8;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 12px;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  h1 { color: #e2e8f0; font-size: 18px; margin-bottom: 4px; }
+  .tagline { color: #475569; font-size: 11px; margin-bottom: 20px; }
+
+  .layer {
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .layer-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .arrow {
+    text-align: center;
+    font-size: 11px;
+    color: #334155;
+    margin: 2px 0;
+    letter-spacing: 1px;
+  }
+
+  /* ── CI Layer ── */
+  .layer-ci { background: #0d1117; border: 1px solid #21262d; }
+  .layer-ci .layer-label { color: #58a6ff; }
+
+  /* ── Data Plane ── */
+  .layer-dp { background: #1a1100; border: 2px solid #f59e0b; }
+  .layer-dp .layer-label { color: #f59e0b; }
+
+  /* ── Control Plane ── */
+  .layer-cp { background: #0e0e1f; border: 2px solid #6366f1; }
+  .layer-cp .layer-label { color: #818cf8; }
+
+  /* ── Dashboard ── */
+  .layer-ui { background: #081a10; border: 2px solid #22c55e; }
+  .layer-ui .layer-label { color: #22c55e; }
+
+  /* ── Integrations ── */
+  .layer-int { background: #1a0a18; border: 2px solid #ec4899; }
+  .layer-int .layer-label { color: #ec4899; }
+
+  /* ── Storage ── */
+  .layer-db { background: #0a0f1a; border: 1px solid #1e40af; }
+  .layer-db .layer-label { color: #60a5fa; }
+
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; gap: 6px; }
+  .flex1 { flex: 1; min-width: 0; }
+
+  .box {
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    padding: 8px 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .box-title { font-size: 10px; font-weight: 700; margin-bottom: 3px; }
+  .box-sub { font-size: 9px; color: #475569; line-height: 1.5; }
+  .box-tag {
+    display: inline-block;
+    font-size: 8px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* scanner colors */
+  .c-trivy   { color: #f87171; }
+  .c-semgrep { color: #fb923c; }
+  .c-bearer  { color: #facc15; }
+  .c-gitleaks{ color: #a3e635; }
+  .c-checkov { color: #34d399; }
+  .c-bandit  { color: #22d3ee; }
+  .c-plugin  { color: #a78bfa; }
+  .c-ai      { color: #c084fc; }
+  .c-indigo  { color: #818cf8; }
+  .c-green   { color: #4ade80; }
+  .c-pink    { color: #f472b6; }
+  .c-blue    { color: #60a5fa; }
+  .c-orange  { color: #fb923c; }
+
+  .tag-sast   { background:#7c2d12; color:#fb923c; }
+  .tag-sca    { background:#450a0a; color:#f87171; }
+  .tag-secret { background:#14532d; color:#4ade80; }
+  .tag-iac    { background:#1e3a5f; color:#60a5fa; }
+  .tag-flow   { background:#4a1d96; color:#c4b5fd; }
+  .tag-ai     { background:#3b0764; color:#e879f9; }
+  .tag-biz    { background:#1c1917; color:#a8a29e; }
+
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .pipe-step {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 9px;
+    border: 1px solid rgba(255,255,255,0.08);
+    white-space: nowrap;
+  }
+  .pipe-arrow { color: #334155; font-size: 10px; }
+
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+  .module {
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    padding: 8px 6px;
+    text-align: center;
+    border: 1px solid rgba(99,102,241,0.2);
+  }
+  .module-icon { font-size: 14px; margin-bottom: 3px; }
+  .module-name { font-size: 9px; font-weight: 700; color: #818cf8; }
+  .module-desc { font-size: 8px; color: #475569; margin-top: 2px; line-height: 1.4; }
+
+  .ws-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .workspace {
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    padding: 8px;
+    border: 1px solid rgba(34,197,94,0.2);
+  }
+  .ws-title { font-size: 10px; font-weight: 700; color: #4ade80; margin-bottom: 5px; }
+  .ws-item { font-size: 8px; color: #475569; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .ws-item:last-child { border-bottom: none; }
+
+  .int-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .int-box {
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+    border: 1px solid rgba(236,72,153,0.15);
+  }
+  .int-name { font-size: 10px; font-weight: 700; color: #f472b6; }
+  .int-desc { font-size: 8px; color: #475569; margin-top: 2px; }
+
+  .db-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .db-box {
+    background: rgba(255,255,255,0.04);
+    border-radius: 6px;
+    padding: 8px;
+    border: 1px solid rgba(96,165,250,0.15);
+  }
+  .db-name { font-size: 10px; font-weight: 700; color: #60a5fa; }
+  .db-desc { font-size: 8px; color: #475569; margin-top: 2px; line-height: 1.4; }
+
+  .badge {
+    display: inline-block;
+    font-size: 8px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge-closed { background: #1a2744; color: #60a5fa; border: 1px solid #1e40af; }
+  .badge-oss    { background: #14532d; color: #4ade80; border: 1px solid #166534; }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid #1e293b;
+    margin: 10px 0;
+  }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; color: #64748b; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<h1>Astra Security Platform — Full Infrastructure</h1>
+<p class="tagline">Closed-source · Control/Data plane separated · AI-augmented · Multi-deployment</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Data Plane (customer CI env)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div> Control Plane (Astra-hosted or self-hosted)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Dashboard (React SPA)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div> External Integrations</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e40af"></div> Persistent Storage</div>
+</div>
+
+<!-- ── CI TRIGGER LAYER ── -->
+<div class="layer layer-ci">
+  <div class="layer-label" style="color:#58a6ff">CI Trigger Layer — Customer's CI Environment (public wrappers only)</div>
+  <div class="row">
+    <div class="box flex1">
+      <div class="box-title" style="color:#58a6ff">GitHub Actions <span class="badge badge-oss">public wrapper</span></div>
+      <div class="box-sub">uses: astra-security/scan-action@v1<br/>Thin YAML — calls Docker image. Zero logic exposed.</div>
+    </div>
+    <div class="box flex1">
+      <div class="box-title" style="color:#58a6ff">GitLab CI <span class="badge badge-oss">public wrapper</span></div>
+      <div class="box-sub">image: ghcr.io/astra/agent:latest<br/>docker pull + run. License key as CI secret.</div>
+    </div>
+    <div class="box flex1">
+      <div class="box-title" style="color:#58a6ff">Jenkins <span class="badge badge-oss">public wrapper</span></div>
+      <div class="box-sub">Jenkinsfile Docker agent step.<br/>Same image, same token model.</div>
+    </div>
+    <div class="box flex1">
+      <div class="box-title" style="color:#58a6ff">Any CI (Docker) <span class="badge badge-oss">generic</span></div>
+      <div class="box-sub">docker run astra/agent scan \<br/>  --token $ASTRA_TOKEN \<br/>  --repo $PWD</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">▼ mounts repo as volume · reads ASTRA_TOKEN env var ▼</div>
+
+<!-- ── DATA PLANE ── -->
+<div class="layer layer-dp">
+  <div class="layer-label">Data Plane — astra/agent Docker Container <span class="badge badge-closed">closed source binary</span></div>
+
+  <!-- Pipeline -->
+  <div class="box" style="margin-bottom:10px">
+    <div class="box-title" style="color:#f59e0b; margin-bottom:6px">Scan Execution Pipeline</div>
+    <div class="pipeline">
+      <div class="pipe-step">1. Context<br/>Collection</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">2. Language<br/>Detection</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">3. Parallel<br/>Scanner Run</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">4. Finding<br/>Normalization</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">5. AI<br/>Enrichment</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">6. Biz Logic<br/>Analysis</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">7. Emit to<br/>Control Plane</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Scanners -->
+    <div class="col" style="flex:2; min-width:300px">
+      <div class="box-title" style="color:#f59e0b; padding: 0 2px">Bundled Scanners (compiled into image)</div>
+      <div class="row">
+        <div class="box flex1">
+          <div class="box-title c-trivy">Trivy</div>
+          <div class="box-sub">CVEs in deps, container image vulns, IaC misconfigs</div>
+          <span class="box-tag tag-sca">SCA</span>
+          <span class="box-tag tag-iac">IaC</span>
+        </div>
+        <div class="box flex1">
+          <div class="box-title c-semgrep">Semgrep</div>
+          <div class="box-sub">SAST across all langs. 500+ bundled rules. Custom rules supported.</div>
+          <span class="box-tag tag-sast">SAST</span>
+        </div>
+        <div class="box flex1">
+          <div class="box-title c-bearer">Bearer CI</div>
+          <div class="box-sub">Sensitive data flows, PII leakage, OWASP API Top 10</div>
+          <span class="box-tag tag-flow">Data Flow</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="box flex1">
+          <div class="box-title c-gitleaks">Gitleaks</div>
+          <div class="box-sub">Secrets & credentials in code + git history</div>
+          <span class="box-tag tag-secret">Secrets</span>
+        </div>
+        <div class="box flex1">
+          <div class="box-title c-checkov">Checkov</div>
+          <div class="box-sub">Terraform, CloudFormation, Helm, K8s manifests</div>
+          <span class="box-tag tag-iac">IaC</span>
+        </div>
+        <div class="box flex1">
+          <div class="box-title c-bandit">Bandit</div>
+          <div class="box-sub">Python-specific SAST. Complements Semgrep for Python.</div>
+          <span class="box-tag tag-sast">SAST</span>
+        </div>
+      </div>
+      <div class="box">
+        <div class="box-title c-plugin">Plugin Interface — Customer-Defined Scanners</div>
+        <div class="box-sub">Any tool outputting JSON findings can plug in via <code style="color:#a78bfa">.astra/plugins.yml</code>. Supports: Snyk CLI, CodeQL, custom scripts, proprietary tools. Agent discovers and runs them alongside bundled scanners.</div>
+        <span class="box-tag tag-biz">Extensible</span>
+      </div>
+    </div>
+
+    <!-- AI Engine -->
+    <div class="col" style="flex:1; min-width:200px">
+      <div class="box-title" style="color:#f59e0b; padding: 0 2px">AI Engine</div>
+      <div class="box" style="flex:1">
+        <div class="box-title c-ai">Provider Abstraction Layer</div>
+        <div class="box-sub" style="margin-bottom:6px">Configurable per org. Code never leaves data plane.</div>
+        <div style="background:rgba(192,132,252,0.08);border-radius:4px;padding:6px;margin-bottom:4px">
+          <div style="font-size:9px;color:#a78bfa;font-weight:700">Ollama (Local)</div>
+          <div style="font-size:8px;color:#475569">Llama 3, Mistral, CodeLlama<br/>Fully air-gapped. No egress.</div>
+        </div>
+        <div style="background:rgba(192,132,252,0.08);border-radius:4px;padding:6px;margin-bottom:4px">
+          <div style="font-size:9px;color:#a78bfa;font-weight:700">AWS Bedrock</div>
+          <div style="font-size:8px;color:#475569">Llama 3, Mistral via AWS.<br/>Data stays in customer's AWS account.</div>
+        </div>
+        <div style="background:rgba(192,132,252,0.08);border-radius:4px;padding:6px">
+          <div style="font-size:9px;color:#a78bfa;font-weight:700">Cloud AI (Pro/Enterprise)</div>
+          <div style="font-size:8px;color:#475569">OpenAI, Anthropic Claude.<br/>Optional. Org must opt in.</div>
+        </div>
+      </div>
+      <div class="box">
+        <div class="box-title c-ai">AI Tasks</div>
+        <div class="box-sub">① Contextual finding explanation<br/>② Language-specific fix code<br/>③ Exploitability scoring (0–10)<br/>④ Business logic rule inference<br/>⑤ Rule confirmation workflow</div>
+        <span class="box-tag tag-ai">AI</span>
+        <span class="box-tag tag-biz">Biz Logic</span>
+      </div>
+    </div>
+
+    <!-- Unified Schema -->
+    <div class="col" style="flex:1; min-width:200px">
+      <div class="box-title" style="color:#f59e0b; padding: 0 2px">Unified Finding Schema</div>
+      <div class="box" style="flex:1">
+        <div style="font-size:8px;color:#64748b;line-height:2;font-family:monospace">
+          id: <span style="color:#818cf8">hash(scanner+rule+file+line)</span><br/>
+          scanner: <span style="color:#fb923c">"semgrep"</span><br/>
+          rule_id: <span style="color:#fb923c">"sql-injection"</span><br/>
+          title: <span style="color:#fb923c">string</span><br/>
+          severity: <span style="color:#f43f5e">CRITICAL|HIGH|MED|LOW</span><br/>
+          cvss_score: <span style="color:#fb923c">float</span><br/>
+          category: <span style="color:#a78bfa">SAST|SCA|SECRETS…</span><br/>
+          file: <span style="color:#fb923c">string</span><br/>
+          line_start / line_end: <span style="color:#fb923c">int</span><br/>
+          code_snippet: <span style="color:#fb923c">string (5 lines)</span><br/>
+          cwe: <span style="color:#fb923c">[]string</span><br/>
+          owasp: <span style="color:#fb923c">[]string</span><br/>
+          ai_explanation: <span style="color:#c084fc">string</span><br/>
+          ai_fix: <span style="color:#c084fc">string</span><br/>
+          exploit_score: <span style="color:#c084fc">float</span><br/>
+          fingerprint: <span style="color:#4ade80">stable hash</span><br/>
+          raw: <span style="color:#64748b">json (original output)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">▼ HTTPS POST gzip-JSON (findings only · no raw code · scan token auth) ▼</div>
+
+<!-- ── CONTROL PLANE ── -->
+<div class="layer layer-cp">
+  <div class="layer-label">Control Plane — Go Modular Monolith <span class="badge badge-closed">closed source</span> — Hosted (SaaS) · Self-hosted · Hybrid</div>
+
+  <div class="module-grid" style="margin-bottom:10px">
+    <div class="module">
+      <div class="module-icon">🔐</div>
+      <div class="module-name">Auth Module</div>
+      <div class="module-desc">SSO (SAML/OIDC)<br/>RBAC (role per org)<br/>API key management<br/>Scan token lifecycle</div>
+    </div>
+    <div class="module">
+      <div class="module-icon">🔍</div>
+      <div class="module-name">Findings Module</div>
+      <div class="module-desc">Ingest + deduplicate<br/>Fingerprint matching<br/>Trend tracking<br/>Severity override</div>
+    </div>
+    <div class="module">
+      <div class="module-icon">📋</div>
+      <div class="module-name">Policies Module</div>
+      <div class="module-desc">Rule-based routing<br/>SLA config per severity<br/>Fail thresholds per repo<br/>Allowlist management</div>
+    </div>
+    <div class="module">
+      <div class="module-icon">🤖</div>
+      <div class="module-name">AI Orchestration</div>
+      <div class="module-desc">Biz logic rule store<br/>Human confirmation flow<br/>Rule enforcement engine<br/>Model config per org</div>
+    </div>
+    <div class="module">
+      <div class="module-icon">🔗</div>
+      <div class="module-name">Integrations Module</div>
+      <div class="module-desc">Jira ticket lifecycle<br/>Slack notifications<br/>PagerDuty alerts<br/>Webhook dispatcher</div>
+    </div>
+    <div class="module">
+      <div class="module-icon">📡</div>
+      <div class="module-name">Dashboard API</div>
+      <div class="module-desc">REST API (v1)<br/>WebSocket (live scans)<br/>GraphQL (reports)<br/>OpenAPI spec published</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Business Logic Engine detail -->
+  <div class="box" style="margin-bottom:8px">
+    <div class="box-title c-ai" style="margin-bottom:6px">Business Logic Flaw Engine — Hybrid AI + Human Loop</div>
+    <div class="pipeline">
+      <div class="pipe-step" style="border-color:#7c3aed">AI scans source<br/>→ infers rules</div>
+      <div class="pipe-arrow" style="color:#7c3aed">→</div>
+      <div class="pipe-step" style="border-color:#7c3aed">Rules presented<br/>to security team</div>
+      <div class="pipe-arrow" style="color:#7c3aed">→</div>
+      <div class="pipe-step" style="border-color:#7c3aed">Human confirms/<br/>edits/rejects</div>
+      <div class="pipe-arrow" style="color:#7c3aed">→</div>
+      <div class="pipe-step" style="border-color:#7c3aed">Confirmed rules<br/>stored in policy DB</div>
+      <div class="pipe-arrow" style="color:#7c3aed">→</div>
+      <div class="pipe-step" style="border-color:#7c3aed">Future scans enforce<br/>confirmed rules</div>
+      <div class="pipe-arrow" style="color:#7c3aed">→</div>
+      <div class="pipe-step" style="border-color:#7c3aed">Violations flagged<br/>as biz logic findings</div>
+    </div>
+  </div>
+
+  <!-- Findings Triage Pipeline -->
+  <div class="box">
+    <div class="box-title c-indigo" style="margin-bottom:6px">Findings Triage &amp; Routing Pipeline</div>
+    <div class="pipeline">
+      <div class="pipe-step">Finding<br/>ingested</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Deduplicate<br/>(fingerprint)</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">AI triage<br/>(exploit score)</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Policy rule<br/>matching</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Auto-route:<br/>Jira / Slack / Page</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Dashboard<br/>notification</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">SLA timer<br/>starts</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">Human triage<br/>+ override</div>
+    </div>
+  </div>
+</div>
+
+<div class="arrow">▼ REST + WebSocket ▼</div>
+
+<!-- ── DASHBOARD ── -->
+<div class="layer layer-ui">
+  <div class="layer-label">Dashboard — React SPA <span class="badge badge-closed">closed source</span></div>
+  <div class="ws-grid">
+    <div class="workspace">
+      <div class="ws-title">Executive Workspace (CISO)</div>
+      <div class="ws-item">Organization risk score (0–100)</div>
+      <div class="ws-item">Compliance posture (SOC2, OWASP, CWE)</div>
+      <div class="ws-item">Finding trends over time (charts)</div>
+      <div class="ws-item">Top vulnerable repos</div>
+      <div class="ws-item">SLA breach alerts</div>
+      <div class="ws-item">Executive PDF reports</div>
+      <div class="ws-item">Team remediation velocity</div>
+    </div>
+    <div class="workspace">
+      <div class="ws-title">Engineering Workspace (Devs)</div>
+      <div class="ws-item">Per-repo finding list (filterable)</div>
+      <div class="ws-item">PR-level scan results inline</div>
+      <div class="ws-item">AI fix guidance per finding</div>
+      <div class="ws-item">Severity triage + suppress</div>
+      <div class="ws-item">Code snippet + context view</div>
+      <div class="ws-item">Scanner breakdown (which tool found what)</div>
+      <div class="ws-item">Business logic rule review queue</div>
+    </div>
+    <div class="workspace">
+      <div class="ws-title">Sec Ops Workspace (Security Team)</div>
+      <div class="ws-item">Finding assignment + ownership</div>
+      <div class="ws-item">SLA tracking per finding</div>
+      <div class="ws-item">Jira ticket lifecycle view</div>
+      <div class="ws-item">Policy rule builder (no-code)</div>
+      <div class="ws-item">Integration config (Slack channels, Jira projects)</div>
+      <div class="ws-item">Scan token management</div>
+      <div class="ws-item">Audit log</div>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+
+  <!-- ── INTEGRATIONS ── -->
+  <div class="layer layer-int" style="margin-bottom:0">
+    <div class="layer-label">External Integrations</div>
+    <div class="int-grid">
+      <div class="int-box">
+        <div class="int-name">Slack</div>
+        <div class="int-desc">Channel alerts, finding summaries, SLA breach pings</div>
+      </div>
+      <div class="int-box">
+        <div class="int-name">Jira</div>
+        <div class="int-desc">Auto-create tickets, link findings, track remediation status</div>
+      </div>
+      <div class="int-box">
+        <div class="int-name">PagerDuty</div>
+        <div class="int-desc">Critical finding → on-call page. Auto-resolve on fix.</div>
+      </div>
+      <div class="int-box">
+        <div class="int-name">GitHub / GitLab</div>
+        <div class="int-desc">PR comments with inline findings. Block merge on threshold.</div>
+      </div>
+      <div class="int-box">
+        <div class="int-name">SSO / IdP</div>
+        <div class="int-desc">SAML 2.0, OIDC. Okta, Azure AD, Google Workspace.</div>
+      </div>
+      <div class="int-box">
+        <div class="int-name">Webhooks</div>
+        <div class="int-desc">Generic outbound webhook for any system. Custom payload templates.</div>
+      </div>
+      <div class="int-box">
+        <div class="int-name">Email</div>
+        <div class="int-desc">SLA alerts, weekly digest, executive reports.</div>
+      </div>
+      <div class="int-box">
+        <div class="int-name">REST API</div>
+        <div class="int-desc">Full API access. Customers build custom integrations.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STORAGE ── -->
+  <div class="layer layer-db" style="margin-bottom:0">
+    <div class="layer-label">Persistent Storage (Control Plane only)</div>
+    <div class="db-grid">
+      <div class="db-box">
+        <div class="db-name">PostgreSQL</div>
+        <div class="db-desc">Findings, policies, orgs, users, scan metadata, business logic rules, audit log</div>
+      </div>
+      <div class="db-box">
+        <div class="db-name">Redis</div>
+        <div class="db-desc">Job queues, finding dedup cache, WebSocket pub/sub, rate limiting, session store</div>
+      </div>
+      <div class="db-box">
+        <div class="db-name">S3 / Object Store</div>
+        <div class="db-desc">Scan artifacts (raw scanner outputs), PDF reports, large finding payloads</div>
+      </div>
+    </div>
+
+    <hr class="section-divider">
+
+    <div class="box-title c-blue" style="margin-bottom:6px">Deployment Modes</div>
+    <div class="row">
+      <div class="box flex1">
+        <div class="box-title" style="color:#38bdf8;font-size:9px">SaaS</div>
+        <div class="box-sub">Astra hosts everything. Customer connects repos + CI. Fastest onboarding.</div>
+      </div>
+      <div class="box flex1">
+        <div class="box-title" style="color:#38bdf8;font-size:9px">Self-Hosted</div>
+        <div class="box-sub">Helm chart + Docker Compose bundle. Customer runs control plane in their infra.</div>
+      </div>
+      <div class="box flex1">
+        <div class="box-title" style="color:#38bdf8;font-size:9px">Hybrid</div>
+        <div class="box-sub">Astra hosts control plane. Data plane runs in customer CI. Code never leaves.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;padding:10px 14px;background:#0d1117;border-radius:6px;border:1px solid #21262d;font-size:9px;color:#475569">
+  <span style="color:#818cf8;font-weight:700">Licensing Tiers:</span>
+  &nbsp;
+  <span style="color:#4ade80">FREE</span> — CLI + basic SAST (Semgrep community rules) &nbsp;|&nbsp;
+  <span style="color:#60a5fa">PRO</span> — Dashboard + all scanners + Slack/Jira integrations &nbsp;|&nbsp;
+  <span style="color:#f59e0b">ENTERPRISE</span> — Business logic AI + SSO + custom policies + on-prem deployment + SLA
+</div>
+
+</body>
+</html>

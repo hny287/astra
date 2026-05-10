@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astra Security — Complete Project Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--b:#0f62fe;--bh:#0353e9;--g:#42be65;--r:#da1e28;--y:#f1c21b;--o:#ff832b;--w:#fff;--bg:#ffffff;--l:#f4f4f4;--l2:#e8e8e8;--t:#161616;--t2:#525252;--t3:#8c8c8c;--brd:#d0d0d0;--brl:#e0e0e0;--f:'IBM Plex Sans','Helvetica Neue',Arial,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--f);background:var(--bg);color:var(--t);letter-spacing:.16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.hdr{background:var(--l);border-bottom:1px solid var(--brl);padding:40px 32px}
+.hdr h1{font-weight:300;font-size:42px;letter-spacing:0}
+.hdr .sub{font-size:18px;color:var(--t2);margin-top:8px}
+.hdr .meta{display:flex;gap:12px;margin-top:16px;font-size:11px;color:var(--t3);flex-wrap:wrap}
+.tabs-bar{position:sticky;top:0;z-index:10;background:var(--w);border-bottom:1px solid var(--brl);display:flex;overflow-x:auto}
+.tabs-bar button{padding:14px 20px;font:400 14px var(--f);color:var(--t2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .12s}
+.tabs-bar button:hover{color:var(--t);background:var(--l)}
+.tabs-bar button.active{color:var(--b);border-bottom-color:var(--b);font-weight:600}
+.tab-panel{display:none;padding:32px;max-width:1440px;margin:0 auto}
+.tab-panel.active{display:block}
+h2{font-weight:300;font-size:28px;letter-spacing:0;margin-bottom:16px;border-bottom:1px solid var(--brl);padding-bottom:12px}
+h3{font-weight:400;font-size:20px;margin:32px 0 12px}
+h4{font-weight:600;font-size:14px;margin:20px 0 8px}
+.lead{color:var(--t2);font-size:15px;margin-bottom:24px;max-width:900px}
+.grid{display:grid;gap:16px;margin:16px 0}
+.g2{grid-template-columns:repeat(auto-fill,minmax(380px,1fr))}
+.g3{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.g4{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.card{background:var(--l);padding:16px;border:1px solid var(--brl);font-size:13px;line-height:1.5}
+.card h4{margin:0 0 6px}
+.card p{color:var(--t2)}
+.card .meta{font-size:11px;color:var(--t3);margin-top:8px}
+.cb{border-left:3px solid var(--b)} .cg{border-left:3px solid var(--g)} .cr{border-left:3px solid var(--r)} .cy{border-left:3px solid var(--y)} .co{border-left:3px solid var(--o)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0 24px}
+.tbl thead{background:var(--l)}
+.tbl th{text-align:left;padding:10px 16px;font-weight:600;font-size:11px;color:var(--t2);border-top:1px solid var(--brd);border-bottom:1px solid var(--brd)}
+.tbl td{padding:10px 16px;border-bottom:1px solid var(--brl);vertical-align:top}
+.tbl tbody tr:hover{background:var(--l)}
+.tag{display:inline-block;padding:2px 8px;font-size:11px;font-weight:400;letter-spacing:.32px;margin:0 1px}
+.tr{background:var(--r);color:var(--w)} .tm{background:#d12771;color:var(--w)} .tp{background:#8a3ffc;color:var(--w)} .tc{background:#0072c3;color:var(--w)} .tg{background:var(--g);color:var(--w)} .ta{background:#6f6f6f;color:var(--w)} .tb{background:var(--b);color:var(--w)}
+.code{background:#1b1b1b;color:#d4d4d4;padding:16px 20px;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.7;overflow-x:auto;margin:12px 0 24px;border:1px solid #333}
+.code .k{color:#569cd6} .code .s{color:#ce9178} .code .c{color:#6a9955} .code .t{color:#4ec9b0} .code .n{color:#b5cea8}
+.flow{display:flex;flex-direction:column;gap:0;margin:16px 0;max-width:800px}
+.flow-step{display:flex;gap:12px;padding:10px 0;padding-left:32px;position:relative;border-left:2px solid var(--brl);margin-left:15px}
+.flow-step::before{content:attr(data-n);position:absolute;left:-15px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--b);color:var(--w);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;line-height:1}
+.flow-step.m::before{background:var(--t3)}
+.flow-step strong{display:block;font-size:13px}
+.flow-step span{font-size:12px;color:var(--t2)}
+.pipe{display:flex;flex-wrap:wrap;gap:0;align-items:center;margin:16px 0;overflow-x:auto}
+.pipe .pn{padding:12px 16px;background:var(--w);border:1px solid var(--brd);min-width:100px;text-align:center;margin-right:24px;position:relative;font-size:12px}
+.pipe .pn::after{content:'→';position:absolute;right:-18px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:16px}
+.pipe .pn:last-child::after{display:none}
+.pipe .pn strong{display:block;font-size:13px}
+.pipe .pn em{font-style:normal;font-size:11px;color:var(--t2)}
+.zone{border:2px dashed var(--brd);padding:16px;margin:16px 0;background:var(--l);position:relative}
+.zone .zt{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;display:inline-block;padding:2px 8px;margin-bottom:8px}
+.acc{border-top:1px solid var(--brl);margin:16px 0}
+.acc-i{border-bottom:1px solid var(--brl)}
+.acc-b{width:100%;text-align:left;padding:12px 16px;cursor:pointer;font:400 14px var(--f);background:none;border:none;color:var(--t);display:flex;justify-content:space-between}
+.acc-b:hover{background:var(--l)}
+.acc-d{display:none;padding:4px 16px 12px;font-size:14px;color:var(--t2)}
+.acc-d.open{display:block}
+.chlog{list-style:none;counter-reset:cl}
+.chlog li{counter-increment:cl;padding:12px 0 12px 48px;position:relative;border-bottom:1px solid var(--brl);font-size:13px}
+.chlog li::before{content:counter(cl);position:absolute;left:0;top:12px;width:32px;height:32px;border-radius:50%;background:var(--b);color:var(--w);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.chlog li .dt{font-size:11px;color:var(--t3);margin-bottom:2px}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0}
+.gloss dt{font-weight:600;font-size:13px;padding:10px 16px;background:var(--l);border-bottom:1px solid var(--brl);border-right:1px solid var(--brl)}
+.gloss dd{font-size:13px;color:var(--t2);padding:10px 16px;border-bottom:1px solid var(--brl);margin:0}
+.stat-row{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}
+.stat{flex:1;min-width:140px;padding:16px;background:var(--l);border:1px solid var(--brl);text-align:center}
+.stat .num{font-size:32px;font-weight:300;color:var(--b)}
+.stat .lbl{font-size:12px;color:var(--t2);margin-top:4px}
+footer{border-top:1px solid var(--brl);padding:24px 32px;text-align:center;font-size:12px;color:var(--t3)}
+</style>
+</head>
+<body>
+<header class="hdr">
+<h1>Astra Security Platform</h1>
+<p class="sub">Complete project reference — BRD, PRD, TRD, diagrams, changelog, and glossary</p>
+<div class="meta"><span>IBM Carbon Design System</span><span>·</span><span>Control Plane + Data Plane</span><span>·</span><span>Multi-scanner + AI</span><span>·</span><span>CI/CD ready</span><span>·</span><span>v0.1 PoC</span></div>
+</header>
+
+<nav class="tabs-bar" id="tabs">
+  <button class="active" data-tab="brd">BRD / PRD / TRD</button>
+  <button data-tab="diag">Diagrams</button>
+  <button data-tab="chlog">Changelog</button>
+  <button data-tab="dash">Dashboard + Glossary</button>
+</nav>
+
+<!-- ═══════════════ TAB 1: BRD / PRD / TRD ═══════════════ -->
+<div class="tab-panel active" id="p-brd">
+
+<h2>BRD — Business Requirements Document</h2>
+
+<h3>1. Problem Statement</h3>
+<p class="lead">Enterprise security teams run 5+ separate scanning tools (SAST, SCA, secret scanning, IaC, DAST) with no unified view. Findings use different schemas, severity scales, and reporting formats. Triage is manual, slow, and error-prone. Business logic flaws—missing auth, privilege escalation, broken access control—cannot be detected by rule-based scanners at all.</p>
+
+<h3>2. Business Objectives</h3>
+<div class="grid g3">
+  <div class="card cb"><h4>Unified Findings</h4><p>Single normalized schema across all scanners. One dashboard instead of 5.</p></div>
+  <div class="card cg"><h4>AI-Augmented Triage</h4><p>AI explains every finding in plain English, suggests fixes, and scores exploitability.</p></div>
+  <div class="card cy"><h4>Business Logic Detection</h4><p>AI infers application rules, detects violations, and presents them for human confirmation.</p></div>
+  <div class="card cr"><h4>Source Code Never Leaves</h4><p>Data Plane runs in customer infrastructure. Only findings JSON crosses the boundary.</p></div>
+  <div class="card co"><h4>CI/CD Native</h4><p>Single Docker command integrates with GitHub Actions, GitLab CI, Jenkins, and any CI platform.</p></div>
+  <div class="card"><h4>Compliance Ready</h4><p>Audit logging, RBAC, SLA enforcement, data residency controls for SOC2/ISO27001.</p></div>
+</div>
+
+<h3>3. Target Users</h3>
+<table class="tbl">
+<thead><tr><th>Persona</th><th>Role</th><th>Primary Need</th></tr></thead>
+<tbody>
+<tr><td><strong>Security Engineer</strong></td><td>Runs deep audits, configures policies</td><td>Detailed findings with AI explanations and fix guidance</td></tr>
+<tr><td><strong>DevOps / Platform</strong></td><td>Embeds Astra in CI pipelines</td><td>Zero-friction Docker integration, PR blocking on critical findings</td></tr>
+<tr><td><strong>CISO / Security Leadership</strong></td><td>Tracks org-wide risk posture</td><td>Executive dashboard with risk trends, SLA compliance, remediation velocity</td></tr>
+<tr><td><strong>Developer</strong></td><td>Fixes findings in their code</td><td>AI-generated fix code, severity context, in-PR comments</td></tr>
+</tbody>
+</table>
+
+<h3>4. Success Metrics</h3>
+<table class="tbl">
+<thead><tr><th>Metric</th><th>Target</th></tr></thead>
+<tbody>
+<tr><td>Mean time to triage (MTTT)</td><td>&lt; 4 hours for CRITICAL findings</td></tr>
+<tr><td>False positive rate</td><td>&lt; 15% after AI enrichment</td></tr>
+<tr><td>CI pipeline overhead</td><td>&lt; 5 minutes total scan time</td></tr>
+<tr><td>Business logic rule coverage</td><td>&gt; 80% of critical app rules detected</td></tr>
+<tr><td>Adoption (teams onboarded)</td><td>&gt; 10 teams in first quarter</td></tr>
+</tbody>
+</table>
+
+<h3>5. Business Rules</h3>
+<ul style="margin:12px 0 24px 24px;font-size:13px;line-height:1.8">
+  <li>Raw source code must NEVER leave the customer environment</li>
+  <li>All findings must be deduplicated before storage (SHA-256 fingerprinting)</li>
+  <li>CRITICAL findings must trigger alerts within 5 minutes of ingestion</li>
+  <li>SLA timers must start immediately upon finding ingestion</li>
+  <li>AI-generated rules must be CANDIDATE status until human confirmed</li>
+  <li>Audit events must be retained for minimum 7 years</li>
+  <li>Org data isolation must be enforced at database level (row-level security)</li>
+  <li>Feature gates: Free (3 scanners, no AI), Pro (all scanners + AI), Enterprise (business logic + compliance)</li>
+</ul>
+
+<h2>PRD — Product Requirements Document</h2>
+
+<h3>1. Product Overview</h3>
+<p class="lead">Astra is a closed-source security scanning platform with two operating modes: <strong>CLI mode</strong> (docker run --rm for CI pipelines) and <strong>API mode</strong> (long-lived HTTP server for self-hosted deployments). It runs 6 scanner binaries in parallel, enriches findings with AI, and emits normalized results to a Control Plane.</p>
+
+<h3>2. Core Features</h3>
+
+<h4>2.1 Scanner Execution Engine</h4>
+<table class="tbl">
+<thead><tr><th>Scanner</th><th>Type</th><th>Language</th><th>What It Detects</th><th>Output Format</th></tr></thead>
+<tbody>
+<tr><td><strong>Semgrep</strong></td><td>SAST</td><td>Python-native</td><td>Code vulnerabilities via 500+ rules</td><td>JSON</td></tr>
+<tr><td><strong>Trivy</strong></td><td>SCA + IaC + Secrets</td><td>Go binary</td><td>CVEs, misconfigs, exposed secrets</td><td>JSON</td></tr>
+<tr><td><strong>Gitleaks</strong></td><td>Secrets</td><td>Go binary</td><td>Git history secret leaks</td><td>JSON</td></tr>
+<tr><td><strong>Bearer</strong></td><td>Data Flow</td><td>Go binary</td><td>Sensitive data flow paths</td><td>JSON</td></tr>
+<tr><td><strong>Checkov</strong></td><td>IaC</td><td>Python-native</td><td>Terraform, Helm, K8s misconfigs</td><td>JSON</td></tr>
+<tr><td><strong>Bandit</strong></td><td>SAST (Python)</td><td>Python-native</td><td>Python-specific security issues</td><td>JSON</td></tr>
+</tbody>
+</table>
+
+<h4>2.2 AI Enrichment</h4>
+<div class="grid g2">
+  <div class="card cy"><h4>Layer 1: Per-File Deep Scan</h4><p>Each code file is sent to AI for vulnerability analysis. Prompt: "Analyze this file for vulnerabilities, logic bugs, anti-patterns." Returns findings[] + file_summary per file. Parallel via batching.</p></div>
+  <div class="card cb"><h4>Layer 2: Cross-File Business Logic</h4><p>Aggregated file summaries form a codebase map. AI identifies cross-file issues: missing auth middleware, privilege escalation, broken access control, data flow violations. Returns biz_logic_findings[]. Serial after Layer 1.</p></div>
+</div>
+
+<h4>2.3 AI Provider Selection</h4>
+<table class="tbl">
+<thead><tr><th>Env Variable</th><th>Provider</th><th>Models</th><th>Scan Mode</th><th>Privacy</th></tr></thead>
+<tbody>
+<tr><td><code>OLLAMA_URL</code></td><td>Ollama Local</td><td>deepseek-coder, llama3</td><td>Per-file + business logic (L1+L2)</td><td>Air-gapped</td></tr>
+<tr><td><code>OLLAMA_API_KEY</code></td><td>Ollama Cloud</td><td>kimi-k2.6:cloud, GLM5.1:cloud</td><td>Per-file + business logic (L1+L2)</td><td>Cloud-hosted</td></tr>
+<tr><td><code>ANTHROPIC_API_KEY</code></td><td>Anthropic Claude</td><td>claude-sonnet-4-6</td><td>Deep scan (combined L1+L2)</td><td>Cloud (opt-in)</td></tr>
+<tr><td><code>OPENAI_API_KEY</code></td><td>OpenAI GPT</td><td>gpt-4o</td><td>Deep scan (combined L1+L2)</td><td>Cloud (opt-in)</td></tr>
+<tr><td>None set</td><td>Fallback</td><td>—</td><td>Rule-based only, no AI</td><td>—</td></tr>
+</tbody>
+</table>
+
+<h4>2.4 Finding Normalization</h4>
+<p class="lead">Every scanner's raw output is mapped to the Unified Finding Schema with these fields:</p>
+<table class="tbl">
+<thead><tr><th>Field</th><th>Type</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td><code>fingerprint</code></td><td>string</td><td>SHA-256 of (scanner + ruleId + file + lineStart)</td></tr>
+<tr><td><code>scanner</code></td><td>string</td><td>Scanner name (trivy, semgrep, gitleaks, bearer, ai-layer-1)</td></tr>
+<tr><td><code>ruleId</code></td><td>string</td><td>Scanner-specific rule ID or CVE ID</td></tr>
+<tr><td><code>severity</code></td><td>enum</td><td>CRITICAL | HIGH | MEDIUM | LOW | INFO</td></tr>
+<tr><td><code>category</code></td><td>enum</td><td>SAST | SCA | SECRETS | IAC | DATA_FLOW | BUSINESS_LOGIC</td></tr>
+<tr><td><code>aiExplanation</code></td><td>string?</td><td>AI-generated plain-English risk explanation</td></tr>
+<tr><td><code>aiFix</code></td><td>string?</td><td>AI-generated code fix in same language</td></tr>
+<tr><td><code>exploitScore</code></td><td>float?</td><td>AI-scored exploitability 0-10</td></tr>
+<tr><td><code>cwe</code></td><td>string[]</td><td>CWE IDs (e.g., CWE-89)</td></tr>
+<tr><td><code>owasp</code></td><td>string[]</td><td>OWASP Top 10 IDs (e.g., A03:2021)</td></tr>
+</tbody>
+</table>
+
+<h4>2.5 Dashboard Workspaces</h4>
+<div class="grid g3">
+  <div class="card cb"><h4>Executive Workspace</h4><p>Risk posture overview, SLA compliance, remediation velocity, trending severity over time.</p></div>
+  <div class="card cg"><h4>Engineering Workspace</h4><p>Findings table with AI explanations, fix code, exploit scores. Filter by scanner, severity, file. Click-to-detail modal.</p></div>
+  <div class="card co"><h4>SecOps Workspace</h4><p>Triage queue, policy management, business logic rule confirmation, integration configuration.</p></div>
+</div>
+
+<h4>2.6 CI/CD Integration</h4>
+<p class="lead">Universal Docker-based integration. The public action wrapper contains zero business logic — it simply pulls and runs the closed-source scanner image.</p>
+<div class="zone"><div class="zt">Universal Docker Command</div>
+<div class="code"><span class="c"># Works with GitHub Actions, GitLab CI, Jenkins, Azure DevOps, CircleCI, any Docker-capable CI</span>
+docker run --rm \
+  -v $(pwd):/repo \
+  -e MODE=cli \
+  -e ASTRA_TOKEN=${ASTRA_TOKEN} \
+  -e OLLAMA_API_KEY=${OLLAMA_API_KEY} \
+  ghcr.io/astra/scanner:latest \
+  astra-scan --repo /repo --branch ${BRANCH_NAME}</div>
+</div>
+
+<h4>2.7 Control Plane Modules</h4>
+<table class="tbl">
+<thead><tr><th>Module</th><th>API Prefix</th><th>Responsibility</th></tr></thead>
+<tbody>
+<tr><td><strong>Auth</strong></td><td>/v1/auth/*</td><td>SSO/SAML/OIDC login, API key exchange, RBAC enforcement</td></tr>
+<tr><td><strong>Findings</strong></td><td>/v1/findings/*</td><td>Ingest, deduplicate, fingerprint, trend analysis</td></tr>
+<tr><td><strong>Scans</strong></td><td>/v1/scans/*</td><td>Trigger scans, list history, real-time status</td></tr>
+<tr><td><strong>Policies</strong></td><td>/v1/policies/*</td><td>Rule routing, SLA assignment, thresholds, allowlists</td></tr>
+<tr><td><strong>AI Orchestration</strong></td><td>/v1/biz-logic/*</td><td>Business logic rule store, human confirmation, model config</td></tr>
+<tr><td><strong>Integrations</strong></td><td>/v1/integrations/*</td><td>Jira, Slack, PagerDuty, webhook dispatch</td></tr>
+<tr><td><strong>Dashboard</strong></td><td>/v1/dashboard/*</td><td>REST + WebSocket, real-time push</td></tr>
+</tbody>
+</table>
+
+<h3>3. Deployment Models</h3>
+<table class="tbl">
+<thead><tr><th>Aspect</th><th>SaaS</th><th>Self-Hosted</th><th>Hybrid</th></tr></thead>
+<tbody>
+<tr><td><strong>Control Plane</strong></td><td>Astra Cloud</td><td>Customer K8s cluster</td><td>Astra Cloud</td></tr>
+<tr><td><strong>Data Plane</strong></td><td>Customer CI/CD</td><td>Customer K8s cluster</td><td>Customer infra</td></tr>
+<tr><td><strong>Database</strong></td><td>Astra-managed (RDS)</td><td>Customer-managed</td><td>Astra-managed</td></tr>
+<tr><td><strong>Data sovereignty</strong></td><td>Findings only leave</td><td>Full control</td><td>Findings only leave</td></tr>
+<tr><td><strong>Air-gapped</strong></td><td><span class="tag tr">No</span></td><td><span class="tag tg">Yes</span></td><td><span class="tag tr">No</span></td></tr>
+<tr><td><strong>Onboarding time</strong></td><td>Minutes</td><td>Hours</td><td>Hours</td></tr>
+<tr><td><strong>Maintenance</strong></td><td>Astra handles all</td><td>Customer handles all</td><td>Astra handles CP only</td></tr>
+<tr><td><strong>Cost model</strong></td><td>Per-seat / per-scan</td><td>License + support</td><td>Per-seat + infra</td></tr>
+</tbody>
+</table>
+
+<h2>TRD — Technical Requirements Document</h2>
+
+<h3>1. Technology Stack</h3>
+<table class="tbl">
+<thead><tr><th>Layer</th><th>Technology</th><th>Rationale</th></tr></thead>
+<tbody>
+<tr><td><strong>Frontend</strong></td><td>Next.js 15 + @carbon/react + IBM Plex Sans</td><td>App Router, SSR, Carbon enterprise components, weight 300 display type</td></tr>
+<tr><td><strong>Control Plane</strong></td><td>Node.js + Fastify + Drizzle ORM + Zod</td><td>3x faster than Express, HTTP/2, type-safe SQL, runtime validation</td></tr>
+<tr><td><strong>Data Plane</strong></td><td>Python 3.12 + asyncio + subprocess</td><td>Semgrep/Bandit/Checkov Python-native, Ollama SDK first-class</td></tr>
+<tr><td><strong>AI</strong></td><td>Ollama SDK (primary) + Anthropic + OpenAI</td><td>Local/cloud AI, tiered deep scan</td></tr>
+<tr><td><strong>Database</strong></td><td>PostgreSQL 16 + Redis 7</td><td>Relational + cache/queues (SQLite for PoC)</td></tr>
+<tr><td><strong>Object Store</strong></td><td>S3 / MinIO</td><td>Raw scanner outputs, PDF reports</td></tr>
+<tr><td><strong>Infra</strong></td><td>Docker + K8s + Helm</td><td>Dev: Compose, Prod: Kubernetes + Helm charts</td></tr>
+</tbody>
+</table>
+
+<h3>2. Database Schema</h3>
+<div class="code"><span class="c">-- Scans table: tracks each scan execution</span>
+<span class="k">CREATE TABLE</span> scans (
+  id <span class="t">INTEGER PRIMARY KEY AUTOINCREMENT</span>,
+  repo_url <span class="t">TEXT NOT NULL</span>,
+  branch <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">'main'</span>,
+  commit_sha <span class="t">TEXT</span>,
+  triggered_by <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">'manual'</span>,
+  scanners_run <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">'[]'</span>,  <span class="c">-- JSON array</span>
+  duration_seconds <span class="t">INTEGER</span>,
+  status <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">'RUNNING'</span>,  <span class="c">-- RUNNING|COMPLETED|FAILED</span>
+  created_at <span class="t">DATETIME DEFAULT CURRENT_TIMESTAMP</span>
+);
+
+<span class="c">-- Findings table: normalized results from all scanners + AI</span>
+<span class="k">CREATE TABLE</span> findings (
+  id <span class="t">INTEGER PRIMARY KEY AUTOINCREMENT</span>,
+  fingerprint <span class="t">TEXT NOT NULL</span>,        <span class="c">-- SHA-256 dedup key</span>
+  scan_id <span class="t">INTEGER NOT NULL REFERENCES</span> scans(id),
+  scanner <span class="t">TEXT NOT NULL</span>,
+  rule_id <span class="t">TEXT NOT NULL</span>,
+  title <span class="t">TEXT NOT NULL</span>,
+  description <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">''</span>,
+  severity <span class="t">TEXT NOT NULL</span>,            <span class="c">-- CRITICAL|HIGH|MEDIUM|LOW|INFO</span>
+  category <span class="t">TEXT NOT NULL</span>,              <span class="c">-- SAST|SCA|SECRETS|IAC|DATA_FLOW|BUSINESS_LOGIC</span>
+  file <span class="t">TEXT NOT NULL</span>,
+  line_start <span class="t">INTEGER NOT NULL DEFAULT</span> <span class="n">0</span>,
+  line_end <span class="t">INTEGER NOT NULL DEFAULT</span> <span class="n">0</span>,
+  code_snippet <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">''</span>,
+  language <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">''</span>,
+  cwe <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">'[]'</span>,       <span class="c">-- JSON array</span>
+  owasp <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">'[]'</span>,      <span class="c">-- JSON array</span>
+  ai_explanation <span class="t">TEXT</span>,               <span class="c">-- AI-generated</span>
+  ai_fix <span class="t">TEXT</span>,                        <span class="c">-- AI-generated fix code</span>
+  exploit_score <span class="t">REAL</span>,                <span class="c">-- 0-10</span>
+  remediation <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">''</span>,
+  raw <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">'{}'</span>,       <span class="c">-- Original scanner JSON</span>
+  created_at <span class="t">DATETIME DEFAULT CURRENT_TIMESTAMP</span>,
+  <span class="k">UNIQUE</span>(fingerprint, scan_id)
+);
+
+<span class="c">-- Business logic rules: AI-inferred, human-confirmed</span>
+<span class="k">CREATE TABLE</span> biz_logic_rules (
+  id <span class="t">INTEGER PRIMARY KEY AUTOINCREMENT</span>,
+  scan_id <span class="t">INTEGER NOT NULL REFERENCES</span> scans(id),
+  rule_text <span class="t">TEXT NOT NULL</span>,
+  confidence <span class="t">REAL NOT NULL</span>,            <span class="c">-- 0.0-1.0</span>
+  evidence_files <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">'[]'</span>,
+  status <span class="t">TEXT NOT NULL DEFAULT</span> <span class="s">'CANDIDATE'</span>, <span class="c">-- CANDIDATE|CONFIRMED|REJECTED</span>
+  violation_description <span class="t">TEXT</span>,
+  created_at <span class="t">DATETIME DEFAULT CURRENT_TIMESTAMP</span>
+);</div>
+
+<h3>3. API Endpoints (PoC Implemented)</h3>
+<table class="tbl">
+<thead><tr><th>Method</th><th>Path</th><th>Description</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>POST</td><td><code>/api/scan</code></td><td>Clone repo, run all scanners, normalize, AI enrich, store</td><td><span class="tag tg">Implemented</span></td></tr>
+<tr><td>GET</td><td><code>/api/findings?scanId=N</code></td><td>Return findings + business logic rules for scan</td><td><span class="tag tg">Implemented</span></td></tr>
+<tr><td>GET</td><td><code>/api/findings</code></td><td>Return all scans (history)</td><td><span class="tag tg">Implemented</span></td></tr>
+<tr><td>POST</td><td><code>/v1/ingest</code></td><td>Data Plane findings ingestion</td><td><span class="tag ta">Planned</span></td></tr>
+<tr><td>POST</td><td><code>/v1/findings/:id/triage</code></td><td>Update finding status</td><td><span class="tag ta">Planned</span></td></tr>
+<tr><td>GET</td><td><code>/v1/policies</code></td><td>List org policies</td><td><span class="tag ta">Planned</span></td></tr>
+<tr><td>POST</td><td><code>/v1/biz-logic/rules/:id/confirm</code></td><td>Confirm AI-inferred rule</td><td><span class="tag ta">Planned</span></td></tr>
+</tbody>
+</table>
+
+<h3>4. Security Requirements</h3>
+<table class="tbl">
+<thead><tr><th>Requirement</th><th>Implementation</th></tr></thead>
+<tbody>
+<tr><td>Encryption at rest</td><td>PostgreSQL AES-256, S3 SSE-S3</td></tr>
+<tr><td>Encryption in transit</td><td>TLS 1.3 for all connections</td></tr>
+<tr><td>Auth methods</td><td>SAML 2.0, OpenID Connect, API Keys, Short-lived JWT scan tokens</td></tr>
+<tr><td>RBAC roles</td><td>Admin (full) / SecOps (triage+policies) / Engineer (view+fix) / Viewer (read-only)</td></tr>
+<tr><td>Multi-tenancy</td><td>PostgreSQL row-level security per org</td></tr>
+<tr><td>Audit logging</td><td>Structured JSON (timestamp, actor, action, resource, before/after, IP, user_agent)</td></tr>
+<tr><td>Data retention</td><td>Hot: 30 days (PostgreSQL) → Cold: 7 years (S3 Glacier)</td></tr>
+<tr><td>Source code protection</td><td>Data Plane isolation — raw code never transmitted</td></tr>
+</tbody>
+</table>
+
+<h3>5. SLA Enforcement</h3>
+<div class="grid g4">
+  <div class="card cr"><h4>CRITICAL</h4><p>4 hours</p></div>
+  <div class="card co"><h4>HIGH</h4><p>24 hours</p></div>
+  <div class="card cy"><h4>MEDIUM</h4><p>72 hours</p></div>
+  <div class="card"><h4>LOW</h4><p>7 days</p></div>
+</div>
+
+<h3>6. Key Source Files</h3>
+<table class="tbl">
+<thead><tr><th>File</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>astra-poc/app/page.tsx</code></td><td>Main dashboard page</td></tr>
+<tr><td><code>astra-poc/app/scan/route.ts</code></td><td>POST /api/scan — clone, scan, normalize, enrich, store</td></tr>
+<tr><td><code>astra-poc/app/findings/route.ts</code></td><td>GET /api/findings — return findings + rules</td></tr>
+<tr><td><code>astra-poc/lib/types.ts</code></td><td>TypeScript types: UnifiedFinding, BusinessLogicRule, ScanMeta, Severity, Category</td></tr>
+<tr><td><code>astra-poc/lib/db.ts</code></td><td>SQLite schema + createScan, completeScan, insertFinding, insertBizRule, listFindings, listBizRules, getScan</td></tr>
+<tr><td><code>astra-poc/lib/scanners.ts</code></td><td>Scanner execution: cloneRepo, runTrivy, runSemgrep, runGitleaks, runBearer, runAllScanners</td></tr>
+<tr><td><code>astra-poc/lib/normalize.ts</code></td><td>Finding normalizer: mapSeverity, mapCategory, fingerprint, normalize</td></tr>
+<tr><td><code>astra-poc/lib/ai.ts</code></td><td>Ollama client: enrichFinding, inferBusinessLogic (OLLAMA_HOST, OLLAMA_API_KEY, OLLAMA_MODEL)</td></tr>
+<tr><td><code>astra-poc/components/*.tsx</code></td><td>RepoInput, FindingsTable, ScannerBreakdown, BusinessLogicPanel, SeverityBadge, MermaidDiagram</td></tr>
+<tr><td><code>astra-poc/Dockerfile</code></td><td>Multi-stage: node:22-slim + scanner binaries (Trivy, Semgrep, Bearer, Gitleaks, Checkov, Bandit)</td></tr>
+<tr><td><code>astra-poc/docker-compose.yml</code></td><td>App (port 3000) + Ollama (port 11435) services</td></tr>
+<tr><td><code>astra-poc/public/architecture.html</code></td><td>This file — complete project reference</td></tr>
+</tbody>
+</table>
+
+</div>
+
+<!-- ═══════════════ TAB 2: DIAGRAMS ═══════════════ -->
+<div class="tab-panel" id="p-diag">
+
+<h2>Architecture Diagrams</h2>
+<p class="lead">All architecture diagrams from the design documentation, rendered as structured reference.</p>
+
+<h3>1. High-Level System Architecture</h3>
+<div class="zone"><div class="zt">Three-Plane Architecture</div>
+<div class="grid g3" style="margin-top:12px">
+  <div class="card"><h4>CI/CD Plane — Customer</h4><p>GitHub Actions (scan-action@v1)<br>GitLab CI (image: ghcr.io/astra/scanner:latest)<br>Jenkins (Docker agent step)<br>Local CLI (docker run astra/scanner)</p><div class="meta">Triggers Data Plane</div></div>
+  <div class="card cg"><h4>Data Plane — Scanner Container</h4><p><strong>Traditional Scanners:</strong> Semgrep (SAST), Trivy (CVE+IaC+Secrets), Gitleaks (Secrets), Checkov (Terraform+Helm), Bandit (Python SAST)<br><strong>AI Scanner:</strong> Layer 1 (per-file Ollama/Claude), Layer 2 (cross-file business logic)<br><strong>Output:</strong> Normalizer → Unified Schema → PostgreSQL + S3</p><div class="meta">Stateless · Per-scan · Python app + scanner binaries</div></div>
+  <div class="card cb"><h4>Control Plane — Node.js / Fastify</h4><p><strong>Modules:</strong> REST API (/v1/ingest, /v1/findings), Auth (SSO+SAML+OIDC+RBAC), Policies (Rules+SLA+Thresholds), Integrations (Jira+Slack+PagerDuty), Dashboard API (WebSocket+GraphQL)</p><div class="meta">Stateful · SaaS or self-hosted</div></div>
+</div>
+<div class="pipe" style="margin-top:16px">
+  <div class="pn"><strong>CI Trigger</strong><em>mount repo</em></div>
+  <div class="pn"><strong>Data Plane</strong><em>scan + AI</em></div>
+  <div class="pn"><strong>Control Plane</strong><em>ingest + triage</em></div>
+  <div class="pn"><strong>Dashboard</strong><em>3 workspaces</em></div>
+</div>
+</div>
+
+<h3>2. Data Plane — 15-Step Pipeline</h3>
+<div class="flow">
+  <div class="flow-step" data-n="1"><strong>Clone Repository</strong><span>git clone --depth 1</span></div>
+  <div class="flow-step" data-n="2"><strong>Language Detection</strong><span>Walk file tree, identify languages</span></div>
+  <div class="flow-step" data-n="3"><strong>Parallel Scanner Execution</strong><span>Semgrep · Trivy · Gitleaks · Checkov · Bandit (asyncio parallel)</span></div>
+  <div class="flow-step m" data-n="4"><strong>Collect Raw Results</strong><span>Parse JSON from each scanner</span></div>
+  <div class="flow-step m" data-n="5"><strong>File Walker</strong><span>Enumerate code files, skip node_modules/.git/vendor</span></div>
+  <div class="flow-step m" data-n="6"><strong>File Chunker</strong><span>Split large files for AI context window</span></div>
+  <div class="flow-step m" data-n="7"><strong>AI Layer 1: Per-File</strong><span>Ollama/Claude — vulnerabilities + file_summary</span></div>
+  <div class="flow-step m" data-n="8"><strong>Build Codebase Map</strong><span>Aggregate all file summaries</span></div>
+  <div class="flow-step m" data-n="9"><strong>AI Layer 2: Cross-File</strong><span>Cross-file attack paths · Missing auth · Privilege escalation</span></div>
+  <div class="flow-step" data-n="10"><strong>Merge All Findings</strong><span>Traditional + AI L1 + AI L2</span></div>
+  <div class="flow-step m" data-n="11"><strong>Normalize</strong><span>Unified Finding Schema with SHA-256 fingerprint</span></div>
+  <div class="flow-step m" data-n="12"><strong>Deduplicate</strong><span>SHA-256 per (scanner + ruleId + file + line)</span></div>
+  <div class="flow-step m" data-n="13"><strong>AI Enrichment</strong><span>HIGH/CRITICAL: fix code + exploitability score</span></div>
+  <div class="flow-step" data-n="14"><strong>Persist</strong><span>PostgreSQL + S3</span></div>
+  <div class="flow-step" data-n="15"><strong>Emit to Control Plane</strong><span>HTTPS POST /v1/ingest · Gzip JSON</span></div>
+</div>
+
+<h3>3. Control Plane — Ingestion & Triage</h3>
+<div class="flow">
+  <div class="flow-step" data-n="1"><strong>Finding Ingested</strong><span>POST /v1/ingest</span></div>
+  <div class="flow-step m" data-n="2"><strong>Deduplicate</strong><span>SHA-256 fingerprint + Redis cache</span></div>
+  <div class="flow-step" data-n="3"><strong>Store in PostgreSQL</strong><span>Findings table</span></div>
+  <div class="flow-step m" data-n="4"><strong>AI Triage</strong><span>Exploitability score + business impact</span></div>
+  <div class="flow-step m" data-n="5"><strong>Policy Rule Matching</strong><span>Thresholds · Filters · Allowlists · SLA</span></div>
+  <div class="flow-step m" data-n="6"><strong>Auto-Route</strong><span>Jira · Slack · PagerDuty · PR comment</span></div>
+  <div class="flow-step m" data-n="7"><strong>Dashboard Notify</strong><span>WebSocket push</span></div>
+  <div class="flow-step" data-n="8"><strong>SLA Timer</strong><span>CRIT:4h · HIGH:24h · MED:72h · LOW:7d</span></div>
+  <div class="flow-step m" data-n="9"><strong>Human Triage</strong><span>Confirm · Assign · Accept risk · False positive</span></div>
+</div>
+<div class="grid g3" style="margin-top:12px">
+  <div class="card cg"><h4>FIXED</h4><p>Close Jira · Notify team</p></div>
+  <div class="card cy"><h4>ACCEPTED RISK</h4><p>Audit trail · Re-scan next commit</p></div>
+  <div class="card"><h4>FALSE POSITIVE</h4><p>Update allowlist · Prevent future alerts</p></div>
+</div>
+
+<h3>4. Two-Layer AI Architecture</h3>
+<div class="grid g2">
+  <div class="card cy"><h4>Layer 1: Per-File Deep Scan</h4><p><strong>Input:</strong> Individual source files<br><strong>Steps:</strong> File Walker → Chunker → Batch by language → AI Model<br><strong>Prompt:</strong> "Analyze this file for vulnerabilities, logic bugs, anti-patterns"<br><strong>Output:</strong> findings[] + file_summary per file<br><div class="meta">Parallel · Handles 5000+ line files via chunking (function/line/AST-based)</div></p></div>
+  <div class="card cb"><h4>Layer 2: Cross-File Business Logic</h4><p><strong>Input:</strong> Aggregated codebase map (all file summaries)<br><strong>Steps:</strong> Build structured graph → AI Model<br><strong>Prompt:</strong> "Identify cross-file: missing auth, privilege escalation, broken access control, data flow violations"<br><strong>Output:</strong> biz_logic_findings[]<br><div class="meta">Serial · After Layer 1 · Confidence-scored · CANDIDATE until human confirmed</div></p></div>
+</div>
+
+<h3>5. Security Model — Zero Trust</h3>
+<div class="pipe">
+  <div class="pn"><strong>External</strong><em>User + CI/CD</em></div>
+  <div class="pn"><strong>Perimeter</strong><em>WAF + TLS 1.3</em></div>
+  <div class="pn"><strong>Control Plane</strong><em>Auth + RBAC + API GW</em></div>
+  <div class="pn"><strong>Data Plane</strong><em>Isolated container</em></div>
+  <div class="pn"><strong>Storage</strong><em>PG (AES-256) + S3 (SSE)</em></div>
+</div>
+
+<h3>6. Data Egress — What Leaves Customer</h3>
+<table class="tbl">
+<thead><tr><th>Data</th><th>Leaves?</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>Raw source code</td><td><span class="tag tr">NO</span></td><td>Stays in Data Plane container</td></tr>
+<tr><td>File paths (relative only)</td><td><span class="tag tg">YES</span></td><td>For locating findings</td></tr>
+<tr><td>Line numbers</td><td><span class="tag tg">YES</span></td><td>For locating findings</td></tr>
+<tr><td>Code snippets (5-10 lines)</td><td><span class="tag tg">YES</span></td><td>Context around finding only</td></tr>
+<tr><td>Scanner metadata</td><td><span class="tag tg">YES</span></td><td>Rule IDs, severity, categories</td></tr>
+<tr><td>AI explanations + fixes</td><td><span class="tag tg">YES</span></td><td>AI-generated, not raw code</td></tr>
+<tr><td>Business logic rules</td><td><span class="tag tg">YES</span></td><td>Inferred rules, not raw code</td></tr>
+<tr><td>Scan artifacts</td><td><span class="tag tr">NO</span></td><td>Customer S3/MinIO</td></tr>
+</tbody>
+</table>
+
+</div>
+
+<!-- ═══════════════ TAB 3: CHANGELOG ═══════════════ -->
+<div class="tab-panel" id="p-chlog">
+
+<h2>Changelog</h2>
+<p class="lead">Complete record of every change, decision, and milestone in the Astra project.</p>
+
+<ol class="chlog">
+  <li><div class="dt">2026-04-29</div><strong>Design specification written</strong> — Comprehensive 1000+ line design spec covering architecture, data plane, AI engine, business logic flaw engine, control plane modules, data models, dashboard, integration contracts, deployment, security model, observability, licensing, language support matrix.</li>
+  <li><div class="dt">2026-05-01</div><strong>Project scaffolded</strong> — Created Next.js 15 + Carbon PoC project at <code>astra-poc/</code> with .gitignore, initial package.json.</li>
+  <li><div class="dt">2026-05-02</div><strong>SQLite schema + queries implemented</strong> — <code>lib/db.ts</code> with scans, findings, biz_logic_rules tables. Functions: createScan, completeScan, insertFinding (with UPSERT dedup), insertBizRule, listFindings, listBizRules, getScan, listScans.</li>
+  <li><div class="dt">2026-05-02</div><strong>Scanner engine built</strong> — <code>lib/scanners.ts</code> with cloneRepo, runTrivy (vuln+misconfig+secret), runSemgrep (--config=auto), runGitleaks (detect with exit-1 handling), runBearer (data flow), runAllScanners. Each returns ScannerResult with findings[], durationMs, error?.</li>
+  <li><div class="dt">2026-05-02</div><strong>Normalizer implemented</strong> — <code>lib/normalize.ts</code> with mapSeverity (CRITICAL/HIGH/MEDIUM/LOW/INFO), mapCategory (SAST/SCA/SECRETS/IAC/DATA_FLOW), fingerprint (SHA-256 of scanner+ruleId+file+line+code), normalize function mapping RawFinding → UnifiedFinding.</li>
+  <li><div class="dt">2026-05-02</div><strong>AI enrichment integrated</strong> — <code>lib/ai.ts</code> with Ollama client (OLLAMA_HOST, OLLAMA_MODEL, OLLAMA_API_KEY). Functions: enrichFinding (plain-English explanation + fix code + exploit score), inferBusinessLogic (reads 5 source files, infers 3-5 rules with confidence + evidence).</li>
+  <li><div class="dt">2026-05-03</div><strong>API routes created</strong> — POST <code>/api/scan</code> (clone → scan → normalize → enrich → store), GET <code>/api/findings?scanId=N</code> (return findings + rules), GET <code>/api/findings</code> (list all scans).</li>
+  <li><div class="dt">2026-05-03</div><strong>Carbon dashboard built</strong> — Components: RepoInput (URL + scan button), FindingsTable (DataTable + modal detail), ScannerBreakdown (per-scanner tiles), BusinessLogicPanel (Accordion), SeverityBadge (colored Tags). IBM Plex Sans weight 300 display, 0px border radius.</li>
+  <li><div class="dt">2026-05-04</div><strong>Dockerized PoC</strong> — Multi-stage Dockerfile (node:22-slim + Trivy + Semgrep + Bearer + Gitleaks + Checkov + Bandit). docker-compose.yml with app (port 3000) + Ollama (port 11435) services. .dockerignore created.</li>
+  <li><div class="dt">2026-05-04</div><strong>Ollama API key support added</strong> — OLLAMA_API_KEY env var with Bearer token auth header. User provided API key for Ollama cloud. User explicitly requested: DO NOT PULL MODELS LOCALLY. Use cloud models (kimi-k2.6:cloud, GLM5.1:cloud).</li>
+  <li><div class="dt">2026-05-05</div><strong>Architecture diagrams created</strong> — 8 comprehensive Mermaid diagram files in docs/diagrams/: 01-architecture-overview, 02-data-plane-flow (15 steps), 03-control-plane-flow, 04-technology-stack, 05-deployment-modes, 06-ci-integration, 07-ai-pipeline, 08-security-model. Scanner design document at astra-scanner-design.md.</li>
+  <li><div class="dt">2026-05-05</div><strong>MermaidDiagram React component created</strong> — <code>components/MermaidDiagram.tsx</code> with dynamic import, Carbon-themed initialization (primaryColor: #0f62fe, IBM Plex Sans font), error/loading states.</li>
+  <li><div class="dt">2026-05-05</div><strong>Visualization page built (React)</strong> — <code>app/visualize/page.tsx</code> with 9 Carbon Tabs: Overview, Data Plane, Control Plane, Tech Stack, Deployment, CI/CD, AI Pipeline, Security, Component Gallery. 18 Mermaid diagram definitions with sample data.</li>
+  <li><div class="dt">2026-05-05</div><strong>Standalone HTML architecture reference built</strong> — <code>public/architecture.html</code> with 4 tabs: BRD/PRD/TRD, Diagrams, Changelog, Dashboard+Glossary. Pure HTML/CSS, no frameworks. Complete project knowledge base.</li>
+  <li><div class="dt">2026-05-05</div><strong>CLAUDE.md project knowledge base created</strong> — <code>/root/astra/CLAUDE.md</code> with complete project context: architecture, types, schema, scanner implementations, AI integration, Docker config, known issues, key file paths, changelog. Ensures future sessions have full context.</li>
+</ol>
+
+<h3>Known Issues & Pending</h3>
+<table class="tbl">
+<thead><tr><th>Issue</th><th>Status</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td>Semgrep install fails on Ubuntu</td><td><span class="tag tr">Open</span></td><td>externally-managed-environment error. --break-system-packages has typing-extensions conflict.</td></tr>
+<tr><td>Python venv missing ensurepip</td><td><span class="tag tr">Open</span></td><td>Needs python3.12-venv package.</td></tr>
+<tr><td>End-to-end Docker test</td><td><span class="tag tp">In Progress</span></td><td>Build and run via docker-compose not yet verified end-to-end.</td></tr>
+<tr><td>Bandit + Checkov not in runAllScanners</td><td><span class="tag tp">Pending</span></td><td>Installed in Dockerfile but not called from scanners.ts.</td></tr>
+<tr><td>Ollama cloud models untested</td><td><span class="tag tp">Pending</span></td><td>kimi-k2.6:cloud / GLM5.1:cloud with provided API key not yet tested end-to-end.</td></tr>
+<tr><td>Control Plane modules unimplemented</td><td><span class="tag ta">Planned</span></td><td>Auth, policies, integrations, WebSocket designed but not coded.</td></tr>
+<tr><td>PostgreSQL migration</td><td><span class="tag ta">Planned</span></td><td>Production will use PostgreSQL 16 instead of SQLite.</td></tr>
+</table>
+
+</div>
+
+<!-- ═══════════════ TAB 4: DASHBOARD + GLOSSARY ═══════════════ -->
+<div class="tab-panel" id="p-dash">
+
+<h2>Project Dashboard</h2>
+
+<div class="stat-row">
+  <div class="stat"><div class="num">6</div><div class="lbl">Scanner Binaries</div></div>
+  <div class="stat"><div class="num">2</div><div class="lbl">AI Layers</div></div>
+  <div class="stat"><div class="num">4</div><div class="lbl">AI Providers</div></div>
+  <div class="stat"><div class="num">3</div><div class="lbl">Deployment Models</div></div>
+  <div class="stat"><div class="num">4</div><div class="lbl">CI Platforms</div></div>
+  <div class="stat"><div class="num">4</div><div class="lbl">RBAC Roles</div></div>
+  <div class="stat"><div class="num">15</div><div class="lbl">Pipeline Steps</div></div>
+  <div class="stat"><div class="num">8</div><div class="lbl">Architecture Diagrams</div></div>
+  <div class="stat"><div class="num">11</div><div class="lbl">Source Files</div></div>
+  <div class="stat"><div class="num">3</div><div class="lbl">DB Tables</div></div>
+</div>
+
+<h3>Implementation Status</h3>
+<table class="tbl">
+<thead><tr><th>Component</th><th>Status</th><th>Detail</th></tr></thead>
+<tbody>
+<tr><td>Scanner Engine (Trivy, Semgrep, Gitleaks, Bearer)</td><td><span class="tag tg">Done</span></td><td>4 scanners running, normalizing, storing</td></tr>
+<tr><td>Finding Normalizer + Deduplication</td><td><span class="tag tg">Done</span></td><td>SHA-256 fingerprint, severity/category mapping</td></tr>
+<tr><td>AI Enrichment (Ollama)</td><td><span class="tag tg">Done</span></td><td>explanation + fix + exploit score</td></tr>
+<tr><td>Business Logic Inference</td><td><span class="tag tg">Done</span></td><td>CANDIDATE rules with confidence + evidence</td></tr>
+<tr><td>Carbon Dashboard</td><td><span class="tag tg">Done</span></td><td>5 components + findings table + modal</td></tr>
+<tr><td>SQLite Database</td><td><span class="tag tg">Done</span></td><td>scans, findings, biz_logic_rules</td></tr>
+<tr><td>API Routes</td><td><span class="tag tg">Done</span></td><td>POST /api/scan, GET /api/findings</td></tr>
+<tr><td>Docker Compose</td><td><span class="tag tp">Partial</span></td><td>Dockerfile + compose built, not yet tested E2E</td></tr>
+<tr><td>Bandit + Checkov Integration</td><td><span class="tag tp">Pending</span></td><td>Installed but not in runAllScanners()</td></tr>
+<tr><td>Ollama Cloud API (kimi, GLM)</td><td><span class="tag tp">Pending</span></td><td>API key added, not yet tested</td></tr>
+<tr><td>Auth Module (SSO/SAML/OIDC)</td><td><span class="tag ta">Planned</span></td><td>Design complete</td></tr>
+<tr><td>Policy Engine</td><td><span class="tag ta">Planned</span></td><td>Design complete</td></tr>
+<tr><td>Integration Dispatch (Jira/Slack/PagerDuty)</td><td><span class="tag ta">Planned</span></td><td>Design complete</td></tr>
+<tr><td>PostgreSQL Migration</td><td><span class="tag ta">Planned</span></td><td>Replace SQLite for production</td></tr>
+<tr><td>WebSocket Real-time</td><td><span class="tag ta">Planned</span></td><td>Dashboard push notifications</td></tr>
+</tbody>
+</table>
+
+<h3>Scanner Coverage</h3>
+<table class="tbl">
+<thead><tr><th>Language</th><th>Semgrep</th><th>Trivy</th><th>Gitleaks</th><th>Checkov</th><th>Bandit</th><th>Bearer</th><th>AI</th></tr></thead>
+<tbody>
+<tr><td><strong>Python</strong></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td></tr>
+<tr><td><strong>JavaScript / TS</strong></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td>—</td><td>—</td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td></tr>
+<tr><td><strong>Java</strong></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td>—</td><td>—</td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td></tr>
+<tr><td><strong>Go</strong></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td>—</td><td>—</td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td></tr>
+<tr><td><strong>Ruby</strong></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td>—</td><td>—</td><td>—</td><td><span class="tag tg">Y</span></td></tr>
+<tr><td><strong>Terraform / IaC</strong></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td>—</td><td>—</td><td><span class="tag tg">Y</span></td></tr>
+<tr><td><strong>Dockerfile</strong></td><td>—</td><td><span class="tag tg">Y</span></td><td>—</td><td><span class="tag tg">Y</span></td><td>—</td><td>—</td><td><span class="tag tg">Y</span></td></tr>
+<tr><td><strong>Rust / PHP / C</strong></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td><span class="tag tg">Y</span></td><td>—</td><td>—</td><td>—</td><td><span class="tag tg">Y</span></td></tr>
+</tbody>
+</table>
+
+<h2>Glossary</h2>
+
+<dl class="gloss">
+<dt>Astra</dt><dd>The security scanning platform. Named for the Greek word for "star" — illuminating hidden vulnerabilities.</dd>
+<dt>Control Plane</dt><dd>Stateful backend (Node.js/Fastify) that ingests findings, enforces policies, manages integrations, and serves the dashboard. Hosted by Astra (SaaS) or customer (self-hosted).</dd>
+<dt>Data Plane</dt><dd>Stateless Python Docker container that executes scanner binaries, runs AI analysis, normalizes findings, and emits results. Runs in customer CI/CD infrastructure. Raw source code never leaves this plane.</dd>
+<dt>Unified Finding Schema</dt><dd>Normalized data model that maps findings from all scanners (Trivy, Semgrep, Gitleaks, Bearer, Checkov, Bandit, AI) to a single consistent structure with severity, category, CWE, OWASP, AI explanation, fix, and exploit score.</dd>
+<dt>Fingerprint</dt><dd>SHA-256 hash of (scanner + ruleId + file + lineStart + codeSnippet). Used for deduplication — identical findings from different scans are merged via UPSERT.</dd>
+<dt>Severity</dt><dd>CRITICAL (exploitable now), HIGH (significant risk), MEDIUM (moderate risk), LOW (minor issue), INFO (informational). Mapped from each scanner's native severity scale.</dd>
+<dt>Category</dt><dd>SAST (static code analysis), SCA (dependency vulnerabilities), SECRETS (exposed credentials/keys), IAC (infrastructure misconfigurations), DATA_FLOW (sensitive data paths), BUSINESS_LOGIC (cross-file security rule violations).</dd>
+<dt>Business Logic Rule</dt><dd>An AI-inferred security rule about how the application should behave (e.g., "All admin routes must have auth middleware"). Stored as CANDIDATE until human confirms or rejects. Confidence score 0.0-1.0.</dd>
+<dt>AI Layer 1</dt><dd>Per-file deep scan. Each source file is sent individually to the AI model for vulnerability analysis. Returns findings[] + file_summary per file.</dd>
+<dt>AI Layer 2</dt><dd>Cross-file business logic analysis. Aggregated file summaries form a codebase map. AI identifies cross-file security issues that single-file analysis cannot detect.</dd>
+<dt>Enrichment</dt><dd>AI-generated addition to a finding: plain-English explanation, concrete fix code snippet, and exploitability score (0-10). Applied to HIGH/CRITICAL findings.</dd>
+<dt>Exploit Score</dt><dd>AI-assessed 0-10 score indicating how easily a vulnerability could be exploited. Higher = more urgent. Used for SLA prioritization and auto-routing.</dd>
+<dt>SLA</dt><dd>Service Level Agreement timer. Starts when a finding is ingested. CRITICAL: 4h, HIGH: 24h, MEDIUM: 72h, LOW: 7 days. Exceeded SLAs trigger escalation.</dd>
+<dt>RBAC</dt><dd>Role-Based Access Control. Four roles: Admin (full access), SecOps (triage+policies), Engineer (view+fix), Viewer (read-only). Enforced per API request.</dd>
+<dt>Ollama</dt><dd>AI inference server (local or cloud). Supports models like llama3, deepseek-coder, kimi-k2.6:cloud, GLM5.1:cloud. Astra uses OLLAMA_HOST, OLLAMA_MODEL, and OLLAMA_API_KEY environment variables.</dd>
+<dt>CLI Mode</dt><dd>docker run --rm execution for CI/CD pipelines. Container starts, scans, emits findings, exits. Stateless. No persistent storage needed in the container.</dd>
+<dt>API Mode</dt><dd>Long-lived HTTP server mode for self-hosted deployments. FastAPI/Uvicorn serves scan requests over HTTP. Planned for production.</dd>
+<dt>CWE</dt><dd>Common Weakness Enumeration. Standardized vulnerability identifier (e.g., CWE-89 = SQL Injection, CWE-798 = Hardcoded Credentials).</dd>
+<dt>OWASP</dt><dd>Open Web Application Security Project. OWASP Top 10 categorizes the most critical web app security risks (e.g., A03:2021 = Injection).</dd>
+<dt>Trivy</dt><dd>Go-based scanner by Aqua Security. Scans for CVEs (vulnerabilities), IaC misconfigurations, and exposed secrets. Category: SCA/IaC/SECRETS.</dd>
+<dt>Semgrep</dt><dd>Python-based SAST scanner. Pattern-based code analysis with 500+ community rules. Category: SAST.</dd>
+<dt>Gitleaks</dt><dd>Go-based secret scanner. Detects API keys, passwords, tokens in Git history and working tree. Category: SECRETS.</dd>
+<dt>Bearer</dt><dd>Go-based data flow scanner. Identifies sensitive data paths through application code. Category: DATA_FLOW.</dd>
+<dt>Checkov</dt><dd>Python-based IaC scanner by Bridgecrew. Scans Terraform, Helm, Kubernetes, CloudFormation. Category: IaC.</dd>
+<dt>Bandit</dt><dd>Python-based SAST scanner by OpenStack. Python-specific security issues. Category: SAST.</dd>
+<dt>IBM Carbon Design System</dt><dd>IBM's open-source design system. Used for Astra's dashboard UI. Key tokens: IBM Plex Sans, 0px border radius, #0f62fe primary, weight 300 display type, 1px hairline borders, 0.16px letter-spacing.</dd>
+<dt>Zero Trust</dt><dd>Security model where no request is trusted by default. Every request passes through WAF, TLS, auth, and API gateway before reaching any service. Data Plane is isolated from Control Plane.</dd>
+</dl>
+
+</div>
+
+<footer>Astra Security Platform · Complete Project Reference · IBM Carbon Design System · v0.1 PoC</footer>
+
+<script>
+const tabs=document.getElementById('tabs');
+const panels=document.querySelectorAll('.tab-panel');
+tabs.addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(!b)return;
+tabs.querySelectorAll('button').forEach(t=>t.classList.remove('active'));b.classList.add('active');
+panels.forEach(p=>p.classList.remove('active'));document.getElementById('p-'+b.dataset.tab).classList.add('active');
+});
+document.addEventListener('click',e=>{const b=e.target.closest('.acc-b');if(!b)return;b.classList.toggle('open');b.nextElementSibling.classList.toggle('open');});
+</script>
+</body>
+</html>

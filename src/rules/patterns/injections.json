@@ -1,0 +1,9 @@
+{
+  "rules": [
+    {"id": "AST-INJ-001", "title": "SQL Injection via string concatenation", "severity": "CRITICAL", "category": "SAST", "cwe": "CWE-89", "owasp": "A03:2021"},
+    {"id": "AST-INJ-002", "title": "Command Injection via unsanitized input", "severity": "CRITICAL", "category": "SAST", "cwe": "CWE-78", "owasp": "A03:2021"},
+    {"id": "AST-INJ-003", "title": "Cross-Site Scripting (XSS) via DOM manipulation", "severity": "HIGH", "category": "SAST", "cwe": "CWE-79", "owasp": "A03:2021"},
+    {"id": "AST-INJ-004", "title": "Path Traversal via user-controlled file paths", "severity": "HIGH", "category": "SAST", "cwe": "CWE-22"},
+    {"id": "AST-INJ-005", "title": "LDAP Injection via unsanitized input", "severity": "HIGH", "category": "SAST", "cwe": "CWE-90"}
+  ]
+}

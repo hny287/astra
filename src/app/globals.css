@@ -1,0 +1,341 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark));
+
+@theme inline {
+  --font-sans: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --color-sidebar-ring: var(--ibm-hairline);
+  --color-sidebar-border: var(--ibm-hairline);
+  --color-sidebar-accent-foreground: var(--ibm-ink);
+  --color-sidebar-accent: var(--ibm-surface-1);
+  --color-sidebar-primary-foreground: var(--ibm-on-primary);
+  --color-sidebar-primary: var(--ibm-primary);
+  --color-sidebar-foreground: var(--ibm-ink);
+  --color-sidebar: var(--ibm-surface-1);
+  --color-chart-5: var(--ibm-semantic-error);
+  --color-chart-4: var(--ibm-semantic-warning);
+  --color-chart-3: var(--ibm-semantic-success);
+  --color-chart-2: #8a3ffc;
+  --color-chart-1: var(--ibm-primary);
+  --color-ring: var(--ibm-primary);
+  --color-input: var(--ibm-hairline);
+  --color-border: var(--ibm-hairline);
+  --color-destructive: var(--ibm-semantic-error);
+  --color-destructive-foreground: var(--ibm-on-primary);
+  --color-accent-foreground: var(--ibm-ink);
+  --color-accent: var(--ibm-surface-1);
+  --color-muted-foreground: var(--ibm-ink-muted);
+  --color-muted: var(--ibm-surface-1);
+  --color-secondary-foreground: var(--ibm-on-primary);
+  --color-secondary: var(--ibm-ink);
+  --color-primary-foreground: var(--ibm-on-primary);
+  --color-primary: var(--ibm-primary);
+  --color-popover-foreground: var(--ibm-ink);
+  --color-popover: var(--ibm-canvas);
+  --color-card-foreground: var(--ibm-ink);
+  --color-card: var(--ibm-canvas);
+  --color-foreground: var(--ibm-ink);
+  --color-background: var(--ibm-canvas);
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+
+  --color-ibm-canvas: var(--ibm-canvas);
+  --color-ibm-surface-1: var(--ibm-surface-1);
+  --color-ibm-surface-2: var(--ibm-surface-2);
+  --color-ibm-hairline: var(--ibm-hairline);
+  --color-ibm-ink: var(--ibm-ink);
+  --color-ibm-primary: var(--ibm-primary);
+  --color-ibm-primary-hover: var(--ibm-primary-hover);
+  --color-ibm-on-primary: var(--ibm-on-primary);
+  --color-ibm-semantic-success: var(--ibm-semantic-success);
+  --color-ibm-semantic-warning: var(--ibm-semantic-warning);
+  --color-ibm-semantic-error: var(--ibm-semantic-error);
+  --color-ibm-semantic-info: var(--ibm-semantic-info);
+}
+
+:root {
+  --ibm-canvas: #ffffff;
+  --ibm-surface-1: #f4f4f4;
+  --ibm-surface-2: #e0e0e0;
+  --ibm-hairline: #e0e0e0;
+  --ibm-hairline-strong: #161616;
+  --ibm-ink: #161616;
+  --ibm-ink-muted: #525252;
+  --ibm-ink-subtle: #8c8c8c;
+  --ibm-primary: #0f62fe;
+  --ibm-primary-hover: #0353e9;
+  --ibm-primary-pressed: #002d8c;
+  --ibm-on-primary: #ffffff;
+  --ibm-inverse-canvas: #161616;
+  --ibm-inverse-ink: #ffffff;
+  --ibm-inverse-ink-muted: #c6c6c6;
+  --ibm-footer-bg: #161616;
+  --ibm-footer-ink: #c6c6c6;
+  --ibm-footer-ink-subtle: #8d8d8d;
+  --ibm-semantic-success: #198038;
+  --ibm-semantic-warning: #b28600;
+  --ibm-semantic-error: #da1e28;
+  --ibm-semantic-info: #0f62fe;
+  --ibm-blue-10: #edf5ff;
+  --ibm-blue-20: #d0e2ff;
+  --ibm-blue-50: #4589ff;
+  --ibm-blue-60: #0f62fe;
+  --ibm-blue-80: #002d8c;
+  --ibm-red-10: #fff1f1;
+  --ibm-red-50: #fa4d56;
+  --ibm-red-60: #da1e28;
+  --ibm-green-10: #defbe6;
+  --ibm-green-40: #42be65;
+  --ibm-green-50: #198038;
+  --ibm-yellow-10: #fddc6930;
+  --ibm-yellow-20: #b28600;
+  --ibm-yellow-50: #fddc69;
+
+  --background: #ffffff;
+  --foreground: #161616;
+  --card: #ffffff;
+  --card-foreground: #161616;
+  --popover: #ffffff;
+  --popover-foreground: #161616;
+  --primary: #0f62fe;
+  --primary-foreground: #ffffff;
+  --secondary: #161616;
+  --secondary-foreground: #ffffff;
+  --muted: #f4f4f4;
+  --muted-foreground: #525252;
+  --accent: #f4f4f4;
+  --accent-foreground: #161616;
+  --destructive: #da1e28;
+  --destructive-foreground: #ffffff;
+  --border: #e0e0e0;
+  --input: #e0e0e0;
+  --ring: #0f62fe;
+  --radius: 0;
+  --chart-1: #0f62fe;
+  --chart-2: #8a3ffc;
+  --chart-3: #198038;
+  --chart-4: #b28600;
+  --chart-5: #da1e28;
+  --sidebar: #f4f4f4;
+  --sidebar-foreground: #161616;
+  --sidebar-primary: #0f62fe;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f4f4;
+  --sidebar-accent-foreground: #161616;
+  --sidebar-border: #e0e0e0;
+  --sidebar-ring: #e0e0e0;
+}
+
+[data-theme="dark"] {
+  --ibm-canvas: #161616;
+  --ibm-surface-1: #262626;
+  --ibm-surface-2: #393939;
+  --ibm-hairline: #393939;
+  --ibm-hairline-strong: #525252;
+  --ibm-ink: #f4f4f4;
+  --ibm-ink-muted: #a8a8a8;
+  --ibm-ink-subtle: #6f6f6f;
+  --ibm-primary: #4589ff;
+  --ibm-primary-hover: #0353e9;
+  --ibm-primary-pressed: #002d8c;
+  --ibm-on-primary: #ffffff;
+  --ibm-inverse-canvas: #ffffff;
+  --ibm-inverse-ink: #161616;
+  --ibm-inverse-ink-muted: #525252;
+  --ibm-footer-bg: #161616;
+  --ibm-footer-ink: #c6c6c6;
+  --ibm-footer-ink-subtle: #8d8d8d;
+  --ibm-semantic-success: #42be65;
+  --ibm-semantic-warning: #fddc69;
+  --ibm-semantic-error: #fa4d56;
+  --ibm-semantic-info: #4589ff;
+  --ibm-blue-10: #1a1a2e;
+  --ibm-blue-20: #1d3660;
+  --ibm-blue-50: #4589ff;
+  --ibm-blue-60: #4589ff;
+  --ibm-blue-80: #a6c8ff;
+  --ibm-red-10: #2a0a0a;
+  --ibm-red-50: #fa4d56;
+  --ibm-red-60: #fa4d56;
+  --ibm-green-10: #0a2a12;
+  --ibm-green-40: #42be65;
+  --ibm-green-50: #42be65;
+  --ibm-yellow-10: #2a2a0a;
+  --ibm-yellow-20: #fddc69;
+  --ibm-yellow-50: #fddc69;
+
+  --background: #161616;
+  --foreground: #f4f4f4;
+  --card: #161616;
+  --card-foreground: #f4f4f4;
+  --popover: #161616;
+  --popover-foreground: #f4f4f4;
+  --primary: #4589ff;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f4;
+  --secondary-foreground: #161616;
+  --muted: #262626;
+  --muted-foreground: #a8a8a8;
+  --accent: #262626;
+  --accent-foreground: #f4f4f4;
+  --destructive: #fa4d56;
+  --destructive-foreground: #ffffff;
+  --border: #393939;
+  --input: #393939;
+  --ring: #4589ff;
+  --sidebar: #262626;
+  --sidebar-foreground: #f4f4f4;
+  --sidebar-primary: #4589ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #f4f4f4;
+  --sidebar-border: #393939;
+  --sidebar-ring: #393939;
+}
+
+@layer base {
+  * {
+    border-radius: 0 !important;
+    @apply border-border outline-ring/50;
+  }
+  body {
+    font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.16px;
+    line-height: 1.5;
+    color: var(--ibm-ink);
+    background: var(--ibm-canvas);
+  }
+  html {
+    @apply font-sans;
+  }
+  a {
+    color: var(--ibm-primary);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  ::selection {
+    background: var(--ibm-primary);
+    color: var(--ibm-on-primary);
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--ibm-surface-1);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--ibm-ink-subtle);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--ibm-ink-muted);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ibm-primary);
+    outline-offset: 2px;
+  }
+}
+
+.ibm-display-xl {
+  font-size: 76px;
+  font-weight: 300;
+  line-height: 1.17;
+  letter-spacing: -0.5px;
+}
+
+.ibm-display-lg {
+  font-size: 60px;
+  font-weight: 300;
+  line-height: 1.17;
+  letter-spacing: -0.4px;
+}
+
+.ibm-display-md {
+  font-size: 42px;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+.ibm-headline {
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.ibm-card-title {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.33;
+}
+
+.ibm-subhead {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.ibm-body-lg {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.ibm-body {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.16px;
+}
+
+.ibm-body-sm {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.29;
+  letter-spacing: 0.16px;
+}
+
+.ibm-body-emphasis {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.29;
+  letter-spacing: 0.16px;
+}
+
+.ibm-caption {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.33;
+  letter-spacing: 0.32px;
+}
+
+.ibm-eyebrow {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.29;
+  letter-spacing: 0.16px;
+}
+
+.ibm-label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.33;
+  letter-spacing: 0.32px;
+  text-transform: uppercase;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

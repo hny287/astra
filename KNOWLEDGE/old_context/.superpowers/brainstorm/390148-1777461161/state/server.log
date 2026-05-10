@@ -1,0 +1,3 @@
+{"type":"server-started","port":52064,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:52064","screen_dir":"/root/astra/.superpowers/brainstorm/390148-1777461161/content","state_dir":"/root/astra/.superpowers/brainstorm/390148-1777461161/state"}
+{"type":"screen-added","file":"/root/astra/.superpowers/brainstorm/390148-1777461161/content/astra-full-visual.html"}
+{"type":"server-stopped","reason":"idle timeout"}

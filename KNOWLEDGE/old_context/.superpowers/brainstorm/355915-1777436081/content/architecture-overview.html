@@ -1,0 +1,105 @@
+<h2>Astra — System Architecture Overview</h2>
+<p class="subtitle">Modular Monolith Control Plane + Containerized Data Plane Agent</p>
+
+<div style="font-family:monospace;font-size:11px;color:#94a3b8;background:#0f172a;border-radius:10px;padding:20px">
+
+  <!-- Top: CI Systems -->
+  <div style="text-align:center;margin-bottom:6px">
+    <span style="color:#64748b;font-size:10px;letter-spacing:1px">CUSTOMER CI ENVIRONMENT</span>
+  </div>
+  <div style="display:flex;justify-content:center;gap:10px;margin-bottom:4px">
+    <div style="background:#1e293b;border-radius:6px;padding:6px 12px;font-size:10px;border:1px solid #334155">GitHub Actions</div>
+    <div style="background:#1e293b;border-radius:6px;padding:6px 12px;font-size:10px;border:1px solid #334155">GitLab CI</div>
+    <div style="background:#1e293b;border-radius:6px;padding:6px 12px;font-size:10px;border:1px solid #334155">Jenkins</div>
+    <div style="background:#1e293b;border-radius:6px;padding:6px 12px;font-size:10px;border:1px solid #334155">Any CI (Docker)</div>
+  </div>
+  <div style="text-align:center;color:#334155;font-size:14px;margin:2px 0">↓</div>
+
+  <!-- Data Plane Agent Box -->
+  <div style="border:2px solid #f59e0b;border-radius:8px;padding:12px;margin-bottom:4px;background:#1c1917">
+    <div style="color:#f59e0b;font-size:10px;letter-spacing:1px;margin-bottom:8px">DATA PLANE — astra/agent Docker Container (runs in customer CI)</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px">
+      <div style="background:#292524;border-radius:4px;padding:6px;text-align:center">
+        <div style="color:#fb923c;font-size:9px;font-weight:bold">Trivy</div>
+        <div style="color:#64748b;font-size:8px">CVE / IaC</div>
+      </div>
+      <div style="background:#292524;border-radius:4px;padding:6px;text-align:center">
+        <div style="color:#fb923c;font-size:9px;font-weight:bold">Semgrep</div>
+        <div style="color:#64748b;font-size:8px">SAST</div>
+      </div>
+      <div style="background:#292524;border-radius:4px;padding:6px;text-align:center">
+        <div style="color:#fb923c;font-size:9px;font-weight:bold">Bearer CI</div>
+        <div style="color:#64748b;font-size:8px">Data flows</div>
+      </div>
+      <div style="background:#292524;border-radius:4px;padding:6px;text-align:center">
+        <div style="color:#fb923c;font-size:9px;font-weight:bold">+ Plugins</div>
+        <div style="color:#64748b;font-size:8px">Bandit, Gitleaks…</div>
+      </div>
+      <div style="background:#292524;border-radius:4px;padding:6px;text-align:center">
+        <div style="color:#a78bfa;font-size:9px;font-weight:bold">AI Engine</div>
+        <div style="color:#64748b;font-size:8px">Ollama / Bedrock</div>
+      </div>
+    </div>
+    <div style="background:#292524;border-radius:4px;padding:5px;text-align:center;font-size:9px;color:#64748b">
+      Scanner Orchestrator → Normalizer → AI Enrichment → Finding Emitter
+    </div>
+  </div>
+
+  <div style="text-align:center;color:#334155;font-size:12px;margin:2px 0">↑ gRPC / HTTPS (structured findings only — no raw code) ↑</div>
+
+  <!-- Control Plane Box -->
+  <div style="border:2px solid #6366f1;border-radius:8px;padding:12px;margin-bottom:4px;background:#0f0f1a">
+    <div style="color:#6366f1;font-size:10px;letter-spacing:1px;margin-bottom:8px">CONTROL PLANE — Modular Go Monolith (hosted or self-hosted)</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px">
+      <div style="background:#1e1e3a;border-radius:4px;padding:5px;text-align:center">
+        <div style="color:#818cf8;font-size:8px;font-weight:bold">Auth</div>
+        <div style="color:#475569;font-size:7px">SSO / RBAC</div>
+      </div>
+      <div style="background:#1e1e3a;border-radius:4px;padding:5px;text-align:center">
+        <div style="color:#818cf8;font-size:8px;font-weight:bold">Findings</div>
+        <div style="color:#475569;font-size:7px">Store / Triage</div>
+      </div>
+      <div style="background:#1e1e3a;border-radius:4px;padding:5px;text-align:center">
+        <div style="color:#818cf8;font-size:8px;font-weight:bold">Policies</div>
+        <div style="color:#475569;font-size:7px">Rules / SLA</div>
+      </div>
+      <div style="background:#1e1e3a;border-radius:4px;padding:5px;text-align:center">
+        <div style="color:#a78bfa;font-size:8px;font-weight:bold">AI Orch.</div>
+        <div style="color:#475569;font-size:7px">Biz Logic</div>
+      </div>
+      <div style="background:#1e1e3a;border-radius:4px;padding:5px;text-align:center">
+        <div style="color:#818cf8;font-size:8px;font-weight:bold">Integrations</div>
+        <div style="color:#475569;font-size:7px">Jira / Slack</div>
+      </div>
+      <div style="background:#1e1e3a;border-radius:4px;padding:5px;text-align:center">
+        <div style="color:#818cf8;font-size:8px;font-weight:bold">Dashboard API</div>
+        <div style="color:#475569;font-size:7px">REST / WS</div>
+      </div>
+    </div>
+    <div style="margin-top:6px;background:#1e1e3a;border-radius:4px;padding:4px;text-align:center;font-size:8px;color:#475569">
+      PostgreSQL (findings, policies, orgs) · Redis (queues, caching) · S3/Object store (scan artifacts)
+    </div>
+  </div>
+
+  <div style="text-align:center;color:#334155;font-size:12px;margin:2px 0">↑ REST / WebSocket ↑</div>
+
+  <!-- Dashboard + Integrations -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:4px">
+    <div style="border:2px solid #22c55e;border-radius:8px;padding:10px;background:#0a1a0f">
+      <div style="color:#22c55e;font-size:10px;letter-spacing:1px;margin-bottom:6px">DASHBOARD — React SPA</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+        <div style="background:#0f2a18;border-radius:4px;padding:5px;text-align:center;font-size:8px;color:#4ade80">Executive<br/>Workspace</div>
+        <div style="background:#0f2a18;border-radius:4px;padding:5px;text-align:center;font-size:8px;color:#4ade80">Engineering<br/>Workspace</div>
+        <div style="background:#0f2a18;border-radius:4px;padding:5px;text-align:center;font-size:8px;color:#4ade80">Sec Ops<br/>Workspace</div>
+      </div>
+    </div>
+    <div style="border:2px solid #ec4899;border-radius:8px;padding:10px;background:#1a0a14">
+      <div style="color:#ec4899;font-size:10px;letter-spacing:1px;margin-bottom:6px">INTEGRATIONS</div>
+      <div style="font-size:8px;color:#9d174d">Slack · Jira · PagerDuty</div>
+      <div style="font-size:8px;color:#9d174d;margin-top:2px">GitHub · GitLab · Webhook</div>
+      <div style="font-size:8px;color:#9d174d;margin-top:2px">SAML / OIDC (SSO)</div>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle" style="margin-top:16px">Does this architecture match your vision? Let me know in the terminal.</p>

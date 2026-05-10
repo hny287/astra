@@ -1,0 +1,1 @@
+export { buildCrossFilePrompt } from './deep-scan';

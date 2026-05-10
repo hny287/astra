@@ -1,0 +1,1235 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Astra — Enterprise Scan Graph v4</title>
+<link rel="stylesheet" href="https://unpkg.com/carbon-components@10/css/carbon-components.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#060606;font-family:'IBM Plex Sans',sans-serif;color:#fff}
+.hdr{height:48px;background:#0d0d0d;border-bottom:1px solid #1e1e1e;display:flex;align-items:center;padding:0 20px;gap:12px;position:fixed;top:0;left:0;right:0;z-index:300}
+.hdr-mark{width:20px;height:20px;background:#0f62fe;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-mark svg{width:12px;height:12px;fill:#fff}
+.hdr-title{font-size:14px;font-weight:600;color:#fff}
+.hdr-div{width:1px;height:16px;background:#2a2a2a;flex-shrink:0}
+.hdr-sub{font-size:12px;color:#555}
+.hdr-pill{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;background:#111;border:1px solid #222;color:#555}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hbtn{font-family:'IBM Plex Sans',sans-serif;font-size:12px;padding:5px 12px;border:1px solid #2a2a2a;background:transparent;color:#777;cursor:pointer;letter-spacing:.16px;transition:all .15s}
+.hbtn:hover{background:#1a1a1a;color:#fff;border-color:#444}
+.hbtn.on{background:#0f62fe;border-color:#0f62fe;color:#fff}
+
+#wrap{position:fixed;top:48px;left:0;right:0;bottom:0;overflow:hidden;cursor:grab;user-select:none}
+#wrap.drag{cursor:grabbing}
+#cvs{position:absolute;top:0;left:0;transform-origin:0 0}
+
+.zc{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:0}
+.zb{width:34px;height:34px;background:#0d0d0d;border:1px solid #222;color:#666;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.zb:hover{background:#1a1a1a;color:#fff}
+.zlbl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#444;text-align:center;padding:3px;background:#0d0d0d;border:1px solid #222;border-top:none;min-width:34px}
+
+#mm{position:fixed;bottom:20px;left:20px;width:220px;height:130px;background:#0d0d0d;border:1px solid #1e1e1e;z-index:200;overflow:hidden}
+.mm-lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#333;padding:3px 5px;border-bottom:1px solid #1a1a1a}
+#mm-vp{position:absolute;border:1px solid #0f62fe;background:rgba(15,98,254,.06);pointer-events:none;transition:all .1s}
+
+#leg{position:fixed;top:60px;left:12px;background:#0d0d0d;border:1px solid #1e1e1e;padding:14px 16px;z-index:200;width:210px}
+.leg-ttl{font-size:10px;font-weight:600;color:#444;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.leg-item{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px;color:#666}
+.leg-dot{width:10px;height:10px;flex-shrink:0}
+.leg-line-wrap{width:24px;height:12px;flex-shrink:0;display:flex;align-items:center}
+.leg-line{width:24px;height:2px}
+.leg-sep{border-top:1px solid #1a1a1a;margin:8px 0}
+.leg-section{font-size:10px;font-weight:600;color:#333;letter-spacing:.6px;text-transform:uppercase;margin:8px 0 6px}
+
+#tip{position:fixed;background:#0d0d0d;border:1px solid #2a2a2a;border-left:2px solid #0f62fe;padding:12px 14px;z-index:500;max-width:280px;pointer-events:none;display:none}
+#tip.vis{display:block}
+.tip-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#555;letter-spacing:.4px;margin-bottom:5px}
+.tip-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:5px}
+.tip-desc{font-size:11px;color:#777;line-height:1.55}
+
+#pan{position:fixed;top:48px;right:0;width:380px;height:calc(100vh - 48px);background:#0a0a0a;border-left:1px solid #1e1e1e;transform:translateX(100%);transition:transform .22s;z-index:250;overflow-y:auto;display:flex;flex-direction:column}
+#pan.open{transform:translateX(0)}
+.pan-hdr{padding:20px 22px 16px;border-bottom:1px solid #1a1a1a;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0}
+.pan-close{background:none;border:none;color:#444;font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-top:2px;transition:color .15s}
+.pan-close:hover{color:#fff}
+.pan-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;padding:3px 8px;letter-spacing:.4px;margin-bottom:8px;display:inline-block}
+.pan-title{font-size:22px;font-weight:300;color:#fff;line-height:1.2;margin-bottom:4px}
+.pan-phase{font-size:11px;color:#444;font-family:'IBM Plex Mono',monospace}
+.pan-body{padding:20px 22px;flex:1}
+.pan-sec{margin-bottom:18px}
+.pan-sec-ttl{font-size:9px;font-weight:600;color:#333;letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #161616}
+.pan-desc{font-size:13px;color:#999;line-height:1.7}
+.pan-items{display:flex;flex-direction:column;gap:6px}
+.pan-item{font-size:12px;color:#777;display:flex;gap:8px;line-height:1.5}
+.pan-item::before{content:'→';color:#0f62fe;font-family:'IBM Plex Mono',monospace;font-size:11px;flex-shrink:0;margin-top:1px}
+.pan-outputs{display:flex;flex-wrap:wrap;gap:5px}
+.pan-out{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 8px;background:#080808;border:1px solid #1e1e1e;color:#78a9ff}
+.pan-timing{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#42be65;padding:5px 10px;background:#080808;display:inline-block;border:1px solid #1a1a1a}
+.pan-hr{border:none;border-top:1px solid #161616;margin:14px 0}
+.pan-note{font-size:11px;padding:8px 10px;line-height:1.55;margin-top:8px;border-left:2px solid}
+.pan-note.warn{color:#f1c21b;background:#0a0800;border-color:#3a2800}
+.pan-note.crit{color:#da1e28;background:#0a0000;border-color:#3a0000}
+.pan-note.info{color:#78a9ff;background:#000a1a;border-color:#002050}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-mark"><svg viewBox="0 0 16 16"><path d="M8 1L1 4v8l7 3 7-3V4L8 1zm0 2.2l4.5 1.9L8 7 3.5 5.1 8 3.2zM3 6.6l4 1.7V13L3 11.3V6.6zm10 4.7l-4 1.7V8.3l4-1.7v4.7z"/></svg></div>
+  <span class="hdr-title">Astra</span>
+  <div class="hdr-div"></div>
+  <span class="hdr-sub">Enterprise Scan Pipeline — Complete DAG</span>
+  <span class="hdr-pill">v4.0 · 24 nodes · nonlinear</span>
+  <div class="hdr-right">
+    <button class="hbtn on" id="btn-leg" onclick="toggleLeg()">Legend</button>
+    <button class="hbtn" onclick="fitView()">Fit</button>
+    <button class="hbtn" onclick="resetView()">Reset</button>
+  </div>
+</div>
+
+<div id="wrap">
+<svg id="cvs" xmlns="http://www.w3.org/2000/svg" width="3600" height="2800">
+<defs>
+  <pattern id="g40" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0L0 0 0 40" fill="none" stroke="#0f0f0f" stroke-width="1"/></pattern>
+  <pattern id="g200" width="200" height="200" patternUnits="userSpaceOnUse"><path d="M200 0L0 0 0 200" fill="none" stroke="#141414" stroke-width="1"/></pattern>
+  <marker id="a-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 2L8 5L1 8" fill="none" stroke="#0f62fe" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="a-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 2L8 5L1 8" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="a-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 2L8 5L1 8" fill="none" stroke="#24a148" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="a-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 2L8 5L1 8" fill="none" stroke="#da1e28" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="a-yellow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 2L8 5L1 8" fill="none" stroke="#f1c21b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="a-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 2L8 5L1 8" fill="none" stroke="#8a3ffc" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="a-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 2L8 5L1 8" fill="none" stroke="#009d9a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="a-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 2L8 5L1 8" fill="none" stroke="#ff832b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs>
+
+<!-- BACKGROUND -->
+<rect width="3600" height="2800" fill="url(#g200)"/>
+<rect width="3600" height="2800" fill="url(#g40)" opacity="0.4"/>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     ZONE LABELS & BACKGROUND REGIONS
+══════════════════════════════════════════════════════════════════ -->
+
+<!-- Customer boundary -->
+<rect x="50" y="60" width="2050" height="2560" rx="0" fill="none" stroke="#1a1a1a" stroke-width="1" stroke-dasharray="6 4"/>
+<text x="70" y="85" font-family="'IBM Plex Mono',monospace" font-size="11" fill="#222" letter-spacing="0.5">CUSTOMER ENVIRONMENT — source code never leaves this boundary</text>
+
+<!-- Control plane boundary -->
+<rect x="2150" y="60" width="1380" height="2560" rx="0" fill="none" stroke="#1a1a1a" stroke-width="1" stroke-dasharray="6 4"/>
+<text x="2170" y="85" font-family="'IBM Plex Mono',monospace" font-size="11" fill="#222" letter-spacing="0.5">CONTROL PLANE — astra.security / self-hosted / hybrid</text>
+
+<!-- Intelligence zone shading -->
+<rect x="80" y="530" width="2000" height="240" fill="#0f62fe" opacity="0.02"/>
+<rect x="80" y="530" width="2000" height="240" fill="none" stroke="#0f62fe" stroke-width="0.5" stroke-dasharray="3 5" opacity="0.3"/>
+<text x="100" y="550" font-family="'IBM Plex Mono',monospace" font-size="10" fill="#0f62fe" opacity="0.4" letter-spacing="0.4">INTELLIGENCE LAYER — parallel, context fed to all downstream nodes</text>
+
+<!-- Parallel scan zone -->
+<rect x="80" y="930" width="2000" height="260" fill="#fff" opacity="0.005"/>
+<rect x="80" y="930" width="2000" height="260" fill="none" stroke="#333" stroke-width="0.5" stroke-dasharray="3 5" opacity="0.4"/>
+<text x="100" y="950" font-family="'IBM Plex Mono',monospace" font-size="10" fill="#444" letter-spacing="0.4">PARALLEL SCAN TRACKS — fork on repo profile · join at deep_scan</text>
+
+<!-- Control plane inner regions -->
+<rect x="2180" y="530" width="1320" height="450" fill="#8a3ffc" opacity="0.015"/>
+<text x="2200" y="550" font-family="'IBM Plex Mono',monospace" font-size="10" fill="#8a3ffc" opacity="0.4" letter-spacing="0.4">INGEST & POLICY ENGINE</text>
+
+<rect x="2180" y="1030" width="1320" height="520" fill="#24a148" opacity="0.012"/>
+<text x="2200" y="1050" font-family="'IBM Plex Mono',monospace" font-size="10" fill="#24a148" opacity="0.4" letter-spacing="0.4">TRIAGE & ENRICHMENT</text>
+
+<rect x="2180" y="1610" width="1320" height="550" fill="#0f62fe" opacity="0.012"/>
+<text x="2200" y="1630" font-family="'IBM Plex Mono',monospace" font-size="10" fill="#0f62fe" opacity="0.4" letter-spacing="0.4">OUTPUT & INTEGRATIONS</text>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     EDGES — drawn before nodes
+══════════════════════════════════════════════════════════════════ -->
+
+<!-- ENTRY CHAIN: URL → Clone → Repo Intel -->
+<line x1="820" y1="155" x2="820" y2="225" stroke="#0f62fe" stroke-width="2" marker-end="url(#a-blue)"/>
+<line x1="820" y1="325" x2="820" y2="395" stroke="#0f62fe" stroke-width="2" marker-end="url(#a-blue)"/>
+
+<!-- Repo Intel → 3 Intelligence nodes (fan out) -->
+<path d="M700 480 Q400 480 400 560" stroke="#8a3ffc" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#a-purple)" fill="none"/>
+<path d="M820 495 L820 560" stroke="#8a3ffc" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#a-purple)" fill="none"/>
+<path d="M940 480 Q1240 480 1240 560" stroke="#8a3ffc" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#a-purple)" fill="none"/>
+
+<!-- Intel nodes → Scan Orchestrator -->
+<path d="M400 660 Q400 770 700 800" stroke="#333" stroke-width="1.5" marker-end="url(#a-dim)" fill="none"/>
+<path d="M820 660 L820 790" stroke="#333" stroke-width="1.5" marker-end="url(#a-dim)" fill="none"/>
+<path d="M1240 660 Q1240 770 940 800" stroke="#333" stroke-width="1.5" marker-end="url(#a-dim)" fill="none"/>
+
+<!-- Also: Repo Intel → Scan Orchestrator (primary) -->
+<path d="M820 495 Q820 720 820 790" stroke="#0f62fe" stroke-width="2" marker-end="url(#a-blue)" fill="none"/>
+
+<!-- Scan Orchestrator → 4 parallel tracks (fork) -->
+<!-- to Tool Scan -->
+<path d="M700 870 Q400 870 400 960" stroke="#0f62fe" stroke-width="2" marker-end="url(#a-blue)" fill="none"/>
+<!-- to IaC -->
+<path d="M780 880 Q660 880 660 960" stroke="#f1c21b" stroke-width="1.5" marker-end="url(#a-yellow)" fill="none"/>
+<!-- to Secrets -->
+<path d="M860 880 Q980 880 980 960" stroke="#da1e28" stroke-width="1.5" marker-end="url(#a-red)" fill="none"/>
+<!-- to Supply Chain -->
+<path d="M940 870 Q1300 870 1300 960" stroke="#333" stroke-width="1.5" marker-end="url(#a-dim)" fill="none"/>
+
+<!-- JOIN: 4 tracks → Deep Scan -->
+<path d="M400 1060 Q400 1210 700 1240" stroke="#0f62fe" stroke-width="2" marker-end="url(#a-blue)" fill="none"/>
+<path d="M660 1060 Q660 1180 760 1240" stroke="#f1c21b" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a-yellow)" fill="none"/>
+<path d="M980 1060 Q980 1180 880 1240" stroke="#da1e28" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a-red)" fill="none"/>
+<path d="M1300 1060 Q1300 1180 940 1240" stroke="#333" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#a-dim)" fill="none"/>
+<text x="1370" y="1170" font-family="'IBM Plex Mono',monospace" font-size="10" fill="#333" letter-spacing="0.4">JOIN</text>
+
+<!-- Deep Scan → Cluster Summaries -->
+<line x1="820" y1="1360" x2="820" y2="1440" stroke="#009d9a" stroke-width="2" marker-end="url(#a-teal)"/>
+
+<!-- Cluster Summaries → Cross File Per Cluster (fan to 3) -->
+<path d="M700 1520 Q550 1520 550 1610" stroke="#24a148" stroke-width="1.5" marker-end="url(#a-green)" fill="none"/>
+<path d="M820 1530 L820 1610" stroke="#24a148" stroke-width="1.5" marker-end="url(#a-green)" fill="none"/>
+<path d="M940 1520 Q1090 1520 1090 1610" stroke="#24a148" stroke-width="1.5" marker-end="url(#a-green)" fill="none"/>
+<text x="1160" y="1565" font-family="'IBM Plex Mono',monospace" font-size="10" fill="#24a148" opacity="0.5">per domain cluster</text>
+
+<!-- Cross File clusters → Cross File Global -->
+<path d="M550 1710 Q550 1800 700 1830" stroke="#24a148" stroke-width="1.5" marker-end="url(#a-green)" fill="none"/>
+<path d="M820 1710 L820 1820" stroke="#24a148" stroke-width="1.5" marker-end="url(#a-green)" fill="none"/>
+<path d="M1090 1710 Q1090 1800 940 1830" stroke="#24a148" stroke-width="1.5" marker-end="url(#a-green)" fill="none"/>
+
+<!-- Cross File Global → Rule Engine -->
+<line x1="820" y1="1940" x2="820" y2="2020" stroke="#8a3ffc" stroke-width="2" marker-end="url(#a-purple)"/>
+
+<!-- Rule Engine → Triage -->
+<line x1="820" y1="2120" x2="820" y2="2200" stroke="#0f62fe" stroke-width="2" marker-end="url(#a-blue)"/>
+
+<!-- Triage → Enrich Critical (conditional) -->
+<path d="M940 2260 Q1100 2260 1100 2200 Q1100 2130 1200 2130" stroke="#da1e28" stroke-width="2" marker-end="url(#a-red)" fill="none"/>
+<text x="1000" y="2250" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#da1e28" opacity="0.7">CRITICAL &gt; 0</text>
+
+<!-- Triage → Finalize (always) -->
+<path d="M820 2300 L820 2380" stroke="#333" stroke-width="2" marker-end="url(#a-dim)" fill="none"/>
+
+<!-- Enrich Critical → Finalize -->
+<path d="M1200 2230 Q1200 2420 940 2420" stroke="#da1e28" stroke-width="1.5" marker-end="url(#a-red)" fill="none"/>
+
+<!-- Finalize → Agentic Auto-Fix (MCP) -->
+<path d="M940 2420 Q1400 2420 1600 2420 Q1700 2420 1700 2300 Q1700 2200 1600 2200" stroke="#ff832b" stroke-width="1.5" stroke-dasharray="7 3" marker-end="url(#a-orange)" fill="none"/>
+
+<!-- Deep Scan streaming persist → Control Plane Ingest -->
+<path d="M940 1290 Q1400 1290 1600 1290 Q1800 1290 2000 1290 Q2080 1290 2080 660 Q2080 590 2200 590" stroke="#525252" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#a-dim)" fill="none" opacity="0.7"/>
+<text x="1640" y="1285" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444" letter-spacing="0.3">streaming persist per batch</text>
+
+<!-- Finalize → Control Plane Ingest -->
+<path d="M820 2500 Q820 2600 1200 2600 Q1800 2600 2080 2600 Q2080 1800 2200 1800 Q2200 750 2200 680" stroke="#0f62fe" stroke-width="2" marker-end="url(#a-blue)" fill="none"/>
+<text x="850" y="2595" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" opacity="0.6">final findings payload · HTTPS POST · gzip</text>
+
+<!-- Rule Engine feedback loop -->
+<path d="M700 2070 Q200 2070 200 850 Q200 810 700 810" stroke="#8a3ffc" stroke-width="1.5" stroke-dasharray="8 4" fill="none" marker-end="url(#a-purple)" opacity="0.6"/>
+<text x="80" y="1450" font-family="'IBM Plex Mono',monospace" font-size="10" fill="#8a3ffc" opacity="0.4" transform="rotate(-90,80,1450)">confirmed rules fed back into future scans</text>
+
+<!-- Intel Layer → Deep Scan (context injection) -->
+<path d="M1240 620 Q1800 620 1800 1300 Q1800 1310 940 1310" stroke="#8a3ffc" stroke-width="1" stroke-dasharray="4 5" fill="none" marker-end="url(#a-purple)" opacity="0.3"/>
+<text x="1810" y="970" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" opacity="0.3" transform="rotate(90,1810,970)">SystemIntelReport injected</text>
+
+<!-- CONTROL PLANE internal edges -->
+<!-- Ingest → Dedup & Policy -->
+<line x1="2500" y1="680" x2="2500" y2="760" stroke="#333" stroke-width="1.5" marker-end="url(#a-dim)"/>
+<!-- Dedup → SLA & Policy -->
+<line x1="2500" y1="860" x2="2500" y2="940" stroke="#333" stroke-width="1.5" marker-end="url(#a-dim)"/>
+<!-- Policy → Integrations -->
+<path d="M2620 990 Q2800 990 2800 1070" stroke="#333" stroke-width="1.5" marker-end="url(#a-dim)" fill="none"/>
+<!-- Policy → AI Triage -->
+<line x1="2500" y1="1000" x2="2500" y2="1080" stroke="#0f62fe" stroke-width="1.5" marker-end="url(#a-blue)"/>
+<!-- AI Triage → Business Logic Queue -->
+<line x1="2500" y1="1180" x2="2500" y2="1260" stroke="#8a3ffc" stroke-width="1.5" marker-end="url(#a-purple)"/>
+<!-- Biz Logic → Human Review Queue -->
+<line x1="2500" y1="1360" x2="2500" y2="1440" stroke="#8a3ffc" stroke-width="1.5" marker-end="url(#a-purple)"/>
+<!-- Human Review → Confirmed Rules DB -->
+<line x1="2500" y1="1540" x2="2500" y2="1660" stroke="#24a148" stroke-width="1.5" marker-end="url(#a-green)"/>
+<!-- Integrations → outputs -->
+<line x1="2800" y1="1170" x2="2800" y2="1660" stroke="#333" stroke-width="1.5" marker-end="url(#a-dim)"/>
+<!-- Output nodes -->
+<path d="M2620 1720 Q2400 1720 2400 1790" stroke="#333" stroke-width="1" marker-end="url(#a-dim)" fill="none"/>
+<path d="M2500" x1="2500" y1="1720" x2="2500" y2="1790" stroke="#333" stroke-width="1" marker-end="url(#a-dim)"/>
+<path d="M2620 1730 Q2700 1730 2700 1800" stroke="#333" stroke-width="1" marker-end="url(#a-dim)" fill="none"/>
+<path d="M2700 1730 Q2850 1730 2900 1800" stroke="#333" stroke-width="1" marker-end="url(#a-dim)" fill="none"/>
+
+<!-- Dashboard API → Dashboard -->
+<line x1="2500" y1="1940" x2="2500" y2="2040" stroke="#0f62fe" stroke-width="1.5" marker-end="url(#a-blue)"/>
+<!-- Dashboard → MCP -->
+<path d="M2380 2100 Q2200 2100 2100 2200 Q2000 2270 1900 2270" stroke="#ff832b" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#a-orange)" fill="none"/>
+
+<!-- Agentic Auto-Fix internal -->
+<line x1="1530" y1="2130" x2="1530" y2="2200" stroke="#ff832b" stroke-width="1.5" marker-end="url(#a-orange)"/>
+<line x1="1530" y1="2300" x2="1530" y2="2360" stroke="#ff832b" stroke-width="1.5" marker-end="url(#a-orange)"/>
+<!-- Auto-Fix → GitHub PR -->
+<path d="M1400 2420 Q1200 2420 1200 2500 Q1200 2560 1100 2560" stroke="#ff832b" stroke-width="1.5" marker-end="url(#a-orange)" fill="none"/>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     NODES — CUSTOMER SIDE
+══════════════════════════════════════════════════════════════════ -->
+
+<!-- ─── URL / ENTRY ─── -->
+<g class="nd" data-id="url" style="cursor:pointer" onclick="openPanel('url')">
+  <rect x="590" y="100" width="460" height="55" fill="#080808" stroke="#0f62fe" stroke-width="2"/>
+  <rect x="590" y="100" width="5" height="55" fill="#0f62fe"/>
+  <text x="610" y="118" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" letter-spacing="0.8">ENTRY POINT · P0</text>
+  <text x="820" y="138" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="16" font-weight="400" fill="#fff">URL / Repository Source</text>
+  <text x="820" y="148" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">git URL · local path · github:org/repo</text>
+</g>
+
+<!-- ─── CLONE ─── -->
+<g class="nd" data-id="clone" style="cursor:pointer" onclick="openPanel('clone')">
+  <rect x="590" y="225" width="460" height="100" fill="#080808" stroke="#0f62fe" stroke-width="1.5"/>
+  <rect x="590" y="225" width="5" height="100" fill="#0f62fe"/>
+  <text x="610" y="243" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" letter-spacing="0.8">NODE · CLONE · ~2–15s</text>
+  <text x="820" y="270" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="18" font-weight="400" fill="#fff">Clone</text>
+  <text x="820" y="289" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">git clone --depth 1 --single-branch</text>
+  <text x="820" y="305" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">AES-256-GCM PAT decrypt · commitSHA resolve</text>
+  <text x="1020" y="255" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">→ /tmp/astra-scan-&lt;cuid&gt;</text>
+</g>
+
+<!-- ─── REPO INTEL (Diagram & Ingest) ─── -->
+<g class="nd" data-id="repo-intel" style="cursor:pointer" onclick="openPanel('repo-intel')">
+  <rect x="590" y="395" width="460" height="100" fill="#080808" stroke="#8a3ffc" stroke-width="2"/>
+  <rect x="590" y="395" width="5" height="100" fill="#8a3ffc"/>
+  <rect x="870" y="405" width="90" height="16" fill="#12001a" stroke="#8a3ffc" stroke-width="0.5" opacity="0.8"/>
+  <text x="915" y="416" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#8a3ffc">AI · 1 call</text>
+  <text x="610" y="413" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" letter-spacing="0.8">NODE · REPO INTEL · ~3–8s</text>
+  <text x="820" y="443" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="18" font-weight="400" fill="#fff">Diagram &amp; Ingest</text>
+  <text x="820" y="462" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">gitingest digest · file tree · key files · README</text>
+  <text x="820" y="478" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">→ SystemIntelReport: domain · authMechanism · criticalPaths · scanFocus</text>
+</g>
+
+<!-- ─── INTELLIGENCE LAYER ─── -->
+
+<!-- Intel Rule Gen -->
+<g class="nd" data-id="rule-gen" style="cursor:pointer" onclick="openPanel('rule-gen')">
+  <rect x="220" y="560" width="360" height="100" fill="#080808" stroke="#8a3ffc" stroke-width="1.5"/>
+  <rect x="220" y="560" width="5" height="100" fill="#8a3ffc"/>
+  <text x="240" y="578" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" letter-spacing="0.8">INTELLIGENCE · A</text>
+  <text x="400" y="606" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">Intelligent Rule Gen.</text>
+  <text x="400" y="625" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">AI infers custom .astra rules</text>
+  <text x="400" y="641" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">specific to this codebase &amp; domain</text>
+</g>
+
+<!-- Critical Paths -->
+<g class="nd" data-id="critical-paths" style="cursor:pointer" onclick="openPanel('critical-paths')">
+  <rect x="640" y="560" width="360" height="100" fill="#080808" stroke="#8a3ffc" stroke-width="1.5"/>
+  <rect x="640" y="560" width="5" height="100" fill="#8a3ffc"/>
+  <text x="660" y="578" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" letter-spacing="0.8">INTELLIGENCE · B</text>
+  <text x="820" y="606" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">Critical Paths &amp; Failure Points</text>
+  <text x="820" y="625" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">auth flows · payment routes · entry points</text>
+  <text x="820" y="641" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">trust boundaries · attack surface map</text>
+</g>
+
+<!-- Scan Scope -->
+<g class="nd" data-id="scan-scope" style="cursor:pointer" onclick="openPanel('scan-scope')">
+  <rect x="1060" y="560" width="380" height="100" fill="#080808" stroke="#8a3ffc" stroke-width="1.5"/>
+  <rect x="1060" y="560" width="5" height="100" fill="#8a3ffc"/>
+  <text x="1080" y="578" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" letter-spacing="0.8">INTELLIGENCE · C</text>
+  <text x="1250" y="606" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">Scan Scope &amp; Instruction Def.</text>
+  <text x="1250" y="625" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">priority tiers P0→P4 · token budget</text>
+  <text x="1250" y="641" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">AI scan instructions · depth · focus</text>
+</g>
+
+<!-- ─── SCAN ORCHESTRATOR ─── -->
+<g class="nd" data-id="scan-orch" style="cursor:pointer" onclick="openPanel('scan-orch')">
+  <rect x="590" y="790" width="460" height="80" fill="#080808" stroke="#0f62fe" stroke-width="2"/>
+  <rect x="590" y="790" width="5" height="80" fill="#0f62fe"/>
+  <!-- pulse -->
+  <circle cx="1030" cy="830" r="8" fill="none" stroke="#0f62fe" stroke-width="1" opacity="0.4" class="pulse-ring"/>
+  <circle cx="1030" cy="830" r="4" fill="#0f62fe" opacity="0.7"/>
+  <text x="610" y="808" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" letter-spacing="0.8">NODE · SCAN ORCHESTRATOR</text>
+  <text x="820" y="838" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="18" font-weight="600" fill="#fff">Scan</text>
+  <text x="820" y="858" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">conditional fork based on SystemIntelReport · manages worker pool</text>
+</g>
+
+<!-- ─── PARALLEL TRACKS ─── -->
+
+<!-- Track A: Tool Scan -->
+<g class="nd" data-id="tool-scan" style="cursor:pointer" onclick="openPanel('tool-scan')">
+  <rect x="200" y="960" width="400" height="100" fill="#080808" stroke="#0f62fe" stroke-width="1.5"/>
+  <rect x="200" y="960" width="5" height="100" fill="#0f62fe"/>
+  <text x="220" y="978" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" letter-spacing="0.8">TRACK A · DETERMINISTIC · ~20–60s</text>
+  <text x="400" y="1006" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">Tool-Level Scan</text>
+  <text x="400" y="1025" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">Semgrep 500+ rules · Trivy CVE · Bandit · Bearer CI</text>
+  <text x="400" y="1041" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">SAST · SCA · data-flow · PII detection</text>
+</g>
+
+<!-- Track B: IaC -->
+<g class="nd" data-id="iac-scan" style="cursor:pointer" onclick="openPanel('iac-scan')">
+  <rect x="460" y="960" width="400" height="100" fill="#080808" stroke="#f1c21b" stroke-width="1.5"/>
+  <rect x="460" y="960" width="5" height="100" fill="#f1c21b"/>
+  <text x="480" y="978" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#f1c21b" letter-spacing="0.8">TRACK B · IaC · conditional</text>
+  <text x="660" y="1006" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">IaC Scan</text>
+  <text x="660" y="1025" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">Checkov · Terraform · Helm · K8s · Dockerfile</text>
+  <text x="660" y="1041" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">IAM · network · container · misconfig</text>
+</g>
+
+<!-- Track C: Secrets -->
+<g class="nd" data-id="secrets-scan" style="cursor:pointer" onclick="openPanel('secrets-scan')">
+  <rect x="800" y="960" width="360" height="100" fill="#080808" stroke="#da1e28" stroke-width="1.5"/>
+  <rect x="800" y="960" width="5" height="100" fill="#da1e28"/>
+  <text x="820" y="978" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#da1e28" letter-spacing="0.8">TRACK C · SECRETS · ~10–30s</text>
+  <text x="980" y="1006" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">Secrets Scan</text>
+  <text x="980" y="1025" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">Gitleaks · TruffleHog · git history</text>
+  <text x="980" y="1041" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">API keys · passwords · certs · tokens</text>
+</g>
+
+<!-- Track D: Supply Chain -->
+<g class="nd" data-id="supply-chain" style="cursor:pointer" onclick="openPanel('supply-chain')">
+  <rect x="1120" y="960" width="380" height="100" fill="#080808" stroke="#525252" stroke-width="1.5"/>
+  <rect x="1120" y="960" width="5" height="100" fill="#525252"/>
+  <text x="1140" y="978" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#888" letter-spacing="0.8">TRACK D · SUPPLY CHAIN · ~15–45s</text>
+  <text x="1310" y="1006" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">Supply Chain &amp; SCA</text>
+  <text x="1310" y="1025" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">reachability SCA · malicious pkg · SBOM</text>
+  <text x="1310" y="1041" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">95% CVEs in transitive deps · Socket-class</text>
+</g>
+
+<!-- ─── DEEP SCAN ─── -->
+<g class="nd" data-id="deep-scan" style="cursor:pointer" onclick="openPanel('deep-scan')">
+  <rect x="585" y="1240" width="470" height="120" fill="#001418" stroke="#009d9a" stroke-width="2"/>
+  <rect x="585" y="1240" width="5" height="120" fill="#009d9a"/>
+  <rect x="940" y="1250" width="100" height="16" fill="#001418" stroke="#009d9a" stroke-width="0.5"/>
+  <text x="990" y="1261" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#009d9a">AI · LLM · batched</text>
+  <text x="605" y="1258" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#009d9a" letter-spacing="0.8">NODE · DEEP SCAN · ~2–10 min</text>
+  <text x="820" y="1296" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="20" font-weight="600" fill="#fff">Deep Scan</text>
+  <text x="820" y="1318" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">per-file AI analysis · context-aware (SystemIntelReport)</text>
+  <text x="820" y="1334" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">→ UnifiedFinding[] + FileSummary[] · streaming persist per batch</text>
+  <text x="820" y="1350" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">concurrency: 5 · chunk large files · retry w/ exponential backoff</text>
+</g>
+
+<!-- ─── CLUSTER SUMMARIES ─── -->
+<g class="nd" data-id="cluster-summaries" style="cursor:pointer" onclick="openPanel('cluster-summaries')">
+  <rect x="590" y="1440" width="460" height="80" fill="#080808" stroke="#009d9a" stroke-width="1.5"/>
+  <rect x="590" y="1440" width="5" height="80" fill="#009d9a"/>
+  <text x="610" y="1458" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#009d9a" letter-spacing="0.8">NODE · CLUSTER SUMMARIES · ~5s · no AI</text>
+  <text x="820" y="1486" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="16" font-weight="400" fill="#fff">Cluster Summaries</text>
+  <text x="820" y="1505" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">group FileSummary[] by domain: auth · payments · API · config · data</text>
+</g>
+
+<!-- ─── CROSS FILE PER CLUSTER (3 nodes) ─── -->
+<g class="nd" data-id="cross-per" style="cursor:pointer" onclick="openPanel('cross-per')">
+  <rect x="370" y="1610" width="300" height="100" fill="#001400" stroke="#24a148" stroke-width="1.5"/>
+  <rect x="370" y="1610" width="5" height="100" fill="#24a148"/>
+  <text x="390" y="1628" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#24a148" letter-spacing="0.6">CROSS FILE · auth cluster</text>
+  <text x="520" y="1658" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="14" font-weight="400" fill="#fff">Cross File</text>
+  <text x="520" y="1675" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#24a148" opacity="0.7">auth domain</text>
+  <text x="520" y="1691" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">missing middleware · IDOR · privesc</text>
+</g>
+<g class="nd" data-id="cross-per-2" style="cursor:pointer" onclick="openPanel('cross-per')">
+  <rect x="690" y="1610" width="260" height="100" fill="#001400" stroke="#24a148" stroke-width="1.5"/>
+  <rect x="690" y="1610" width="5" height="100" fill="#24a148"/>
+  <text x="710" y="1628" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#24a148" letter-spacing="0.6">CROSS FILE · payments</text>
+  <text x="820" y="1658" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="14" font-weight="400" fill="#fff">Cross File</text>
+  <text x="820" y="1675" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#24a148" opacity="0.7">payments domain</text>
+  <text x="820" y="1691" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">race conditions · price manipulation</text>
+</g>
+<g class="nd" data-id="cross-per-3" style="cursor:pointer" onclick="openPanel('cross-per')">
+  <rect x="970" y="1610" width="300" height="100" fill="#001400" stroke="#24a148" stroke-width="1.5"/>
+  <rect x="970" y="1610" width="5" height="100" fill="#24a148"/>
+  <text x="990" y="1628" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#24a148" letter-spacing="0.6">CROSS FILE · other clusters</text>
+  <text x="1120" y="1658" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="14" font-weight="400" fill="#fff">Cross File</text>
+  <text x="1120" y="1675" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#24a148" opacity="0.7">API · config · data</text>
+  <text x="1120" y="1691" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">trust boundaries · data flows</text>
+</g>
+
+<!-- ─── CROSS FILE GLOBAL ─── -->
+<g class="nd" data-id="cross-global" style="cursor:pointer" onclick="openPanel('cross-global')">
+  <rect x="585" y="1820" width="470" height="120" fill="#001400" stroke="#24a148" stroke-width="2"/>
+  <rect x="585" y="1820" width="5" height="120" fill="#24a148"/>
+  <rect x="940" y="1830" width="100" height="16" fill="#001400" stroke="#24a148" stroke-width="0.5"/>
+  <text x="990" y="1841" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#24a148">AI · GRAPH</text>
+  <text x="605" y="1838" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#24a148" letter-spacing="0.8">NODE · CROSS FILE GLOBAL · ~30–90s</text>
+  <text x="820" y="1874" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="20" font-weight="600" fill="#fff">Cross File Global</text>
+  <text x="820" y="1896" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">reasons across cluster-level summaries · not raw code</text>
+  <text x="820" y="1912" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">IDOR · BOLA · broken access control · data flow violations</text>
+  <text x="820" y="1928" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">race conditions · workflow bypass · trust boundary violations</text>
+</g>
+
+<!-- ─── RULE ENGINE (RILE) ─── -->
+<g class="nd" data-id="rule-engine" style="cursor:pointer" onclick="openPanel('rule-engine')">
+  <rect x="585" y="2020" width="470" height="100" fill="#0a0010" stroke="#8a3ffc" stroke-width="2"/>
+  <rect x="585" y="2020" width="5" height="100" fill="#8a3ffc"/>
+  <rect x="940" y="2030" width="100" height="16" fill="#0a0010" stroke="#8a3ffc" stroke-width="0.5"/>
+  <text x="990" y="2041" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#8a3ffc">RULES · AI</text>
+  <text x="605" y="2038" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" letter-spacing="0.8">NODE · RULE ENGINE · RILE · ~20–40s</text>
+  <text x="820" y="2070" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="20" font-weight="600" fill="#fff">Rile</text>
+  <text x="820" y="2090" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">infer biz-logic rules from findings · store as CANDIDATE</text>
+  <text x="820" y="2106" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">feedback loop → confirmed rules injected into future scans</text>
+</g>
+
+<!-- ─── TRIAGE ─── -->
+<g class="nd" data-id="triage" style="cursor:pointer" onclick="openPanel('triage')">
+  <rect x="590" y="2200" width="460" height="100" fill="#080808" stroke="#0f62fe" stroke-width="1.5"/>
+  <rect x="590" y="2200" width="5" height="100" fill="#0f62fe"/>
+  <text x="610" y="2218" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" letter-spacing="0.8">NODE · TRIAGE · no AI · &lt;1s</text>
+  <text x="820" y="2256" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="18" font-weight="400" fill="#fff">Triage</text>
+  <text x="820" y="2276" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">count CRITICAL findings → conditional routing</text>
+  <text x="820" y="2292" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">if CRITICAL &gt; 0 → enrich_critical · always → finalize</text>
+</g>
+
+<!-- ─── ENRICH CRITICAL (conditional) ─── -->
+<g class="nd" data-id="enrich-critical" style="cursor:pointer" onclick="openPanel('enrich-critical')">
+  <rect x="1200" y="2080" width="420" height="150" fill="#0a0000" stroke="#da1e28" stroke-width="2"/>
+  <rect x="1200" y="2080" width="5" height="150" fill="#da1e28"/>
+  <rect x="1500" y="2090" width="100" height="16" fill="#0a0000" stroke="#da1e28" stroke-width="0.5"/>
+  <text x="1550" y="2101" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#da1e28">AI · focused</text>
+  <text x="1220" y="2098" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#da1e28" letter-spacing="0.8">NODE · ENRICH CRITICAL · conditional</text>
+  <text x="1410" y="2134" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="18" font-weight="600" fill="#fff">Enrich Critical</text>
+  <text x="1410" y="2154" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#888">deep dive on CRITICAL findings only</text>
+  <text x="1410" y="2170" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#666">re-reads specific files · confirms · expands</text>
+  <text x="1410" y="2186" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">generates exploit scenarios · dismisses FP</text>
+  <text x="1410" y="2202" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">reduces false positives · increases confidence</text>
+</g>
+
+<!-- ─── FINALIZE ─── -->
+<g class="nd" data-id="finalize" style="cursor:pointer" onclick="openPanel('finalize')">
+  <rect x="590" y="2380" width="460" height="120" fill="#080808" stroke="#333" stroke-width="1.5"/>
+  <rect x="590" y="2380" width="5" height="120" fill="#525252"/>
+  <text x="610" y="2398" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#888" letter-spacing="0.8">NODE · FINALIZE · ~5–15s</text>
+  <text x="820" y="2440" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="18" font-weight="400" fill="#fff">Aggregate &amp; Finalize</text>
+  <text x="820" y="2460" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">normalize · SHA-256 dedup · sort CRITICAL→INFO</text>
+  <text x="820" y="2476" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">scan status → COMPLETED · emit SSE complete event</text>
+  <text x="820" y="2492" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">HTTPS POST gzip-JSON → Control Plane /v1/ingest</text>
+</g>
+
+<!-- ─── AGENTIC AUTO-FIX ─── -->
+<g class="nd" data-id="autofix" style="cursor:pointer" onclick="openPanel('autofix')">
+  <rect x="1400" y="2080" width="420" height="60" fill="#0a0600" stroke="#ff832b" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <rect x="1400" y="2080" width="5" height="60" fill="#ff832b"/>
+  <text x="1420" y="2098" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#ff832b" letter-spacing="0.8">AGENTIC AUTO-FIX</text>
+  <text x="1610" y="2118" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="14" font-weight="400" fill="#fff">Auto-Fix Engine</text>
+  <text x="1610" y="2132" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#666">AI generates fix · validates · opens draft PR</text>
+</g>
+<g class="nd" data-id="autofix-pr" style="cursor:pointer" onclick="openPanel('autofix')">
+  <rect x="1400" y="2200" width="420" height="60" fill="#0a0600" stroke="#ff832b" stroke-width="1.5"/>
+  <rect x="1400" y="2200" width="5" height="60" fill="#ff832b"/>
+  <text x="1420" y="2218" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#ff832b" letter-spacing="0.8">AUTO-FIX · HUMAN GATE</text>
+  <text x="1610" y="2238" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" font-weight="400" fill="#fff">Draft PR · Human Approval</text>
+  <text x="1610" y="2252" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#666">never auto-merge · reviewer assigned · Pixee-class</text>
+</g>
+<g class="nd" data-id="autofix-merge" style="cursor:pointer" onclick="openPanel('autofix')">
+  <rect x="1400" y="2360" width="420" height="60" fill="#0a0600" stroke="#ff832b" stroke-width="1" stroke-dasharray="4 3"/>
+  <rect x="1400" y="2360" width="5" height="60" fill="#ff832b" opacity="0.5"/>
+  <text x="1610" y="2389" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#666">Approve → finding auto-marked FIXED</text>
+  <text x="1610" y="2407" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">Jira ticket auto-closed · SLA satisfied</text>
+</g>
+
+<!-- AutoFix edges -->
+<line x1="1610" y1="2140" x2="1610" y2="2200" stroke="#ff832b" stroke-width="1.5" marker-end="url(#a-orange)"/>
+<line x1="1610" y1="2260" x2="1610" y2="2360" stroke="#ff832b" stroke-width="1.5" marker-end="url(#a-orange)"/>
+
+<!-- MCP Layer -->
+<g class="nd" data-id="mcp" style="cursor:pointer" onclick="openPanel('mcp')">
+  <rect x="1580" y="2200" width="380" height="120" fill="#0a0600" stroke="#ff832b" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <rect x="1580" y="2200" width="5" height="120" fill="#ff832b" opacity="0.6"/>
+  <text x="1600" y="2218" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#ff832b" letter-spacing="0.8">MCP SERVER · AI AGENT LAYER</text>
+  <text x="1770" y="2254" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="14" font-weight="400" fill="#fff">MCP / Agent Integration</text>
+  <text x="1770" y="2272" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#888">Claude Code · Cursor · Copilot · Codex · Devin</text>
+  <text x="1770" y="2288" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#666">check_policy · scan_file · get_findings</text>
+  <text x="1770" y="2304" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">verify_fix · get_business_rules</text>
+</g>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     CONTROL PLANE NODES
+══════════════════════════════════════════════════════════════════ -->
+
+<!-- ─── INGEST & DEDUP ─── -->
+<g class="nd" data-id="cp-ingest" style="cursor:pointer" onclick="openPanel('cp-ingest')">
+  <rect x="2200" y="570" width="500" height="190" fill="#080808" stroke="#8a3ffc" stroke-width="1.5"/>
+  <rect x="2200" y="570" width="5" height="190" fill="#8a3ffc"/>
+  <text x="2220" y="588" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" letter-spacing="0.8">CP · INGEST MODULE</text>
+  <text x="2450" y="618" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="16" font-weight="400" fill="#fff">Validate &amp; Ingest</text>
+  <text x="2450" y="638" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">Bearer token auth · org ownership check · rate limit</text>
+  <text x="2450" y="654" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">decompress gzip · parse UnifiedFinding[]</text>
+  <!-- Dedup box -->
+  <rect x="2220" y="668" width="460" height="80" fill="#0a0a0a" stroke="#333" stroke-width="0.5"/>
+  <text x="2220" y="684" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#444" dx="6">DEDUP ENGINE</text>
+  <text x="2450" y="708" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">SHA-256 fingerprint: scanner+ruleId+file+lineStart</text>
+  <text x="2450" y="725" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">new → INSERT · existing → UPDATE last_seen + occurrence_count</text>
+  <text x="2450" y="741" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">Redis dedup cache · fingerprint TTL 30 days</text>
+</g>
+
+<!-- ─── POLICY ENGINE ─── -->
+<g class="nd" data-id="cp-policy" style="cursor:pointer" onclick="openPanel('cp-policy')">
+  <rect x="2200" y="780" width="500" height="160" fill="#080808" stroke="#8a3ffc" stroke-width="1.5"/>
+  <rect x="2200" y="780" width="5" height="160" fill="#8a3ffc"/>
+  <text x="2220" y="798" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" letter-spacing="0.8">CP · POLICY ENGINE</text>
+  <text x="2450" y="826" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="16" font-weight="400" fill="#fff">Policy &amp; SLA Engine</text>
+  <text x="2450" y="846" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">match conditions: severity · category · scanner · file_pattern · language</text>
+  <text x="2450" y="862" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">SLA timers: CRITICAL 24h · HIGH 72h · MEDIUM 14d · LOW 30d</text>
+  <text x="2450" y="878" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">route actions: create_jira · notify_slack · page_pagerduty · webhook</text>
+  <text x="2450" y="894" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">fail_scan · allowlist · PR merge block</text>
+  <text x="2450" y="910" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#222">priority ordering · org-wide + repo-specific rules</text>
+</g>
+
+<!-- ─── AI EXPLOIT TRIAGE ─── -->
+<g class="nd" data-id="cp-ai-triage" style="cursor:pointer" onclick="openPanel('cp-ai-triage')">
+  <rect x="2200" y="1060" width="500" height="120" fill="#080808" stroke="#0f62fe" stroke-width="1.5"/>
+  <rect x="2200" y="1060" width="5" height="120" fill="#0f62fe"/>
+  <rect x="2570" y="1070" width="115" height="16" fill="#000a1a" stroke="#0f62fe" stroke-width="0.5"/>
+  <text x="2627" y="1081" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#0f62fe">AI · Semgrep-style</text>
+  <text x="2220" y="1078" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" letter-spacing="0.8">CP · AI TRIAGE · hybrid deterministic+LLM</text>
+  <text x="2450" y="1108" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="16" font-weight="400" fill="#fff">AI Exploit Scoring &amp; Triage</text>
+  <text x="2450" y="1128" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">exploit_score: 0.0–10.0 · reachability · auth required</text>
+  <text x="2450" y="1144" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">Semgrep Assistant Memories · ~20% triage automation</text>
+  <text x="2450" y="1160" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">org triage history → learned rules → improves over time</text>
+</g>
+
+<!-- ─── BIZ LOGIC QUEUE ─── -->
+<g class="nd" data-id="cp-biz-queue" style="cursor:pointer" onclick="openPanel('cp-biz-queue')">
+  <rect x="2200" y="1260" width="500" height="100" fill="#080808" stroke="#8a3ffc" stroke-width="1.5"/>
+  <rect x="2200" y="1260" width="5" height="100" fill="#8a3ffc"/>
+  <text x="2220" y="1278" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" letter-spacing="0.8">CP · BUSINESS LOGIC QUEUE</text>
+  <text x="2450" y="1316" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">Biz Logic Rule Store</text>
+  <text x="2450" y="1336" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">store CANDIDATE rules · prioritize by confidence</text>
+  <text x="2450" y="1352" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">notify Sec Ops workspace · evidence_files[] attached</text>
+</g>
+
+<!-- ─── HUMAN REVIEW QUEUE ─── -->
+<g class="nd" data-id="cp-human-review" style="cursor:pointer" onclick="openPanel('cp-human-review')">
+  <rect x="2200" y="1440" width="500" height="100" fill="#080808" stroke="#8a3ffc" stroke-width="1.5"/>
+  <rect x="2200" y="1440" width="5" height="100" fill="#8a3ffc"/>
+  <text x="2220" y="1458" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" letter-spacing="0.8">CP · HUMAN REVIEW · Sec Ops Workspace</text>
+  <text x="2450" y="1496" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">Human Rule Confirmation</text>
+  <text x="2450" y="1516" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">Confirm · Edit · Reject CANDIDATE rules</text>
+  <text x="2450" y="1532" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">security engineer reviews evidence + rule text</text>
+</g>
+
+<!-- ─── CONFIRMED RULES DB ─── -->
+<g class="nd" data-id="cp-rules-db" style="cursor:pointer" onclick="openPanel('cp-rules-db')">
+  <rect x="2200" y="1660" width="500" height="80" fill="#001400" stroke="#24a148" stroke-width="1.5"/>
+  <rect x="2200" y="1660" width="5" height="80" fill="#24a148"/>
+  <text x="2220" y="1678" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#24a148" letter-spacing="0.8">CP · CONFIRMED RULES · PostgreSQL</text>
+  <text x="2450" y="1706" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="15" font-weight="400" fill="#fff">Confirmed Rules Store</text>
+  <text x="2450" y="1726" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">status: CONFIRMED → distributed via token validation response</text>
+</g>
+
+<!-- ─── INTEGRATIONS ─── -->
+<g class="nd" data-id="cp-integrations" style="cursor:pointer" onclick="openPanel('cp-integrations')">
+  <rect x="2750" y="1060" width="340" height="700" fill="#080808" stroke="#333" stroke-width="1"/>
+  <rect x="2750" y="1060" width="5" height="700" fill="#525252"/>
+  <text x="2770" y="1078" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#888" letter-spacing="0.8">CP · INTEGRATIONS MODULE</text>
+
+  <!-- Jira -->
+  <rect x="2770" y="1090" width="300" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2920" y="1112" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" fill="#fff">Jira</text>
+  <text x="2920" y="1129" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">auto tickets · severity→priority · bi-directional sync</text>
+
+  <!-- Slack -->
+  <rect x="2770" y="1160" width="300" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2920" y="1182" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" fill="#fff">Slack</text>
+  <text x="2920" y="1199" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">Blocks API · severity badge · SLA alerts · digest</text>
+
+  <!-- PagerDuty -->
+  <rect x="2770" y="1230" width="300" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2920" y="1252" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" fill="#fff">PagerDuty</text>
+  <text x="2920" y="1269" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">CRITICAL → incident · auto-resolve on FIXED</text>
+
+  <!-- GitHub/GitLab -->
+  <rect x="2770" y="1300" width="300" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2920" y="1322" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" fill="#fff">GitHub / GitLab</text>
+  <text x="2920" y="1339" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">PR inline comments · commit status · merge block</text>
+
+  <!-- Webhooks -->
+  <rect x="2770" y="1370" width="300" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2920" y="1392" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" fill="#fff">Webhooks</text>
+  <text x="2920" y="1409" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">HMAC-SHA256 signed · 3× retry · custom payload</text>
+
+  <!-- Email -->
+  <rect x="2770" y="1440" width="300" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2920" y="1462" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" fill="#fff">Email</text>
+  <text x="2920" y="1479" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">weekly digest · SLA breach alerts · PDF reports</text>
+
+  <!-- SARIF/API -->
+  <rect x="2770" y="1510" width="300" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2920" y="1532" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" fill="#fff">SARIF / REST API</text>
+  <text x="2920" y="1549" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">GitHub Code Scanning · full API · OpenAPI spec</text>
+
+  <!-- MCP Integration -->
+  <rect x="2770" y="1580" width="300" height="55" fill="#0a0600" stroke="#ff832b" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <text x="2920" y="1602" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" fill="#ff832b">MCP Server</text>
+  <text x="2920" y="1619" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">AI agent policy layer · check_policy · verify_fix</text>
+
+  <!-- SSO -->
+  <rect x="2770" y="1650" width="300" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2920" y="1672" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="13" fill="#fff">SSO / IdP</text>
+  <text x="2920" y="1689" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#555">Okta · Azure AD · Google · SAML · OIDC</text>
+</g>
+
+<!-- ─── DASHBOARD API ─── -->
+<g class="nd" data-id="cp-dashboard-api" style="cursor:pointer" onclick="openPanel('cp-dashboard-api')">
+  <rect x="2200" y="1780" width="500" height="160" fill="#080808" stroke="#0f62fe" stroke-width="1.5"/>
+  <rect x="2200" y="1780" width="5" height="160" fill="#0f62fe"/>
+  <text x="2220" y="1798" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" letter-spacing="0.8">CP · DASHBOARD API</text>
+  <text x="2450" y="1836" text-anchor="middle" font-family="'IBM Plex Sans',sans-serif" font-size="16" font-weight="400" fill="#fff">Dashboard API</text>
+  <text x="2450" y="1856" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555">REST v1 · WebSocket (live findings) · GraphQL (Enterprise)</text>
+  <text x="2450" y="1872" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">SSE stream /api/v1/scans/:id/progress</text>
+  <text x="2450" y="1888" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#444">Redis pub/sub → live finding notifications</text>
+  <text x="2450" y="1904" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333">OpenAPI 3.0 spec auto-generated · /api/docs</text>
+</g>
+
+<!-- ─── DASHBOARD ─── -->
+<g class="nd" data-id="cp-dashboard" style="cursor:pointer" onclick="openPanel('cp-dashboard')">
+  <rect x="2200" y="2000" width="500" height="220" fill="#080808" stroke="#0f62fe" stroke-width="1.5"/>
+  <rect x="2200" y="2000" width="5" height="220" fill="#0f62fe"/>
+  <text x="2220" y="2018" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" letter-spacing="0.8">CP · REACT SPA · 3 WORKSPACES</text>
+
+  <!-- Executive -->
+  <rect x="2220" y="2028" width="460" height="55" fill="#0a0a0a" stroke="#1a1a1a" stroke-width="0.5"/>
+  <text x="2290" y="2048" font-family="'IBM Plex Sans',sans-serif" font-size="12" fill="#fff">Executive Workspace</text>
+  <text x="2290" y="2065" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#444">risk score · compliance · trend charts · SLA · PDF reports</text>
+
+  <!-- Engineering -->
+  <rect x="2220" y="2090" width="460" height="55" fill="#0a0a0a" stroke="#1a1a1a" stroke-width="0.5"/>
+  <text x="2290" y="2110" font-family="'IBM Plex Sans',sans-serif" font-size="12" fill="#fff">Engineering Workspace</text>
+  <text x="2290" y="2127" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#444">per-repo findings · PR inline · AI fix guidance · code view</text>
+
+  <!-- Sec Ops -->
+  <rect x="2220" y="2152" width="460" height="55" fill="#0a0a0a" stroke="#1a1a1a" stroke-width="0.5"/>
+  <text x="2290" y="2172" font-family="'IBM Plex Sans',sans-serif" font-size="12" fill="#fff">Sec Ops Workspace</text>
+  <text x="2290" y="2189" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#444">assignment · SLA tracking · policy builder · rule queue · audit log</text>
+</g>
+
+<!-- ─── STORAGE NODES (right side) ─── -->
+<g class="nd" data-id="cp-storage" style="cursor:pointer" onclick="openPanel('cp-storage')">
+  <rect x="2200" y="2300" width="500" height="200" fill="#080808" stroke="#333" stroke-width="1"/>
+  <rect x="2200" y="2300" width="5" height="200" fill="#333"/>
+  <text x="2220" y="2318" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#555" letter-spacing="0.8">CP · STORAGE LAYER</text>
+  <!-- PostgreSQL -->
+  <rect x="2220" y="2328" width="140" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2290" y="2350" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#888">PostgreSQL</text>
+  <text x="2290" y="2366" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#444">findings · scans · jobs · biz_rules · ai_logs</text>
+  <!-- Redis -->
+  <rect x="2374" y="2328" width="140" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2444" y="2350" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#888">Redis</text>
+  <text x="2444" y="2366" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#444">dedup cache · SSE pub/sub · jobs · sessions</text>
+  <!-- S3 -->
+  <rect x="2528" y="2328" width="152" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2604" y="2350" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#888">S3 / MinIO</text>
+  <text x="2604" y="2366" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#444">artifacts · payloads · PDF reports · SBOM</text>
+  <!-- AI Logs -->
+  <rect x="2220" y="2396" width="460" height="55" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2450" y="2418" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#888">ai_call_logs — observability</text>
+  <text x="2450" y="2435" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#444">provider · model · tokens · durationMs · request + response JSON · per node</text>
+  <!-- Audit -->
+  <rect x="2220" y="2460" width="460" height="30" fill="#0a0a0a" stroke="#222" stroke-width="0.5"/>
+  <text x="2450" y="2479" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#444">audit_log — all user actions · who · what · when · before/after diff</text>
+</g>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     ANNOTATION LABELS
+══════════════════════════════════════════════════════════════════ -->
+<text x="2100" y="2650" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#da1e28" opacity="0.5">▲ source code never crosses this line ▲</text>
+<line x1="2100" y1="2655" x2="2100" y2="100" stroke="#da1e28" stroke-width="0.5" stroke-dasharray="4 6" opacity="0.2"/>
+
+<!-- Phase rail labels -->
+<line x1="50" y1="100" x2="50" y2="2620" stroke="#1a1a1a" stroke-width="1"/>
+<text x="42" y="130" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#1e1e1e" transform="rotate(-90,42,130)">P0 ENTRY</text>
+<text x="42" y="290" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" opacity="0.3" transform="rotate(-90,42,290)">P1 CLONE</text>
+<text x="42" y="460" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" opacity="0.3" transform="rotate(-90,42,460)">P2 REPO INTEL</text>
+<text x="42" y="630" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" opacity="0.3" transform="rotate(-90,42,630)">P3 INTELLIGENCE LAYER</text>
+<text x="42" y="840" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" opacity="0.3" transform="rotate(-90,42,840)">P4 ORCHESTRATE</text>
+<text x="42" y="1010" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333" transform="rotate(-90,42,1010)">P5 PARALLEL TRACKS</text>
+<text x="42" y="1300" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#009d9a" opacity="0.4" transform="rotate(-90,42,1300)">P6 DEEP SCAN AI</text>
+<text x="42" y="1480" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#009d9a" opacity="0.3" transform="rotate(-90,42,1480)">P7 CLUSTER</text>
+<text x="42" y="1680" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#24a148" opacity="0.4" transform="rotate(-90,42,1680)">P8 CROSS FILE AI</text>
+<text x="42" y="1900" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#24a148" opacity="0.3" transform="rotate(-90,42,1900)">P9 CROSS GLOBAL</text>
+<text x="42" y="2080" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#8a3ffc" opacity="0.4" transform="rotate(-90,42,2080)">P10 RILE</text>
+<text x="42" y="2260" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#0f62fe" opacity="0.3" transform="rotate(-90,42,2260)">P11 TRIAGE</text>
+<text x="42" y="2440" text-anchor="end" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#333" transform="rotate(-90,42,2440)">P12 FINALIZE</text>
+</svg>
+</div>
+
+<!-- ZOOM CONTROLS -->
+<div class="zc">
+  <button class="zb" onclick="zoom(1.2)">+</button>
+  <div class="zlbl" id="zlbl">55%</div>
+  <button class="zb" onclick="zoom(0.83)">−</button>
+</div>
+
+<!-- MINIMAP -->
+<div id="mm">
+  <div class="mm-lbl">MINIMAP</div>
+  <div id="mm-vp"></div>
+</div>
+
+<!-- LEGEND -->
+<div id="leg">
+  <div class="leg-ttl">Node Types</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#0f62fe"></div>Core Pipeline Node</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#8a3ffc"></div>Intelligence / Rule Engine</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#009d9a"></div>AI Deep Scan</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#24a148"></div>Cross-File AI Analysis</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#da1e28"></div>Secrets / Critical Path</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#f1c21b"></div>IaC Track</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#ff832b"></div>Agentic Auto-Fix / MCP</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#525252"></div>Supply Chain / Persist</div>
+  <div class="leg-sep"></div>
+  <div class="leg-section">Edges</div>
+  <div class="leg-item"><div class="leg-line-wrap"><div class="leg-line" style="background:#0f62fe"></div></div>Primary flow</div>
+  <div class="leg-item"><div class="leg-line-wrap"><div class="leg-line" style="background:#8a3ffc;background:repeating-linear-gradient(90deg,#8a3ffc 0,#8a3ffc 5px,transparent 5px,transparent 9px)"></div></div>Intelligence feed</div>
+  <div class="leg-item"><div class="leg-line-wrap"><div class="leg-line" style="background:repeating-linear-gradient(90deg,#525252 0,#525252 5px,transparent 5px,transparent 9px)"></div></div>Streaming persist</div>
+  <div class="leg-item"><div class="leg-line-wrap"><div class="leg-line" style="background:repeating-linear-gradient(90deg,#8a3ffc 0,#8a3ffc 7px,transparent 7px,transparent 13px)"></div></div>Rule feedback loop</div>
+  <div class="leg-sep"></div>
+  <div style="font-size:10px;color:#333;line-height:1.6">Click any node for<br/>full technical detail</div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tip">
+  <div class="tip-tag" id="tip-tag"></div>
+  <div class="tip-title" id="tip-title"></div>
+  <div class="tip-desc" id="tip-desc"></div>
+</div>
+
+<!-- SIDE PANEL -->
+<div id="pan">
+  <div class="pan-hdr">
+    <div>
+      <div class="pan-tag" id="pan-tag"></div>
+      <div class="pan-title" id="pan-title"></div>
+      <div class="pan-phase" id="pan-phase"></div>
+    </div>
+    <button class="pan-close" onclick="closePan()">✕</button>
+  </div>
+  <div class="pan-body" id="pan-body"></div>
+</div>
+
+<script src="https://unpkg.com/carbon-components@10/scripts/carbon-components.min.js"></script>
+<script>
+// ── PAN / ZOOM ──
+let sc = 0.55, tx = 260, ty = 20, drag = false, lx, ly;
+const wrap = document.getElementById('wrap');
+const cvs = document.getElementById('cvs');
+
+function applyT() {
+  cvs.style.transform = `translate(${tx}px,${ty}px) scale(${sc})`;
+  document.getElementById('zlbl').textContent = Math.round(sc*100)+'%';
+  updateMM();
+}
+wrap.addEventListener('mousedown', e => {
+  if (e.target.closest('.nd') || e.target.closest('#pan')) return;
+  drag = true; lx = e.clientX; ly = e.clientY; wrap.classList.add('drag');
+});
+window.addEventListener('mousemove', e => {
+  if (!drag) return;
+  tx += e.clientX - lx; ty += e.clientY - ly; lx = e.clientX; ly = e.clientY; applyT();
+});
+window.addEventListener('mouseup', () => { drag = false; wrap.classList.remove('drag'); });
+wrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = wrap.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  const f = e.deltaY < 0 ? 1.1 : 0.9;
+  const ns = Math.min(Math.max(sc * f, 0.1), 3);
+  tx = mx - (mx - tx) * (ns / sc); ty = my - (my - ty) * (ns / sc); sc = ns; applyT();
+}, {passive: false});
+function zoom(f) {
+  const cx = wrap.offsetWidth/2, cy = wrap.offsetHeight/2;
+  const ns = Math.min(Math.max(sc * f, 0.1), 3);
+  tx = cx - (cx - tx) * (ns/sc); ty = cy - (cy - ty) * (ns/sc); sc = ns; applyT();
+}
+function resetView() { sc = 0.55; tx = 260; ty = 20; applyT(); }
+function fitView() {
+  const W = wrap.offsetWidth, H = wrap.offsetHeight;
+  const ns = Math.min((W-60)/3600, (H-60)/2800);
+  sc = ns; tx = (W - 3600*ns)/2; ty = (H - 2800*ns)/2; applyT();
+}
+
+// ── MINIMAP ──
+function updateMM() {
+  const mm = document.getElementById('mm'), vp = document.getElementById('mm-vp');
+  const mmW = mm.offsetWidth - 2, mmH = mm.offsetHeight - 20;
+  const sx = mmW/3600, sy = mmH/2800;
+  const wW = wrap.offsetWidth, wH = wrap.offsetHeight;
+  const vpX = (-tx/sc)*sx, vpY = (-ty/sc)*sy;
+  const vpW = (wW/sc)*sx, vpH = (wH/sc)*sy;
+  vp.style.left = Math.max(0, vpX) + 'px';
+  vp.style.top = (20 + Math.max(0, vpY)) + 'px';
+  vp.style.width = Math.min(mmW, vpW) + 'px';
+  vp.style.height = Math.min(mmH, vpH) + 'px';
+}
+
+// ── NODE DATA ──
+const ND = {
+  'url': {
+    tag: 'ENTRY POINT · P0', tc: '#0f62fe',
+    title: 'URL / Repository Source',
+    phase: 'Phase 0 — Input resolution',
+    desc: 'Every scan starts here. Accepts three input modes: a git URL (HTTPS or SSH), a local directory path mounted as a volume in CI, or eventually a cloud API prefix (github:org/repo). The source resolver auto-detects the type and normalises it before Clone runs.',
+    items: ['HTTPS / SSH git URLs — public and private repos', 'Local dir /repo — CI volume mount, developer local scan', 'github:org/repo / gitlab:org/repo — cloud API fetch (post-PoC)', 'Branch selection via --branch flag (default: main)', 'Diff-only mode: --diff-only scans only changed files in PR'],
+    outputs: ['repoUrl (string)', 'branch (string)', 'userId (for PAT lookup)'],
+    timing: '< 1s — no processing at this stage',
+    note: null
+  },
+  'clone': {
+    tag: 'NODE · CLONE · P1', tc: '#0f62fe',
+    title: 'Clone',
+    phase: 'Phase 1 — Source resolution',
+    desc: 'Resolves the repository URL to a local directory on disk. For private repos, decrypts the stored GitHub/GitLab PAT from the org profile using AES-256-GCM and injects it into the clone URL. Source code never leaves the CI runner at this point.',
+    items: ['git clone --depth 1 --single-branch (fast, no unnecessary history)', 'git rev-parse HEAD to resolve exact commitSHA', 'AES-256-GCM PAT decryption from GithubProfile in DB', 'Creates /tmp/astra-scan-<cuid> with safety check before cleanup', 'Counts files in cloned directory for progress reporting', 'PAT never logged — clone URL with injected token is not printed'],
+    outputs: ['localDir (absolute temp path)', 'commitSha (git hash)', 'status → RUNNING'],
+    timing: '2–15s depending on repo size and network',
+    note: null
+  },
+  'repo-intel': {
+    tag: 'NODE · REPO INTEL · P2', tc: '#8a3ffc',
+    title: 'Diagram & Ingest (Repo Intel)',
+    phase: 'Phase 2 — Codebase intelligence',
+    desc: 'The foundation of the entire scan. Builds a SystemIntelReport from the cloned repo before any scanning starts. This is what makes Astra context-aware — a fintech payments API gets payment-specific scan focus, a healthcare app gets HIPAA-specific rules. Every downstream node receives this report as injected context.',
+    items: ['Walk directory tree (max 3 levels)', 'Read key files: package.json, go.mod, requirements.txt, README.md, .env.example, main entry points', 'Detect tech stack: languages, frameworks, DBs, external services (Stripe, Twilio, AWS S3)', 'Detect auth mechanism: JWT | sessions | OAuth2 | API keys | none', 'Build compact digest (~2K tokens) — Gitingest-style structured representation', 'One AI call → SystemIntelReport JSON: systemType, domain, authMechanism, entryPoints, criticalPaths, attackSurface, highValueTargets, scanFocus'],
+    outputs: ['SystemIntelReport (injected into ALL downstream nodes)', 'techStack', 'entryPoints[]', 'criticalPaths[]', 'highValueTargets[]', 'scanFocus (natural language instructions)'],
+    timing: '3–8s — one AI call, ~2K tokens input',
+    note: { type: 'info', text: 'SystemIntelReport is the single biggest quality multiplier in the pipeline. Without it, every scan is generic. With it, every scan knows it\'s reviewing a specific system with specific risks.' }
+  },
+  'rule-gen': {
+    tag: 'INTELLIGENCE · A', tc: '#8a3ffc',
+    title: 'Intelligent Rule Generation',
+    phase: 'Phase 3 — Intelligence layer (parallel)',
+    desc: 'Generates custom .astra security rules specific to THIS codebase and domain. Not generic OWASP rules — rules that understand the business context. A fintech app gets payment-specific rules. A healthcare app gets HIPAA-specific rules. These rules are injected into the deep_scan and cross_file prompts.',
+    items: ['Reads SystemIntelReport: domain, tech stack, auth mechanism', 'AI generates custom .astra rule files for this specific system', '"All /charge endpoints must verify Stripe webhook signature"', '"Amount must come from DB, not request body"', '"Admin operations require role === ADMIN verified against DB, not JWT payload"', 'Rules become part of deep_scan and cross_file AI system prompts', 'Also generates language-specific overlays: TypeScript vs Python vs Go rules differ'],
+    outputs: ['customRules[] (.astra format)', 'ruleContext (injected into AI system prompt for all scan nodes)'],
+    timing: 'Parallel with B and C — ~5–10s',
+    note: null
+  },
+  'critical-paths': {
+    tag: 'INTELLIGENCE · B', tc: '#8a3ffc',
+    title: 'Critical Paths & Failure Points',
+    phase: 'Phase 3 — Intelligence layer (parallel)',
+    desc: 'Maps the highest-value attack paths through the codebase. Tells deep_scan and cross_file which files, functions, and data flows are the most critical security boundaries. P0 files get full AI analysis; boilerplate gets lighter treatment.',
+    items: ['Auth flows: login → session → middleware → protected routes', 'Payment flows: price calculation → charge → webhook verification', 'Data flows: user input → DB query → response', 'Entry points: all public API routes ranked by exploitability', 'Trust boundaries: where untrusted data enters the system', 'Failure points: non-atomic operations, missing validation, shared state'],
+    outputs: ['criticalPaths[] (ordered by risk)', 'trustBoundaries[]', 'P0 files (highest priority — full deep analysis)', 'failurePoints[] (race conditions, non-atomic ops)'],
+    timing: 'Parallel with A and C',
+    note: null
+  },
+  'scan-scope': {
+    tag: 'INTELLIGENCE · C', tc: '#8a3ffc',
+    title: 'Scan Scope & Instruction Definition',
+    phase: 'Phase 3 — Intelligence layer (parallel)',
+    desc: 'Determines what gets scanned, in what order, with what depth, and with what AI instructions. Token budget is allocated per file based on risk tier. High-risk files get full deep analysis; boilerplate gets lighter or is skipped.',
+    items: ['Priority tiers: P0 (entry points) → P1 (auth) → P2 (biz logic) → P3 (config) → P4 (utils)', 'Token budget map: file → token allocation based on priority tier', 'Scan depth per node: quick / standard / deep / exhaustive (thinkingDepth)', 'Language-specific overlays injected into per-file prompts', 'Skip list: node_modules, dist, .git, generated files, test fixtures', 'AI-generated focus instructions: "pay particular attention to..."'],
+    outputs: ['PrioritizedFile[] with tier + language', 'tokenBudgetMap', 'scanInstructions (injected into deep_scan prompts)', 'skipList[]'],
+    timing: 'Parallel with A and B',
+    note: null
+  },
+  'scan-orch': {
+    tag: 'NODE · SCAN ORCHESTRATOR · P4', tc: '#0f62fe',
+    title: 'Scan Orchestrator',
+    phase: 'Phase 4 — Dispatch & routing',
+    desc: 'The central dispatcher. Receives the full SystemIntelReport and all three intelligence outputs, then conditionally routes work to the appropriate parallel scan tracks. Manages the worker pool concurrency across all tracks.',
+    items: ['Always routes: Tool Scan (Semgrep/Trivy) + Supply Chain', 'Conditional: IaC Scan — only if Terraform/Helm/K8s/Dockerfile found in repo', 'Conditional: Secrets Scan — always, but depth varies by secrets_risk flag', 'Worker pool: concurrency 4–8 depending on config', 'Each dispatched job carries: localDir + SystemIntelReport + nodeConfig', 'Monitors all track completion for JOIN gate before proceeding'],
+    outputs: ['2–4 parallel Job records dispatched', 'Each job: localDir + config + SystemIntelReport'],
+    timing: '< 1s — routing only',
+    note: null
+  },
+  'tool-scan': {
+    tag: 'PARALLEL TRACK A · DETERMINISTIC', tc: '#0f62fe',
+    title: 'Tool-Level Scan (Semgrep / Trivy)',
+    phase: 'Phase 5 — Parallel scanning',
+    desc: 'The fast deterministic layer. Pattern-based and CVE-database tools that run without AI. Low false-positive rate, excellent coverage of known vulnerability classes. The grounding layer that validates AI findings against hard rules — matching the VULSOLVER hybrid architecture that achieved 96.29% F1.',
+    items: ['Semgrep: 500+ curated SAST rules + custom .astra rules injected from Intelligence A', 'Trivy: CVE database scan for all dependency managers (npm, pip, go, cargo, maven, nuget)', 'Bandit: Python-specific SAST (complements Semgrep for Python codebases)', 'Bearer CI: data flow analysis, PII detection, OWASP API rules', 'SARIF output normalised to UnifiedFinding[]', 'Results: RawFinding[] → normalizer → UnifiedFinding[]'],
+    outputs: ['UnifiedFinding[] (category: SAST, SCA)', 'scanner: semgrep | trivy | bandit | bearer'],
+    timing: '20–60s depending on codebase size',
+    note: { type: 'info', text: 'Semgrep hybrid: the .astra rules from Intelligence A are injected as custom Semgrep rules, giving you deterministic checking of AI-inferred business rules — the best of both worlds.' }
+  },
+  'iac-scan': {
+    tag: 'PARALLEL TRACK B · IaC · CONDITIONAL', tc: '#f1c21b',
+    title: 'IaC Scan',
+    phase: 'Phase 5 — Parallel scanning (conditional)',
+    desc: 'Infrastructure-as-Code security scanning. Only spawned if SystemIntelReport detected IaC files during Repo Intel. Covers the full infrastructure surface: cloud config, container security, network exposure, IAM policies.',
+    items: ['Checkov: Terraform, CloudFormation, Helm, K8s, Dockerfile (1000+ checks)', 'IAM: overprivileged roles, * actions/resources, admin policies', 'Network: security groups open to 0.0.0.0/0, RDS publicly_accessible', 'Container: USER root, privileged: true, sensitive mounts, no resource limits', 'Kubernetes: securityContext, network policies, RBAC misconfigs', 'Conditional: only spawned if has_iac === true in SystemIntelReport'],
+    outputs: ['UnifiedFinding[] (category: IAC)', 'scanner: checkov | trivy-iac'],
+    timing: '10–30s · conditional execution only',
+    note: null
+  },
+  'secrets-scan': {
+    tag: 'PARALLEL TRACK C · SECRETS', tc: '#da1e28',
+    title: 'Secrets Scan',
+    phase: 'Phase 5 — Parallel scanning',
+    desc: 'The fastest track. Dedicated secrets and credential detection across both current code AND full git history. Finds API keys, passwords, private keys, and tokens that exist anywhere in the commit history — even if they were "removed" from HEAD.',
+    items: ['Gitleaks: full git history + current code (industry standard, 17K stars)', 'TruffleHog: high-entropy string detection + known service key patterns', 'Pattern coverage: AWS AKIA, Stripe sk_live_, GitHub ghp_, OpenAI sk-, JWT secrets', 'git history: finds secrets deleted from code that still live in commits', 'Service-specific: TWILIO_AUTH_TOKEN, SENDGRID_API_KEY, CLOUDINARY_URL, DATABASE_URL', 'All secrets findings are HIGH or CRITICAL — no exceptions'],
+    outputs: ['UnifiedFinding[] (category: SECRETS)', 'scanner: gitleaks | trufflehog'],
+    timing: '10–30s — git history scan can be large on old repos',
+    note: { type: 'crit', text: 'CRITICAL: removing a secret from code does NOT remove it from git history. Full history scan is mandatory. Any tool that only scans HEAD is incomplete.' }
+  },
+  'supply-chain': {
+    tag: 'PARALLEL TRACK D · SUPPLY CHAIN', tc: '#525252',
+    title: 'Supply Chain & SCA',
+    phase: 'Phase 5 — Parallel scanning',
+    desc: 'Reachability-aware software composition analysis. The critical insight from Endor Labs research: 95% of CVEs live in transitive dependencies, and most are unreachable. Reachability eliminates 80% of false-positive SCA alerts.',
+    items: ['Reachability analysis: is this vulnerable package actually called from application code?', 'Malicious package detection: typosquatting, post-install scripts, obfuscated code, dependency confusion', 'SBOM generation: SPDX + CycloneDX format saved to S3', 'Unpinned deps: ^ or * version ranges that allow silent malicious updates', 'GitHub Actions pinning: detect unpinned Actions (trivy-action compromised twice March 2026)', 'Supply chain attack patterns: Shai-Hulud npm worm class (Sep 2025 — 500+ packages)'],
+    outputs: ['UnifiedFinding[] (category: SCA)', 'SBOM artifact (S3 stored)', 'reachabilityMap'],
+    timing: '15–45s',
+    note: { type: 'warn', text: 'Market signal: trivy-action GitHub Action was retroactively compromised across 76/77 release tags in March 2026. Always pin Actions to commit SHAs.' }
+  },
+  'deep-scan': {
+    tag: 'NODE · AI DEEP SCAN · P6', tc: '#009d9a',
+    title: 'Deep Scan',
+    phase: 'Phase 6 — Per-file AI analysis',
+    desc: 'The core AI scanning engine. Every file in the PrioritizedFile[] list is sent to the AI with the full SystemIntelReport as context. The AI acts as a senior security engineer who already knows what this system does — not a generic scanner. Validated by VULSOLVER research: hybrid deterministic+LLM achieves 96.29% accuracy, 100% recall on OWASP Benchmark.',
+    items: ['Context-aware: prompt includes "this is a Stripe payments API with JWT auth where isAdmin is stored in payload"', 'Per-file analysis: file content → AI prompt (role + guidelines + patterns + custom rules + SystemIntelReport)', 'Batch processing: concurrency 5 (configurable), each batch streams findings to PostgreSQL immediately', 'Large files chunked by function/class boundary, each chunk gets file header context (imports, types)', 'FileSummary generated per file: purpose, exports, dependencies, riskAreas (for cross_file)', 'Streaming persist: findings visible in dashboard as each batch completes — not at scan end', 'Retry with exponential backoff: maxRetries × retryBackoffMs × 2^attempt'],
+    outputs: ['UnifiedFinding[] (scanner: ai-deep-scan)', 'FileSummary[] (internal — passed to cluster_summaries)', 'tokenUsage accumulated in ScanState'],
+    timing: '2–10 minutes depending on repo size and model',
+    note: { type: 'crit', text: 'Known gap fixed: findings now written per-batch (streaming persist), not all at end. A 10-minute scan no longer loses everything on persist failure.' }
+  },
+  'cluster-summaries': {
+    tag: 'NODE · CLUSTER SUMMARIES · P7', tc: '#009d9a',
+    title: 'Cluster Summaries',
+    phase: 'Phase 7 — Pre-aggregation (no AI)',
+    desc: 'Pure data processing — no AI call. Groups the FileSummary[] output from deep_scan into domain-specific clusters before cross-file analysis. This solves the context window bomb: instead of dumping all 200 file summaries into one prompt, each cross_file call gets a focused, bounded context.',
+    items: ['Groups FileSummary[] by domain using heuristic matching (fast, no AI)', 'auth cluster: files matching /auth/, /middleware/, *jwt*, *permission*, *session*', 'payments cluster: files matching /payment*, /stripe*, /billing*, /charge*', 'API cluster: files matching /route*, /controller*, /handler*, server.ts', 'config cluster: .env, config.*, migrations/, schema.*', 'data cluster: /model*, /repo*, /db*, /service*', 'Remaining cluster: everything else (P4 files)', 'Each cluster stays under the cross_file token budget'],
+    outputs: ['ClusterMap: domain → FileSummary[]', 'N cluster jobs dispatched (one per domain)'],
+    timing: '< 5s — no AI, pure heuristic matching',
+    note: { type: 'info', text: 'This is the fix for the "context window bomb" — the biggest known gap from the LangGraph pipeline review. Each cross_file call now has focused, bounded context instead of all summaries in one giant prompt.' }
+  },
+  'cross-per': {
+    tag: 'NODE · CROSS FILE PER CLUSTER', tc: '#24a148',
+    title: 'Cross File (Per Domain Cluster)',
+    phase: 'Phase 8 — Domain-scoped cross-file analysis',
+    desc: 'AI reasons about security invariants within a single domain cluster. Focused context — bounded by the cluster — means the model can reason accurately without context overflow. Runs once per cluster in parallel.',
+    items: ['Auth cluster: "auth middleware is defined in middleware/rbac.ts but not applied to POST /admin/users"', 'Payments cluster: "amount comes from req.body in payments.ts, not fetched from DB — price manipulation risk"', 'API cluster: "GET /api/invoices/:id has no ownership check — IDOR vulnerability"', 'Each cluster gets its own AI call with focused context', 'Finds IDOR, missing auth middleware, broken access control, trust boundary violations', 'Produces: cross-file UnifiedFinding[] + BusinessLogicRule[] CANDIDATES for this cluster'],
+    outputs: ['UnifiedFinding[] (scanner: business-logic — per cluster)', 'BusinessLogicRule[] CANDIDATES (per cluster)'],
+    timing: '30–60s per cluster · clusters run in parallel',
+    note: null
+  },
+  'cross-global': {
+    tag: 'NODE · CROSS FILE GLOBAL · P9', tc: '#24a148',
+    title: 'Cross File Global',
+    phase: 'Phase 9 — System-wide architectural analysis',
+    desc: 'The final AI cross-file pass. Reasons across cluster-level summaries — not raw code — to find system-wide architectural security flaws. This is the highest-level analysis: patterns that cross domain boundaries, data flows between services, system-wide invariant violations.',
+    items: ['Input: cluster summaries (compact, ~5–15K tokens) not raw FileSummary[]', 'Race conditions spanning multiple services (TOCTOU across cluster boundaries)', 'Privilege escalation paths that cross multiple domains', 'Data flow violations: user input from API cluster reaching DB query in data cluster without sanitization', 'Workflow bypass: skipping required steps in multi-step flows', 'State machine violations: invalid state transitions across service boundaries', 'Trust boundary violations: client-controlled data reaching privileged operations'],
+    outputs: ['UnifiedFinding[] (scanner: business-logic-global)', 'BusinessLogicRule[] CANDIDATES (system-wide)'],
+    timing: '30–90s — one large context call',
+    note: { type: 'info', text: 'This is where IDOR bugs like the McDonald\'s 64M application exposure get caught. Traditional SAST detection rate for this class: near zero.' }
+  },
+  'rule-engine': {
+    tag: 'NODE · RULE ENGINE · RILE · P10', tc: '#8a3ffc',
+    title: 'Rile — Rule Engine',
+    phase: 'Phase 10 — Business logic rule inference',
+    desc: 'Infers reusable business logic security rules from what was observed across all scans. These CANDIDATE rules are stored and sent to the Sec Ops workspace for human confirmation. Once confirmed, they become permanent enforcement rules injected into future scans. This is the long-term learning loop.',
+    items: ['Aggregates BusinessLogicRule[] CANDIDATES from all cluster passes and cross_file_global', 'Deduplicates rules: merge similar rules with confidence weighting', 'Assigns CANDIDATE status with confidence score 0.0–1.0 and evidenceFiles[]', 'Stores in biz_logic_rules PostgreSQL table', 'Dispatches to Human Review Queue in Sec Ops workspace', 'Feedback loop: CONFIRMED rules are distributed to future scans via token validation response', 'CONFIRMED rules injected into Scan Orchestrator prompt: "In future scans, enforce these rules..."'],
+    outputs: ['BusinessLogicRule[] (status: CANDIDATE)', 'Written to biz_logic_rules table', 'Notification to Sec Ops review queue'],
+    timing: '20–40s',
+    note: { type: 'info', text: 'The data moat: each org\'s confirmed rules make Astra smarter for that org\'s codebase. This is the Semgrep Assistant Memories equivalent — an org-specific learning layer that incumbents cannot replicate retroactively.' }
+  },
+  'triage': {
+    tag: 'NODE · TRIAGE · P11', tc: '#0f62fe',
+    title: 'Triage',
+    phase: 'Phase 11 — Conditional routing',
+    desc: 'Pure logic node — no AI. Counts CRITICAL findings across all tracks and routes conditionally. If CRITICAL findings exist, dispatches enrich_critical before finalize. Always dispatches finalize. This is the conditional edge in the DAG.',
+    items: ['Count CRITICAL findings from all tracks and cross_file passes', 'If CRITICAL > 0: dispatch enrich_critical (parallel to continue to finalize)', 'Always: dispatch finalize (never blocked by enrich_critical)', 'Configurable threshold: can be set to HIGH instead of CRITICAL', 'Fast: no I/O, no AI, just counting and routing decisions'],
+    outputs: ['Conditional: enrich_critical job (if CRITICAL > 0)', 'Always: finalize job'],
+    timing: '< 1s',
+    note: null
+  },
+  'enrich-critical': {
+    tag: 'NODE · ENRICH CRITICAL · CONDITIONAL', tc: '#da1e28',
+    title: 'Enrich Critical',
+    phase: 'Phase 11b — Deep dive on critical findings (conditional)',
+    desc: 'A second targeted AI pass on CRITICAL findings only. Re-reads the specific files involved with full context, confirms or dismisses the finding, expands the exploitation scenario, and generates concrete remediation steps. Reduces false positives on the most impactful findings.',
+    items: ['Takes CRITICAL UnifiedFinding[] from all previous nodes', 'Re-reads the specific files referenced in each finding (full file content, not summary)', 'AI evaluates: is this a true positive? What is the full exploit scenario?', 'Generates concrete: CVSSv3 score, exploit steps, impact, remediation', 'Dismisses false positives: finding confidence drops below threshold → mark INFO', 'Expands true positives: additional affected files, broader attack surface', 'Output: enriched UnifiedFinding[] with higher confidence and detail'],
+    outputs: ['Enriched UnifiedFinding[] (updated ai_explanation, ai_fix, exploitScore, confidence)', 'FalsePositive[] (findings dismissed by second pass)'],
+    timing: '1–3 minutes — runs in parallel with finalize start',
+    note: { type: 'crit', text: 'This is the node that catches what ZeroPath calls "intimidatingly good" analysis. Re-reading the actual files with full context dramatically reduces the 78% false-positive rate that pure-LLM IDOR detection suffers from.' }
+  },
+  'finalize': {
+    tag: 'NODE · FINALIZE · P12', tc: '#525252',
+    title: 'Aggregate & Finalize',
+    phase: 'Phase 12 — Normalisation, dedup, emit',
+    desc: 'The final stage in the customer environment. Collects all findings from all tracks (including enrich_critical if it completed), deduplicates, normalises severity, sorts, filters, and emits the final payload to the Control Plane.',
+    items: ['Wait for enrich_critical to complete (or timeout after maxWait)', 'Collect: tool-scan findings + secrets findings + IaC findings + deep_scan findings + cross_file findings + enriched findings', 'SHA-256 dedup: fingerprint = SHA256(scanner + ruleId + file + lineStart)', 'Severity normalisation: consistent enum across all scanners', 'Sort: CRITICAL → HIGH → MEDIUM → LOW → INFO', 'Filter: by configured severity threshold (--fail-on flag)', 'HTTPS POST gzip-JSON → Control Plane /api/v1/scans with Bearer token', 'Exit codes: 0 (clean) · 1 (findings above threshold, CI fails) · 2 (infrastructure error)'],
+    outputs: ['allFindings[]', 'deduplicatedFindings[]', 'scan status → COMPLETED', 'HTTPS POST to /api/v1/scans → Control Plane'],
+    timing: '5–15s',
+    note: null
+  },
+  'autofix': {
+    tag: 'AGENTIC AUTO-FIX · MCP', tc: '#ff832b',
+    title: 'Agentic Auto-Fix Engine',
+    phase: 'Post-scan — Automated remediation',
+    desc: 'Triggered from the dashboard or automatically for HIGH/CRITICAL findings. AI generates a fix, validates it (no syntax errors, no new patterns broken), and opens a draft PR for human review. Never auto-merges. The Pixee-class "humans approve every change" model.',
+    items: ['Classify fix type: simple (single-file), complex (multi-file), business-logic (needs human input)', 'Fetch full file context for affected files (not just snippet)', 'AI generates fix using full context + UnifiedFinding + ai_fix seed', 'Validate: parse AST, check for syntax errors, verify no existing tests broken', 'Generate minimal unified diff preserving code style', 'Create branch: astra/fix-{fingerprint-short}', 'Commit: "security: fix {title} [{severity}]" — co-authored-by: Astra Security', 'Open draft PR with AI explanation, remediation notes, dashboard link', 'Request review from finding assignee or CODEOWNERS'],
+    outputs: ['Draft PR on GitHub/GitLab', 'Branch: astra/fix-{fingerprint}', 'On approve → finding auto-marked FIXED → Jira closed → SLA satisfied'],
+    timing: '30–120s per fix',
+    note: { type: 'warn', text: 'Design constraint: never auto-merge. The Pixee model is correct. Human approval is mandatory. This is especially important for business-logic fixes where AI may not fully understand the intended behaviour.' }
+  },
+  'mcp': {
+    tag: 'MCP SERVER · AI AGENT LAYER', tc: '#ff832b',
+    title: 'MCP / AI Agent Integration',
+    phase: 'Continuous — AI coding agent governance',
+    desc: 'Astra as the security policy enforcement layer for AI coding agents. Claude Code, Cursor, Copilot, Codex, Devin, and other agents call Astra\'s MCP server before committing code. Policy violations are blocked before they become findings.',
+    items: ['check_policy(code) — does this code violate any confirmed business logic rules?', 'scan_file(path) — real-time per-file scan with findings returned in < 60s', 'get_findings(repo) — existing open findings for context', 'verify_fix(diff) — confirm that a proposed fix actually resolves the finding', 'get_business_rules(repo) — retrieve confirmed rules as agent context', 'First SAST vendor with MCP server: Mend.io launched this pattern — Astra copies and extends it', 'Endor Labs AURI architecture: "verifiable evidence — data flow, call paths, reachability — for every finding"'],
+    outputs: ['Tool results: policy violation | clean | findings[]', 'Agent blocks commit on violation', 'Agent gets context: what rules apply to this codebase'],
+    timing: 'Real-time — < 60s per scan_file call',
+    note: { type: 'info', text: 'Forward moat: as Claude Code, Cursor, Devin become the primary code writers, Astra becomes the mandatory security gate they must pass through. Every AI-generated PR is checked before merge.' }
+  },
+  'cp-ingest': {
+    tag: 'CP · INGEST MODULE', tc: '#8a3ffc',
+    title: 'Validate & Ingest',
+    phase: 'Control Plane — Receipt and deduplication',
+    desc: 'The first node in the Control Plane. Receives the gzip-compressed findings payload from the data plane, validates the scan token, decompresses, parses, and runs deduplication against the existing findings database.',
+    items: ['Validate Bearer token: SHA-256 hash lookup in scan_tokens table', 'Org ownership check: does this token own this repo?', 'Rate limit check: per-token ingest rate', 'Decompress gzip: parse UnifiedFinding[] + BusinessLogicRule[]', 'DEDUP: fingerprint lookup in Redis cache (TTL 30 days)', 'New finding: INSERT with status NEW, first_seen = now()', 'Existing finding: UPDATE last_seen, occurrence_count++, scan_id updated', 'Create scan record: branch, commitSha, duration, scanners_run, finding_counts{}'],
+    outputs: ['Findings written to PostgreSQL', 'Redis dedup cache updated', 'Payload archived to S3 (90-day retention)', 'Scan record created'],
+    timing: '2–10s depending on finding count',
+    note: null
+  },
+  'cp-policy': {
+    tag: 'CP · POLICY ENGINE', tc: '#8a3ffc',
+    title: 'Policy & SLA Engine',
+    phase: 'Control Plane — Routing and SLA',
+    desc: 'Matches each finding against configured policy rules and starts SLA timers. Routes findings to the appropriate integration actions. Policy rules are evaluated in priority order — first match wins.',
+    items: ['Condition matching: severity · category · scanner · file_pattern · language · exploit_score', 'SLA timers: CRITICAL 24h · HIGH 72h · MEDIUM 14d · LOW 30d (configurable)', 'Actions: create_jira · notify_slack · page_pagerduty · post_webhook · fail_scan · merge_block', 'Org-wide rules + repo-specific rule overrides', 'Allowlist: fingerprints marked as accepted_risk are skipped', 'SLA breach monitoring: background job every 15min, escalate on breach', 'PR merge blocking: update GitHub commit status check to fail'],
+    outputs: ['SLA deadline set on each finding', 'Integration actions dispatched', 'Redis SSE event published (live dashboard update)'],
+    timing: '< 1s per finding — synchronous matching',
+    note: null
+  },
+  'cp-ai-triage': {
+    tag: 'CP · AI TRIAGE · HYBRID', tc: '#0f62fe',
+    title: 'AI Exploit Scoring & Triage',
+    phase: 'Control Plane — AI-assisted triage',
+    desc: 'The control plane AI pass. Separate from scan-side AI — this runs on the normalised findings after dedup, with access to historical org data. Implements the Semgrep Assistant Memories pattern: org triage decisions accumulate into a learned model.',
+    items: ['exploit_score: 0.0–10.0 based on reachability, auth required, known exploit patterns', 'Hybrid deterministic+LLM: Semgrep-style AST grounding + frontier model reasoning (VULSOLVER architecture)', 'Semgrep Assistant Memories equivalent: ~20% triage automation from org history, growing over time', 'Learned rules: org\'s past triage decisions train finding-specific models', 'Priority reranking: exploit_score × severity × asset_criticality → final priority order', 'Auto-dismiss: findings below confidence threshold with justification logged'],
+    outputs: ['exploit_score populated on each finding', 'priority_rank assigned', 'auto_dismissed[] findings (with justification)', 'Org memory updated with triage decision'],
+    timing: '5–30s depending on finding count',
+    note: { type: 'info', text: 'This is the "memory moat" — each org\'s triage history makes Astra smarter specifically for that org. Incumbents cannot replicate this retroactively.' }
+  },
+  'cp-biz-queue': {
+    tag: 'CP · BUSINESS LOGIC QUEUE', tc: '#8a3ffc',
+    title: 'Business Logic Rule Store',
+    phase: 'Control Plane — Rule management',
+    desc: 'Receives CANDIDATE BusinessLogicRule[] from the scan payload, stores them in PostgreSQL, and notifies the Sec Ops workspace human review queue.',
+    items: ['Receive CANDIDATE rules from finalize payload', 'Deduplicate rules: same rule_text + same org = update confidence, not create new', 'Prioritise by confidence score for review queue ordering', 'Store evidenceFiles[] for security team context', 'Notify Sec Ops workspace via SSE event and email digest'],
+    outputs: ['BusinessLogicRule[] written to biz_logic_rules table', 'Sec Ops review queue updated', 'Email notification sent'],
+    timing: '< 1s',
+    note: null
+  },
+  'cp-human-review': {
+    tag: 'CP · HUMAN REVIEW · Sec Ops', tc: '#8a3ffc',
+    title: 'Human Rule Confirmation',
+    phase: 'Control Plane — Security team review',
+    desc: 'The Sec Ops workspace interface where the security team reviews AI-inferred business logic rules. Confirm, edit, or reject each CANDIDATE rule. Confirmed rules become permanent enforcement rules for all future scans of this codebase.',
+    items: ['Review queue: CANDIDATE rules ordered by confidence score', 'Confirm: rule_text accepted as-is, status → CONFIRMED', 'Edit: security engineer refines rule text, confidence reset to 1.0', 'Reject: rule dismissed as false positive, status → REJECTED', 'Evidence: click evidenceFiles[] to see the code that led to this rule inference', 'Confirmed rules immediately distributed to future scans via token validation response'],
+    outputs: ['BusinessLogicRule status → CONFIRMED | REJECTED', 'CONFIRMED rules → distributed to Scan Orchestrator prompts'],
+    timing: 'Human-driven — async',
+    note: null
+  },
+  'cp-rules-db': {
+    tag: 'CP · CONFIRMED RULES · PostgreSQL', tc: '#24a148',
+    title: 'Confirmed Rules Store',
+    phase: 'Control Plane — Rule persistence and distribution',
+    desc: 'Stores CONFIRMED business logic rules and distributes them to the data plane. CONFIRMED rules are included in the response to GET /api/v1/auth/validate-token — the data plane receives them at scan start and injects them into every AI prompt.',
+    items: ['Confirmed rules stored in biz_logic_rules table with status CONFIRMED', 'Distributed via token validation response: GET /api/v1/auth/validate-token returns confirmed rules', 'Data plane receives rules at scan start → injected into scan prompt', 'Violation in future scan → BusinessLogicFinding with reference to confirmed rule', 'Rule versioning: edit history tracked, old violations linked to rule version that caught them'],
+    outputs: ['Rules distributed via token validation response', 'Future scans enforce rules automatically'],
+    timing: 'Persistent — rules live indefinitely until rejected',
+    note: null
+  },
+  'cp-integrations': {
+    tag: 'CP · INTEGRATIONS MODULE', tc: '#525252',
+    title: 'Integrations Module',
+    phase: 'Control Plane — External system routing',
+    desc: 'Routes finding events to all configured external systems. Each integration is a Go/TypeScript interface implementation with retry logic and delivery guarantees.',
+    items: ['Jira: auto-tickets via REST API v3, severity→priority map (CRITICAL→P1), bi-directional status sync', 'Slack: Blocks API messages with severity badge, AI explanation excerpt, dashboard link, digest mode', 'PagerDuty: Events API v2 for CRITICAL, auto-resolve incident when finding → FIXED', 'GitHub/GitLab: PR inline comments, commit status check pass/fail, merge blocking', 'Webhooks: HMAC-SHA256 signed POST to customer URL, 3× retry with exponential backoff', 'Email: weekly digest, SLA breach alerts to assignee + admins, PDF executive report delivery', 'SARIF: GitHub Code Scanning standard, Azure DevOps, other tooling', 'MCP Server: AI agent policy enforcement layer', 'SSO/IdP: Okta, Azure AD, Google — SAML + OIDC'],
+    outputs: ['Jira issue keys stored on findings', 'Slack messages posted', 'PagerDuty incidents created', 'PR comments + status checks posted', 'Webhook deliveries with signature'],
+    timing: '1–5s per integration call',
+    note: null
+  },
+  'cp-dashboard-api': {
+    tag: 'CP · DASHBOARD API', tc: '#0f62fe',
+    title: 'Dashboard API',
+    phase: 'Control Plane — API surface',
+    desc: 'The full API surface for the React SPA. REST v1 for all data operations, WebSocket for live finding updates, GraphQL for Enterprise flexible querying.',
+    items: ['REST v1: all CRUD operations for findings, scans, policies, tokens, orgs', 'WebSocket: live scan progress, real-time finding appearance as batches complete', 'SSE stream: /api/v1/scans/:id/progress — per-node progress events', 'GraphQL (Enterprise): flexible querying for custom reports and dashboards', 'OpenAPI 3.0 spec auto-generated: /api/docs', 'Redis pub/sub: finding events published → WebSocket + SSE consumed by dashboard', 'POST /api/v1/scans/:id/resume — resume failed scan from next uncompleted node', 'POST /api/v1/scans/:id/rerun-node — re-run specific node'],
+    outputs: ['JSON API responses', 'WebSocket events', 'SSE progress stream'],
+    timing: '< 50ms p99 for most endpoints',
+    note: null
+  },
+  'cp-dashboard': {
+    tag: 'CP · REACT SPA · 3 WORKSPACES', tc: '#0f62fe',
+    title: 'Dashboard',
+    phase: 'Control Plane — User interface',
+    desc: 'Three role-specific workspaces for the three personas: CISO/leadership, engineering teams, and security operations.',
+    items: ['Executive: org risk score 0–100, compliance posture (OWASP/CWE/SOC2/PCI/HIPAA), trend charts 90 days, SLA breach summary, PDF reports', 'Engineering: per-repo finding list, filter by severity/category/scanner/state, code snippet + AI explanation + ai_fix, PR scan results delta, suppress/override', 'Sec Ops: assignment, SLA tracker with breach countdown, Jira lifecycle, policy rule builder (no-code), business logic rule review queue, scan token manager, audit log', 'Real-time: findings appear as deep_scan batches complete (streaming persist)', 'Business logic queue: Confirm/Edit/Reject CANDIDATE rules with evidence'],
+    outputs: ['REST/WebSocket consumption from Dashboard API'],
+    timing: 'Real-time via SSE/WebSocket',
+    note: null
+  },
+  'cp-storage': {
+    tag: 'CP · STORAGE LAYER', tc: '#525252',
+    title: 'Storage Layer',
+    phase: 'Control Plane — Persistence',
+    desc: 'Three-tier storage architecture: PostgreSQL for relational data and source of truth, Redis for ephemeral and real-time, S3/MinIO for large objects.',
+    items: ['PostgreSQL 16: findings, scans, jobs, biz_logic_rules, policies, scan_tokens, users, orgs, ai_call_logs, audit_log', 'Redis 7: dedup cache (fingerprint→finding_id, TTL 30d), job queue (BullMQ), SSE pub/sub, session store, rate limit counters', 'S3/MinIO: scan artifacts (raw scanner JSON), gzip payload archive (90d), PDF reports, SBOM exports (SPDX/CycloneDX)', 'ai_call_logs: every AI provider call logged with full request+response JSON for observability', 'audit_log: all user actions with before/after diff for compliance'],
+    outputs: ['All data persisted with appropriate retention policies'],
+    timing: 'Synchronous writes on critical paths',
+    note: null
+  }
+};
+
+// ── HOVER TOOLTIP ──
+document.querySelectorAll('.nd').forEach(nd => {
+  nd.addEventListener('mouseenter', e => {
+    const id = nd.dataset.id;
+    const d = ND[id]; if (!d) return;
+    const tip = document.getElementById('tip');
+    document.getElementById('tip-tag').textContent = d.tag;
+    document.getElementById('tip-title').textContent = d.title;
+    document.getElementById('tip-desc').textContent = d.desc.substring(0, 120) + '…';
+    tip.style.borderLeftColor = d.tc;
+    const r = nd.getBoundingClientRect();
+    tip.style.left = (r.right + 10) + 'px';
+    tip.style.top = Math.min(r.top, window.innerHeight - 200) + 'px';
+    tip.classList.add('vis');
+  });
+  nd.addEventListener('mouseleave', () => document.getElementById('tip').classList.remove('vis'));
+});
+
+// ── SIDE PANEL ──
+let selNode = null;
+function openPanel(id) {
+  const d = ND[id]; if (!d) return;
+  if (selNode) { const prev = document.querySelector(`[data-id="${selNode}"] rect:nth-child(2)`); if (prev) prev.setAttribute('stroke-width', prev.dataset.ow || '1.5'); }
+  selNode = id;
+  const nr = document.querySelector(`[data-id="${id}"] rect:nth-child(2)`);
+  if (nr) { nr.dataset.ow = nr.getAttribute('stroke-width'); nr.setAttribute('stroke-width', '3'); }
+
+  const tag = document.getElementById('pan-tag');
+  tag.textContent = d.tag; tag.style.color = d.tc; tag.style.background = d.tc + '18'; tag.style.borderLeftColor = d.tc;
+  document.getElementById('pan-title').textContent = d.title;
+  document.getElementById('pan-phase').textContent = d.phase;
+
+  let html = `
+    <div class="pan-sec"><div class="pan-sec-ttl">Description</div><div class="pan-desc">${d.desc}</div></div>
+    <div class="pan-hr"></div>
+    <div class="pan-sec"><div class="pan-sec-ttl">What this node does</div><div class="pan-items">${d.items.map(i => `<div class="pan-item">${i}</div>`).join('')}</div></div>
+    <div class="pan-hr"></div>
+    <div class="pan-sec"><div class="pan-sec-ttl">Outputs → next node</div><div class="pan-outputs">${d.outputs.map(o => `<span class="pan-out">${o}</span>`).join('')}</div></div>
+    <div class="pan-hr"></div>
+    <div class="pan-sec"><div class="pan-sec-ttl">Timing</div><div class="pan-timing">${d.timing}</div></div>`;
+
+  if (d.note) {
+    const cls = d.note.type === 'crit' ? 'crit' : d.note.type === 'warn' ? 'warn' : 'info';
+    const clr = cls === 'crit' ? '#da1e28' : cls === 'warn' ? '#f1c21b' : '#78a9ff';
+    html += `<div class="pan-hr"></div><div class="pan-note ${cls}" style="border-left-color:${clr}">${d.note.text}</div>`;
+  }
+
+  document.getElementById('pan-body').innerHTML = html;
+  document.getElementById('pan').classList.add('open');
+}
+function closePan() {
+  document.getElementById('pan').classList.remove('open');
+  if (selNode) { const nr = document.querySelector(`[data-id="${selNode}"] rect:nth-child(2)`); if (nr) nr.setAttribute('stroke-width', nr.dataset.ow || '1.5'); selNode = null; }
+}
+
+function toggleLeg() {
+  const l = document.getElementById('leg'), b = document.getElementById('btn-leg');
+  const hidden = l.style.display === 'none';
+  l.style.display = hidden ? 'block' : 'none';
+  b.classList.toggle('on', hidden);
+}
+
+// ── PULSE ANIMATION ──
+const pr = document.querySelector('.pulse-ring');
+if (pr) { let r = 8, g = true; setInterval(() => { if (g) { r += 0.15; if (r > 14) g = false; } else { r -= 0.15; if (r < 8) g = true; } pr.setAttribute('r', r); pr.setAttribute('opacity', 0.4 - (r-8)/6*0.35); }, 30); }
+
+applyT();
+setTimeout(updateMM, 50);
+</script>
+</body>
+</html>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Astra — Competitive Intelligence Report 2026</title>
+<link rel="stylesheet" href="https://unpkg.com/carbon-components@10/css/carbon-components.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+body{background:#f4f4f4;min-height:100vh}
+.bx--header{background:#161616;border-bottom:1px solid #393939;position:sticky;top:0;z-index:200}
+.bx--header__name{color:#fff;font-weight:300}
+.bx--header__name em{font-style:normal;color:#0f62fe}
+.bx--header-nav-item__link{color:#c6c6c6;font-size:14px}
+.bx--header-nav-item--active .bx--header-nav-item__link,
+.bx--header-nav-item__link:hover{color:#fff;border-bottom-color:#0f62fe}
+
+/* hero */
+.hero{background:#161616;padding:80px 32px 64px;border-bottom:3px solid #0f62fe}
+.hero-eye{font-size:12px;font-weight:600;color:#0f62fe;letter-spacing:.8px;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hero-eye::before{content:'';width:20px;height:1px;background:#0f62fe;display:inline-block}
+.hero-h1{font-size:clamp(36px,5vw,64px);font-weight:300;color:#fff;line-height:1.1;letter-spacing:-.5px;margin-bottom:20px}
+.hero-h1 em{font-style:normal;color:#0f62fe}
+.hero-sub{font-size:16px;color:#a8a8a8;max-width:740px;line-height:1.7;margin-bottom:48px}
+.hero-kpis{display:flex;flex-wrap:wrap;border-top:1px solid #393939}
+.kpi{padding:24px 40px 24px 0;margin-right:40px;border-right:1px solid #393939}
+.kpi:last-child{border-right:none}
+.kpi-num{font-size:44px;font-weight:300;color:#fff;line-height:1;margin-bottom:6px}
+.kpi-num em{color:#0f62fe;font-style:normal}
+.kpi-label{font-size:12px;color:#8d8d8d;letter-spacing:.16px;max-width:160px;line-height:1.4}
+
+/* sections */
+.sec{padding:48px 32px;border-bottom:1px solid #e0e0e0;background:#fff}
+.sec.alt{background:#f4f4f4}
+.sec.dark{background:#161616}
+.sec-eye{font-size:12px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#8d8d8d;margin-bottom:6px}
+.sec-title{font-size:32px;font-weight:300;color:#161616;margin-bottom:8px}
+.sec.dark .sec-title{color:#fff}
+.sec-sub{font-size:14px;color:#525252;max-width:700px;line-height:1.6;margin-bottom:0}
+.sec.dark .sec-sub{color:#a8a8a8}
+
+/* tabs */
+.tabs-bar{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 32px;display:flex;overflow-x:auto}
+.tab-btn{font-size:14px;color:#525252;padding:16px 20px;cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;white-space:nowrap;transition:all .15s;font-family:inherit}
+.tab-btn:hover{color:#161616}
+.tab-btn.on{color:#161616;border-bottom-color:#0f62fe;font-weight:600}
+.tab-pane{display:none;background:#fff}
+.tab-pane.on{display:block}
+
+/* competitor cards */
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1px;background:#e0e0e0}
+.comp-card{background:#fff;padding:24px;border-top:3px solid #e0e0e0;transition:border-color .2s}
+.comp-card:hover{border-top-color:#0f62fe}
+.comp-card.threat{border-top-color:#da1e28}
+.comp-card.caution{border-top-color:#f1c21b}
+.comp-card.safe{border-top-color:#24a148}
+.comp-card.purple{border-top-color:#8a3ffc}
+.comp-name{font-size:18px;font-weight:600;color:#161616;margin-bottom:2px}
+.comp-cat{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8d8d8d;margin-bottom:14px;letter-spacing:.2px}
+.comp-funding{font-size:13px;font-weight:600;color:#0f62fe;margin-bottom:6px}
+.comp-price{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#525252;background:#f4f4f4;padding:4px 10px;display:inline-block;margin-bottom:12px}
+.comp-desc{font-size:13px;color:#525252;line-height:1.6;margin-bottom:10px}
+.comp-weak{font-size:12px;color:#da1e28;display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+.comp-weak::before{content:'↘';font-size:11px;flex-shrink:0;margin-top:1px;font-family:'IBM Plex Mono',monospace}
+.pill{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
+.pill-red{background:#da1e28;color:#fff}
+.pill-yellow{background:#f1c21b;color:#161616}
+.pill-green{background:#24a148;color:#fff}
+.pill-purple{background:#8a3ffc;color:#fff}
+.pill-blue{background:#0f62fe;color:#fff}
+
+/* gap rows */
+.gap-list{border:1px solid #e0e0e0;background:#e0e0e0;display:flex;flex-direction:column;gap:1px;margin-top:24px}
+.gap-row{background:#fff;display:grid;grid-template-columns:56px 1fr;align-items:start}
+.gap-row.header{background:#f4f4f4}
+.gap-num-cell{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;color:#0f62fe;padding:20px 16px;border-right:1px solid #e0e0e0;display:flex;align-items:flex-start;justify-content:center;min-height:100%}
+.gap-content{padding:16px 20px}
+.gap-title{font-size:14px;font-weight:600;color:#161616;margin-bottom:6px}
+.gap-desc{font-size:13px;color:#525252;line-height:1.55}
+.gap-astra{font-size:13px;color:#0f62fe;margin-top:8px;font-weight:600}
+
+/* pricing table */
+.price-wrap{overflow-x:auto;margin-top:24px}
+.price-table{width:100%;border-collapse:collapse;background:#fff;min-width:700px}
+.price-table th{background:#f4f4f4;text-align:left;font-size:11px;font-weight:600;color:#8d8d8d;letter-spacing:.4px;text-transform:uppercase;padding:12px 16px;border-bottom:1px solid #e0e0e0;border-right:1px solid #e0e0e0}
+.price-table th:last-child{border-right:none}
+.price-table td{padding:12px 16px;font-size:13px;border-bottom:1px solid #f4f4f4;border-right:1px solid #e0e0e0;vertical-align:top;color:#525252}
+.price-table td:last-child{border-right:none}
+.price-table tr:last-child td{border-bottom:none}
+.price-table tr:hover td{background:#f4f4f4}
+.astra-row td{background:#edf5ff!important}
+.astra-row td:first-child{font-weight:600;color:#0f62fe}
+.cat-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;white-space:nowrap}
+.ct-review{background:#dde1ff;color:#001d6c}
+.ct-sast{background:#d0e2ff;color:#002d9c}
+.ct-aisast{background:#d9fbfb;color:#003a3a}
+.ct-supply{background:#fff8e1;color:#6b3c00}
+.ct-cloud{background:#ffd7d9;color:#750e13}
+.ct-api{background:#e8daff;color:#491d8b}
+.price-mono{font-family:'IBM Plex Mono',monospace;font-size:12px}
+
+/* sota grid */
+.sota-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:#e0e0e0;margin-top:24px}
+.sota-card{background:#1c1c1c;padding:24px}
+.sota-card.filled{background:#0f62fe}
+.sota-n{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#0f62fe;margin-bottom:8px;letter-spacing:.4px}
+.sota-card.filled .sota-n{color:rgba(255,255,255,.65)}
+.sota-t{font-size:15px;font-weight:600;color:#fff;margin-bottom:6px}
+.sota-d{font-size:13px;color:#a8a8a8;line-height:1.55}
+.sota-card.filled .sota-d{color:rgba(255,255,255,.75)}
+
+/* roadmap */
+.roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e0e0e0;margin-top:24px}
+.stage{background:#161616;padding:28px 24px}
+.stage-n{font-family:'IBM Plex Mono',monospace;font-size:40px;font-weight:600;color:#0f62fe;opacity:.4;line-height:1;margin-bottom:10px}
+.stage-t{font-size:18px;font-weight:400;color:#fff;margin-bottom:4px}
+.stage-p{font-size:11px;font-weight:600;color:#0f62fe;letter-spacing:.4px;text-transform:uppercase;margin-bottom:16px}
+.stage-items{display:flex;flex-direction:column;gap:9px}
+.stage-item{font-size:13px;color:#a8a8a8;line-height:1.5;display:flex;gap:9px}
+.stage-item::before{content:'→';color:#0f62fe;font-family:'IBM Plex Mono',monospace;font-size:12px;flex-shrink:0;margin-top:1px}
+.stage-thresh{margin-top:16px;padding-top:14px;border-top:1px solid #393939;font-size:11px;color:#8d8d8d;font-family:'IBM Plex Mono',monospace;line-height:1.65}
+
+/* signals */
+.signal-list{border:1px solid #e0e0e0;background:#e0e0e0;display:flex;flex-direction:column;gap:1px;margin-top:24px}
+.sig-row{background:#fff;display:grid;grid-template-columns:160px 1fr 140px 120px;align-items:center}
+.sig-row.hdr{background:#f4f4f4}
+.sig-cell{padding:14px 18px;border-right:1px solid #e0e0e0;font-size:13px;color:#525252}
+.sig-cell:last-child{border-right:none}
+.sig-row.hdr .sig-cell{font-size:11px;font-weight:600;color:#8d8d8d;letter-spacing:.4px;text-transform:uppercase}
+.sig-co{font-weight:600;color:#161616}
+.sig-amt{font-family:'IBM Plex Mono',monospace;font-weight:600;color:#0f62fe;font-size:13px}
+
+/* callout */
+.callout{border-left:4px solid #0f62fe;padding:18px 22px;background:#edf5ff;margin-top:24px}
+.callout.dark-bg{background:#1c1c1c;border-color:#0f62fe}
+.callout-t{font-size:14px;font-weight:600;color:#0f62fe;margin-bottom:6px}
+.callout-b{font-size:13px;color:#525252;line-height:1.6}
+.callout.dark-bg .callout-b{color:#8d8d8d}
+
+/* quote */
+.quote-block{background:#161616;padding:28px 32px;margin-top:24px}
+.qt{font-size:17px;font-weight:300;color:#fff;line-height:1.7;margin-bottom:14px}
+.qt em{color:#0f62fe;font-style:normal}
+.qa{font-size:11px;color:#8d8d8d;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+
+footer{background:#161616;padding:28px 32px;display:flex;justify-content:space-between;align-items:center}
+.ft-l{font-size:14px;color:#8d8d8d;display:flex;align-items:center;gap:10px}
+.ft-mark{width:18px;height:18px;background:#0f62fe;display:flex;align-items:center;justify-content:center}
+.ft-r{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8d8d8d;text-align:right;line-height:1.7}
+
+@media(max-width:860px){
+  .roadmap,.sota-grid{grid-template-columns:1fr}
+  .comp-grid{grid-template-columns:1fr}
+  .sig-row{grid-template-columns:1fr 1fr}
+  .sig-cell:nth-child(3),.sig-cell:nth-child(4){display:none}
+  .gap-row{grid-template-columns:1fr}
+  .gap-num-cell{display:none}
+  .hero-kpis{flex-direction:column}.kpi{border-right:none;border-bottom:1px solid #393939;margin-right:0}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="bx--header" role="banner">
+  <a class="bx--header__name" href="#">Astra <em>Intelligence</em></a>
+  <nav class="bx--header__nav" aria-label="Report sections">
+    <ul class="bx--header__menu-bar" role="menubar">
+      <li class="bx--header-nav-item bx--header-nav-item--active" role="none"><a class="bx--header-nav-item__link" href="#overview" role="menuitem">Overview</a></li>
+      <li class="bx--header-nav-item" role="none"><a class="bx--header-nav-item__link" href="#competitors" role="menuitem">Competitors</a></li>
+      <li class="bx--header-nav-item" role="none"><a class="bx--header-nav-item__link" href="#gaps" role="menuitem">Gaps</a></li>
+      <li class="bx--header-nav-item" role="none"><a class="bx--header-nav-item__link" href="#pricing" role="menuitem">Pricing</a></li>
+      <li class="bx--header-nav-item" role="none"><a class="bx--header-nav-item__link" href="#sota" role="menuitem">SOTA</a></li>
+      <li class="bx--header-nav-item" role="none"><a class="bx--header-nav-item__link" href="#signals" role="menuitem">Signals</a></li>
+      <li class="bx--header-nav-item" role="none"><a class="bx--header-nav-item__link" href="#roadmap" role="menuitem">Roadmap</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="overview">
+  <div class="hero-eye">Competitive Intelligence · May 2026</div>
+  <h1 class="hero-h1">The <em>code security</em><br/>landscape in 2026.</h1>
+  <p class="hero-sub">The market has bifurcated into three archetypes — AI-native PR review, deterministic enterprise SAST, and AI-native SAST. Astra attacks the seam between all three. The single largest unserved gap: business-logic and IDOR vulnerabilities comprising 49% of high/critical bug-bounty findings — invisible to traditional SAST, and only now being targeted by incumbents with private betas.</p>
+  <div class="hero-kpis">
+    <div class="kpi"><div class="kpi-num"><em>30+</em></div><div class="kpi-label">Tools profiled across 5 categories</div></div>
+    <div class="kpi"><div class="kpi-num"><em>$32B</em></div><div class="kpi-label">Wiz/Google — largest security acquisition ever</div></div>
+    <div class="kpi"><div class="kpi-num"><em>49%</em></div><div class="kpi-label">Critical bug-bounty findings from business logic / IDOR</div></div>
+    <div class="kpi"><div class="kpi-num"><em>$550M</em></div><div class="kpi-label">CodeRabbit valuation — 2 years old</div></div>
+    <div class="kpi"><div class="kpi-num"><em>96%</em></div><div class="kpi-label">VULSOLVER F1 on OWASP Benchmark using hybrid LLM+SAST</div></div>
+  </div>
+</section>
+
+<!-- COMPETITOR TABS -->
+<div id="competitors">
+  <div class="tabs-bar" id="comp-tabs">
+    <button class="tab-btn on" data-tab="t-ai-review">AI Code Review</button>
+    <button class="tab-btn" data-tab="t-ent-sast">Enterprise SAST</button>
+    <button class="tab-btn" data-tab="t-ai-sast">AI-Native SAST</button>
+    <button class="tab-btn" data-tab="t-cloud">Cloud &amp; Supply Chain</button>
+    <button class="tab-btn" data-tab="t-api">API &amp; Runtime</button>
+  </div>
+
+  <!-- AI CODE REVIEW -->
+  <div class="tab-pane on" id="t-ai-review">
+    <div class="sec" style="padding-bottom:0">
+      <div class="sec-eye">Category 1</div>
+      <div class="sec-title">AI-Native Code Review</div>
+      <div class="sec-sub">Fastest-growing category consolidating around CodeRabbit. All tools share a structural blind spot: diff-only scanning makes cross-file business-logic detection architecturally impossible.</div>
+    </div>
+    <div class="comp-grid">
+      <div class="comp-card threat">
+        <span class="pill pill-red">Highest Threat</span>
+        <div class="comp-name">CodeRabbit</div>
+        <div class="comp-cat">AI PR REVIEW · ALL 4 GIT PLATFORMS</div>
+        <div class="comp-funding">$60M Series B · $550M val · Sep 2025 · Scale VP + NVIDIA + CRV</div>
+        <div class="comp-price">Free OSS → $24 Pro → ~$15K/mo Enterprise</div>
+        <div class="comp-desc">Category leader. 8,000+ paying customers, 2M+ repos. Only reviewer on GitHub, GitLab, Azure DevOps, and Bitbucket. 40+ integrated linters/SAST. Launched multi-repo analysis Mar 2026 — confirms cross-repo reasoning is the next battleground.</div>
+        <div class="comp-weak">Noisiest tool on market. No cross-repo reasoning. No compliance audit trails. Diff-only origin limits business-logic detection structurally — the core Astra wedge.</div>
+      </div>
+      <div class="comp-card caution">
+        <span class="pill pill-yellow">Direct Competitor</span>
+        <div class="comp-name">CodeAnt AI</div>
+        <div class="comp-cat">AI PR REVIEW + SAST + IaC · YC W24</div>
+        <div class="comp-funding">$2M seed · $20M val · May 2025 · Y Combinator</div>
+        <div class="comp-price">$10 entry → $24 → $40 + on-prem</div>
+        <div class="comp-desc">Closest architectural competitor. Bundles AI review + SAST + secrets + IaC + DORA metrics. Replaced SonarQube at Bajaj Finserv Health. Runs air-gapped at Commvault (800+ engineers). Claims 98% code-review time reduction.</div>
+        <div class="comp-weak">Only $2.5M raised. Brand thin vs CodeRabbit. SAST depth unproven on logic flaws. Small team unable to compete on enterprise distribution.</div>
+      </div>
+      <div class="comp-card caution">
+        <span class="pill pill-yellow">Watch</span>
+        <div class="comp-name">Greptile</div>
+        <div class="comp-cat">AI CODE REVIEW · WHOLE-CODEBASE REASONING</div>
+        <div class="comp-funding">$25M Series A · Sep 2025 · talks w/ Benchmark at $30M</div>
+        <div class="comp-price">$30/dev/month · GitHub + GitLab only · no free tier</div>
+        <div class="comp-desc">Wins on accuracy: ~82% bug-catch rate (own benchmark). Cross-file reasoning is its primary differentiator — exactly the architectural capability Astra must match. Best for large complex codebases with cross-file dependencies.</div>
+        <div class="comp-weak">No free tier. GitHub/GitLab only — no Azure DevOps or Bitbucket. No native SAST/supply-chain stack. Premium price for SMBs.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-green">Manageable</span>
+        <div class="comp-name">Qodo (ex-CodiumAI)</div>
+        <div class="comp-cat">AI PR REVIEW · OPEN-SOURCE FRIENDLY · ALL 4 PLATFORMS</div>
+        <div class="comp-funding">Acquired · PR-Agent 8,500 GitHub stars</div>
+        <div class="comp-price">Free (PR-Agent OSS) → $19 Qodo Merge → Custom</div>
+        <div class="comp-desc">Open-source-friendly reference. F1 60.1% (own benchmark). Covers all 4 platforms. Supports self-hosting — right reference architecture for regulated industries. Strong community moat.</div>
+        <div class="comp-weak">Lower accuracy ceiling than Greptile. Limited enterprise distribution. Self-hosting complexity. No deep SAST integration.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-purple">Niche</span>
+        <div class="comp-name">Cursor BugBot</div>
+        <div class="comp-cat">AI PR REVIEW · CURSOR ECOSYSTEM · GA MARCH 2026</div>
+        <div class="comp-funding">Part of Anysphere (Cursor) — $2.6B valuation</div>
+        <div class="comp-price">$40/dev/month</div>
+        <div class="comp-desc">Wins on lowest noise and "Learned Rules" that adapt to team patterns over time. Deep Cursor IDE integration is the moat. Security-focused from the start. Highest signal-to-noise ratio in the category.</div>
+        <div class="comp-weak">Cursor ecosystem lock-in. Premium $40 price. GitHub-only currently. No multi-platform story.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-green">Opportunity</span>
+        <div class="comp-name">Amazon CodeGuru → EOL</div>
+        <div class="comp-cat">ML CODE REVIEW · AWS — BEING DISCONTINUED</div>
+        <div class="comp-funding">AWS built-in · EOL November 20, 2025</div>
+        <div class="comp-price">Discontinued — no migration path</div>
+        <div class="comp-desc">AWS formally discontinued CodeGuru Reviewer. All CodeGuru customers are in active displacement. Replacement is Amazon Q Developer + Inspector Code Security — no parity with standalone reviewers. A real acquisition opportunity for Astra.</div>
+        <div class="comp-weak">Product is dead. Opportunity: target all CodeGuru customers with a seamless migration story and free trial.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENTERPRISE SAST -->
+  <div class="tab-pane" id="t-ent-sast">
+    <div class="sec" style="padding-bottom:0">
+      <div class="sec-eye">Category 2</div>
+      <div class="sec-title">Enterprise SAST / AppSec</div>
+      <div class="sec-sub">Being squeezed from above (cloud platforms bundling security) and below (developer-first AI tools). All share three structural weaknesses: high false-positive rates, poor business-logic detection, and pricing that breaks at the 11–49 developer band.</div>
+    </div>
+    <div class="comp-grid">
+      <div class="comp-card threat">
+        <span class="pill pill-red">Must Beat</span>
+        <div class="comp-name">Semgrep</div>
+        <div class="comp-cat">SAST · OSS + COMMERCIAL · HYBRID AI BETA (NOV 2025)</div>
+        <div class="comp-funding">$100M Series D · Feb 2025 · $204M total · Menlo Ventures</div>
+        <div class="comp-price">Free &lt;10 contributors → $40 Team → Enterprise custom</div>
+        <div class="comp-desc">Most strategically relevant incumbent. 14,300 GitHub stars, 60M+ Docker pulls, 2025 Gartner MQ AST Leader. <strong>Nov 2025: launched private beta "AI-Powered Detection"</strong> targeting IDORs/business-logic — reported 1.9× better recall than standalone Claude Code on IDORs. This is the same hybrid architecture Astra is building. Racing to close the gap.</div>
+        <div class="comp-weak">No PR-time conversational AI review. Multimodal beta is private, IDOR-only, not GA. Expensive at scale. Critical path: must ship Astra's hybrid engine before Semgrep goes GA.</div>
+      </div>
+      <div class="comp-card caution">
+        <span class="pill pill-yellow">Pricing Gap</span>
+        <div class="comp-name">Snyk</div>
+        <div class="comp-cat">DEVELOPER-FIRST SCA + SAST + IaC + SECRETS + CONTAINER</div>
+        <div class="comp-funding">$530M total raised · ~$7.4B last valuation</div>
+        <div class="comp-price">Free → $25 Team (≤10 devs) → ~$105/dev Enterprise (11+ devs)</div>
+        <div class="comp-desc">Developer-experience benchmark for SCA. Generous free tier, broad ecosystem, IDE feedback loop, reachability analysis. Serious enterprise muscle with Salesforce/Atlassian integrations.</div>
+        <div class="comp-weak">Pricing cliff at 11 devs ($25→$105) drives mass churn. SAST depth weaker than Veracode/Checkmarx. False-positive rates climb after months of ingestion. Complex SKU structure. The 11–49 dev gap is Astra's core acquisition opportunity.</div>
+      </div>
+      <div class="comp-card caution">
+        <span class="pill pill-yellow">Legacy Incumbent</span>
+        <div class="comp-name">Veracode</div>
+        <div class="comp-cat">ENTERPRISE SAST/DAST/SCA · BINARY ANALYSIS</div>
+        <div class="comp-funding">Acquired by Broadcom/Permira · opaque financials</div>
+        <div class="comp-price">$10K–$25K/year per module · six-figure enterprise</div>
+        <div class="comp-desc">Binary analysis (no source code upload). 40+ languages. Mature compliance reporting. Phylum supply-chain assets acquired 2025. Gartner MQ Leader. Heavy enterprise customer base — slow to churn but ripe for displacement.</div>
+        <div class="comp-weak">Long scan times on monoliths. High false-positive rate. No custom query authoring. Slow time-to-value. Checkmarx actively winning migration deals on these exact pain points.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-green">Legacy Quality</span>
+        <div class="comp-name">SonarQube Cloud</div>
+        <div class="comp-cat">CODE QUALITY + SAST · RULE-BASED · LOC PRICING</div>
+        <div class="comp-funding">Sonar ~$412M raised · profitable</div>
+        <div class="comp-price">Free 50K LOC → €30/$32 Team → Enterprise (LOC-based)</div>
+        <div class="comp-desc">Shipped AI Code Assurance (AI-generated code tagging + quality gates) and AI CodeFix in 2025. 24% of users report lower vulnerability rates. Deterministic, fully auditable — preferred in regulated industries. CodeAnt AI is actively displacing it.</div>
+        <div class="comp-weak">AI CodeFix suggestions are templates, not contextual. LOC pricing penalizes large repos. No business-logic reasoning. No conversational PR review. Primary displacement target for Astra.</div>
+      </div>
+      <div class="comp-card threat">
+        <span class="pill pill-red">Platform Threat</span>
+        <div class="comp-name">GitHub Advanced Security</div>
+        <div class="comp-cat">CODEQL + SECRETS + COPILOT AUTOFIX · GITHUB NATIVE</div>
+        <div class="comp-funding">Microsoft / GitHub — unlimited runway</div>
+        <div class="comp-price">$19/committer Secret Protection + $30/committer Code Security</div>
+        <div class="comp-desc">Unbundled into self-serve April 2025. Integrated Endor Labs SCA Feb 2025. Copilot Code Review GA March 2026 with agentic architecture. GitHub-native zero-friction advantage for GitHub-only teams.</div>
+        <div class="comp-weak">GitHub-only — no GitLab, Bitbucket, Azure DevOps support outside GitHub. CodeQL requires expert query authoring. Per-active-committer billing scales unpredictably. No cross-platform story.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-purple">Platform Bundled</span>
+        <div class="comp-name">GitLab Ultimate + Duo</div>
+        <div class="comp-cat">DEVOPS + SAST + AI AGENTS · GITLAB NATIVE</div>
+        <div class="comp-funding">GTLB public · ~$9B market cap</div>
+        <div class="comp-price">$29 Premium + $19 Duo Pro → $60–99 Ultimate + $39 Duo Enterprise</div>
+        <div class="comp-desc">Duo Agent Platform GA Jan 2026. Agentic SAST Vulnerability Resolution (auto-generates merge-ready fixes). Agentic Code Review $0.25/review flat. Uses Semgrep engine for SAST. Full DevSecOps bundle.</div>
+        <div class="comp-weak">GitLab platform lock-in. AI credits burn fast on agentic flows ($500+/month for small teams). No GitHub support. Pricing complexity with credits + seats.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI-NATIVE SAST -->
+  <div class="tab-pane" id="t-ai-sast">
+    <div class="sec" style="padding-bottom:0">
+      <div class="sec-eye">Category 3 — The SOTA Frontier</div>
+      <div class="sec-title">AI-Native SAST</div>
+      <div class="sec-sub">The genuine state-of-the-art frontier — and Astra's direct peer group. These tools catch what traditional SAST misses, but lack platform breadth, enterprise governance, and the conversational PR-review layer.</div>
+    </div>
+    <div class="quote-block" style="margin:0">
+      <div class="qt">"Multiple AI-native SASTs are already on the market. They work extremely well. They find real vulnerabilities and logic bugs in minutes. They can 'think' about business logic issues... My results showed that (in order of success), <em>ZeroPath, Corgea, and Almanax</em> are the top three products on the market right now."</div>
+      <div class="qa">Joshua Rogers — "Hacking with AI SASTs" · Sep 2025 · Most-cited independent comparative review of this category</div>
+    </div>
+    <div class="comp-grid">
+      <div class="comp-card threat">
+        <span class="pill pill-red">Closest Competitor</span>
+        <div class="comp-name">ZeroPath</div>
+        <div class="comp-cat">AI-NATIVE SAST · IDOR/AUTH SPECIALIST</div>
+        <div class="comp-funding">Ex-Tesla/Google security engineers · 2025 RSAC Innovation Sandbox Top 10</div>
+        <div class="comp-price">Custom enterprise only — no self-serve</div>
+        <div class="comp-desc">Rogers called it "the best product I tried — intimidatingly good." Natural-language security policies ("All DB queries must use parameterized statements"), sub-60-second PR scans, 15+ languages. 0-days discovered in Netflix, Hulu, Salesforce. Published "IDOR Crisis 2025": 53% of their critical disclosures are authorization/access-control flaws, traditional SAST detection rate near zero.</div>
+        <div class="comp-weak">Custom enterprise pricing only — no self-serve. Narrow platform support. No enterprise governance/SSO/audit posture. No conversational PR-review layer. Small team.</div>
+      </div>
+      <div class="comp-card caution">
+        <span class="pill pill-yellow">Agentic Fixer</span>
+        <div class="comp-name">Pixee</div>
+        <div class="comp-cat">AGENTIC REMEDIATION · INGESTS ANY SCANNER OUTPUT</div>
+        <div class="comp-funding">Actively raising · SOC2 + ISO27001</div>
+        <div class="comp-price">Custom · self-hosted / air-gapped / cloud</div>
+        <div class="comp-desc">Ingests findings from SonarQube, CodeQL, Semgrep, Snyk and "turns scanner noise into validated, prioritized risk, then writes fixes as your developers would. Humans approve every change." Claims 98% false-positive removal via execution-path tracing, 74% manual triage time eliminated. The reference implementation for agentic auto-fix.</div>
+        <div class="comp-weak">Depends on other scanners for detection — no native AI SAST engine. Remediation layer, not detection. Custom pricing limits accessibility. No PR review conversational interface.</div>
+      </div>
+      <div class="comp-card caution">
+        <span class="pill pill-blue">Enterprise Layer</span>
+        <div class="comp-name">Endor Labs (AURI)</div>
+        <div class="comp-cat">REACHABILITY SCA + AGENTIC POLICY · AI AGENT SECURITY</div>
+        <div class="comp-funding">$93M Series B · Apr 2025 · $188M total · Lightspeed + Salesforce Ventures</div>
+        <div class="comp-price">Custom enterprise · GHAS integration Feb 2025</div>
+        <div class="comp-desc">Pioneered reachability-based SCA (95% of CVEs are in transitive deps — reachability is the only way to know if they're exploitable). AURI (2026): "agentic reasoning with deterministic program analysis delivering verifiable evidence — data flow, call paths, reachability — for every finding." First SAST vendor with MCP server for AI coding agent governance.</div>
+        <div class="comp-weak">No PR conversational review. Enterprise-only motion. AURI is early-stage. Does not replace SAST — complements it.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-green">Supply Chain</span>
+        <div class="comp-name">Socket Security</div>
+        <div class="comp-cat">MALICIOUS PACKAGE DETECTION · SUPPLY CHAIN FIREWALL</div>
+        <div class="comp-funding">$65M total · $40M Series B · Abstract Ventures</div>
+        <div class="comp-price">Socket Firewall Free (CLI) → Custom enterprise</div>
+        <div class="comp-desc">Protects 10,000+ orgs, 300,000+ GitHub repos. Blocking 100+ supply-chain attacks/week. Socket Firewall Free launched Sep 2025. Critical context: Shai-Hulud npm worm (Sep 2025) compromised 500+ packages. Trivy-action retroactively poisoned twice March 2026 (76/77 release tags). Malicious-package detection is now table-stakes.</div>
+        <div class="comp-weak">Supply chain only. No SAST, no business-logic detection, no PR review. Complements but does not compete with Astra's core detection story.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-green">All-in-One SMB</span>
+        <div class="comp-name">Aikido Security</div>
+        <div class="comp-cat">SAST + SCA + DAST + IaC + SECRETS + CSPM · FLAT PRICING</div>
+        <div class="comp-funding">Actively raising · 50,000+ orgs including Revolut/Niantic/Visma</div>
+        <div class="comp-price">Free (2 users) → $350/mo → $700/mo → Custom</div>
+        <div class="comp-desc">Developer-first all-in-one at flat-rate pricing. G2 4.7+. 92–95% noise reduction (own data). Very popular with SMBs. Understood the 11–49 dev pricing gap before most security vendors. The consolidation story Astra should position against.</div>
+        <div class="comp-weak">Free→$350/month step is steep. No advanced business-logic AI detection. Limited enterprise governance features. Brand awareness below CodeRabbit/Snyk.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-purple">OSS Dominant</span>
+        <div class="comp-name">Trivy + Gitleaks + Bearer</div>
+        <div class="comp-cat">OSS SCANNERS · BUNDLED IN ASTRA'S ENGINE</div>
+        <div class="comp-funding">Aqua Security (Trivy) / OSS community</div>
+        <div class="comp-price">Free (MIT / Apache 2.0)</div>
+        <div class="comp-desc">Trivy: 32,200 GitHub stars — default Harbor scanner. Gitleaks: 17K stars, 16M Docker pulls — de-facto secrets scanner. Bearer (now Cycode): OSS data-flow SAST. All three are already bundled in Astra's detection engine. These are foundations, not competitors.</div>
+        <div class="comp-weak">Trivy-action compromised twice March 2026 — pin to commit SHAs. No AI reasoning. No business-logic detection. Point tools, not platforms.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOUD & SUPPLY CHAIN -->
+  <div class="tab-pane" id="t-cloud">
+    <div class="sec" style="padding-bottom:0">
+      <div class="sec-eye">Category 4</div>
+      <div class="sec-title">Cloud Security &amp; Supply Chain</div>
+      <div class="sec-sub">Restructured by Google's $32B Wiz acquisition — the largest security M&A ever. CNAPP tools focus on runtime cloud posture, not PR-time code review. Adjacent but increasingly relevant as Wiz/Endor Labs move toward code-side integration.</div>
+    </div>
+    <div class="comp-grid">
+      <div class="comp-card threat">
+        <span class="pill pill-red">Market Signal</span>
+        <div class="comp-name">Wiz → Google Cloud</div>
+        <div class="comp-cat">CNAPP · CLOUD SECURITY · ACQUIRED MARCH 2026</div>
+        <div class="comp-funding">Acquired by Google · $32B cash · March 11, 2026 (closed)</div>
+        <div class="comp-price">Custom enterprise (six-figure typical)</div>
+        <div class="comp-desc">Largest acquisition in Google's 28-year history. 17.4% CNAPP mindshare (PeerSpot). The $32B signal: cloud-native security is strategic infrastructure. Now locked into Google Cloud GTM — multi-cloud customers nervous about Google ownership may defect to Orca. No code-review story — but watch for Wiz expanding to shift-left inside Google Cloud.</div>
+        <div class="comp-weak">No code-review or PR-time detection. Google ownership alienates AWS/Azure shops. Focus is cloud posture/runtime — the opposite end of the shift-left spectrum from Astra.</div>
+      </div>
+      <div class="comp-card caution">
+        <span class="pill pill-blue">Opportunity</span>
+        <div class="comp-name">Orca Security</div>
+        <div class="comp-cat">AGENTLESS CNAPP · MULTI-CLOUD · POST-WIZ OPPORTUNITY</div>
+        <div class="comp-funding">$550M total raised</div>
+        <div class="comp-price">Custom (per compute asset model)</div>
+        <div class="comp-desc">Agentless SideScanning, three deployment modes, 6.3% CNAPP mindshare. Best positioned to win multi-cloud enterprise accounts nervous about Wiz/Google ownership. Strong pricing flexibility vs Wiz's six-figure lock-in.</div>
+        <div class="comp-weak">No code-side SAST or PR review. Cloud runtime only. Competing in a market now dominated by a Google-backed incumbent with $32B of validation.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-yellow">Fragmenting</span>
+        <div class="comp-name">Prisma Cloud → Cortex Cloud</div>
+        <div class="comp-cat">CNAPP · PALO ALTO NETWORKS · PLATFORM MERGE</div>
+        <div class="comp-funding">Palo Alto Networks (PANW) public</div>
+        <div class="comp-price">Custom enterprise</div>
+        <div class="comp-desc">Being merged with Cortex CDR into "Cortex Cloud" (Q3 FY25/late 2025). Built on open-source Checkov (Bridgecrew ~$156M acquisition, 2021). Customer complaints: high cost, deployment complexity, fragmented UX during reorganization.</div>
+        <div class="comp-weak">UX fragmentation during platform merge. Enterprise lock-in. Slow innovation cycle during reorganization. IaC scanning (Checkov) is open-source — no moat there.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-purple">Platform Roll-Up</span>
+        <div class="comp-name">Cycode (acquired Bearer)</div>
+        <div class="comp-cat">AI-NATIVE ASPM · 100+ TOOL CONSOLIDATION</div>
+        <div class="comp-funding">$80M+ total raised</div>
+        <div class="comp-price">Custom enterprise</div>
+        <div class="comp-desc">Acquired Bearer (open-source data-flow SAST) and built an AI-Native ASPM platform consolidating 100+ security tools. Bearer Pro adds inter-procedural Java analysis. Apiiro focuses on pre-code threat modeling from Jira tickets before code is written. Mend.io launched first SAST MCP server.</div>
+        <div class="comp-weak">Complex platform requiring significant integration effort. Custom enterprise only. Acquisitions create integration debt and cultural friction.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API & RUNTIME -->
+  <div class="tab-pane" id="t-api">
+    <div class="sec" style="padding-bottom:0">
+      <div class="sec-eye">Category 5</div>
+      <div class="sec-title">API Security &amp; Runtime</div>
+      <div class="sec-sub">An adjacent category that validates the business-logic gap from the DAST/runtime direction. These tools attack the same BOLA/IDOR problem at runtime — Astra attacks it at the source code level, earlier in the SDLC.</div>
+    </div>
+    <div class="comp-grid">
+      <div class="comp-card caution">
+        <span class="pill pill-yellow">Validates The Gap</span>
+        <div class="comp-name">Escape.tech</div>
+        <div class="comp-cat">AI-POWERED API SECURITY DAST · BUSINESS-LOGIC FOCUS</div>
+        <div class="comp-funding">~$10M raised · EU-based</div>
+        <div class="comp-price">Custom enterprise</div>
+        <div class="comp-desc">100+ dedicated GraphQL security tests. Agentless OSINT + AI fingerprinting to discover shadow APIs externally. Tests for BOLA, BFLA, IDOR, and business-logic abuse that StackHawk's pipeline model misses. Their product existence validates that business-logic is the biggest uncovered gap — from the DAST direction, where Astra attacks it from the SAST direction.</div>
+        <div class="comp-weak">External/runtime only — cannot find pre-production code issues. Custom pricing limits self-serve adoption. No supply-chain coverage. No code review.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-green">CI-Native DAST</span>
+        <div class="comp-name">StackHawk</div>
+        <div class="comp-cat">DEVELOPER-FIRST DAST · TRANSPARENT PRICING</div>
+        <div class="comp-funding">~$35M raised</div>
+        <div class="comp-price">$42/contributor/month — fully transparent self-serve</div>
+        <div class="comp-desc">Built atop OWASP ZAP. Embeds in CI/CD. Supports REST/GraphQL/SOAP/gRPC. Developer-first experience at transparent pricing. Best pricing model reference for Astra: transparent, self-serve, per-contributor.</div>
+        <div class="comp-weak">Misses business-logic IDOR/BOLA requiring application context. Pipeline-only — no external shadow API discovery. No SAST or supply-chain coverage.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-purple">Runtime ADR</span>
+        <div class="comp-name">Contrast Security (ADR)</div>
+        <div class="comp-cat">RUNTIME APPLICATION DETECTION &amp; RESPONSE</div>
+        <div class="comp-funding">$200M+ total raised · Gartner Visionary 2025 MQ AST</div>
+        <div class="comp-price">Custom enterprise</div>
+        <div class="comp-desc">Rebranded RASP to "ADR" — Application Detection &amp; Response. Claims 81 confirmed attacks/app/month missed by WAFs/EDRs/scanners (own data). RASP/ADR market estimated $2.59B 2026 → $8.88B by 2031 (27.96% CAGR). The runtime feedback loop Astra should eventually ingest to prioritize which findings are actively exploited.</div>
+        <div class="comp-weak">Runtime agent deployment = friction. No shift-left SAST. Does not find vulnerabilities before they ship. Datadog/Dynatrace entering same ADR category.</div>
+      </div>
+      <div class="comp-card safe">
+        <span class="pill pill-blue">OpenAPI Specialist</span>
+        <div class="comp-name">42Crunch</div>
+        <div class="comp-cat">OPENAPI SECURITY · AI AGENT API GOVERNANCE</div>
+        <div class="comp-funding">Series B · undisclosed</div>
+        <div class="comp-price">Free → Teams → Enterprise</div>
+        <div class="comp-desc">OpenAPI/AI-API specialist with runtime API protection and an MCP abstraction layer for governing AI agent behavior through APIs. First mover in AI agent API security governance — relevant as Claude Code, Cursor, Devin become primary API consumers and attack surfaces.</div>
+        <div class="comp-weak">Very niche — OpenAPI/REST focused. No SAST. No supply-chain. Limited outside API-heavy architectures.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAPS -->
+<section class="sec" id="gaps">
+  <div class="sec-eye">Market Analysis</div>
+  <div class="sec-title">The Five Biggest Unsolved Gaps</div>
+  <div class="sec-sub">Where every incumbent fails — and where Astra wins. These are structural gaps, not temporary feature misses.</div>
+  <div class="gap-list">
+    <div class="gap-row">
+      <div class="gap-num-cell">01</div>
+      <div class="gap-content">
+        <div class="gap-title">Business-logic / authorization vulnerabilities at PR time</div>
+        <div class="gap-desc">49% of high/critical bug-bounty findings live here (Semgrep, Nov 2025). IDOR, BOLA, BFLA, broken access control — invisible to traditional SAST. ZeroPath: 53% of their critical disclosures are authorization flaws. Semgrep's AI beta is private and IDOR-only. Pure-LLM approaches run 23–65% precision (NDSS 2025) and 78% false-positive rate (Semgrep Claude Code study). No incumbent has shipped a production-grade hybrid engine for this at PR time.</div>
+        <div class="gap-astra">→ Astra: repo_intel + cross_file graph + hybrid deterministic+LLM. Business-logic as lead marketing message and public benchmark proof point.</div>
+      </div>
+    </div>
+    <div class="gap-row" style="background:#f4f4f4">
+      <div class="gap-num-cell">02</div>
+      <div class="gap-content">
+        <div class="gap-title">A unified transparent-priced platform: AI PR review + AI SAST + reachability SCA + malicious-package detection + agentic auto-fix</div>
+        <div class="gap-desc">Every security team buys 4–6 tools today. CodeAnt AI is the closest, but SAST depth is unproven on logic flaws and market presence is minimal. CodeRabbit has review but no deep SAST. Snyk has SCA but no conversational PR review. No single product delivers all five capabilities with transparent self-serve pricing.</div>
+        <div class="gap-astra">→ Astra: single platform, single dashboard, single price. Target the buyer who has CodeRabbit + Snyk + Gitleaks + Checkov running as four separate tools.</div>
+      </div>
+    </div>
+    <div class="gap-row">
+      <div class="gap-num-cell">03</div>
+      <div class="gap-content">
+        <div class="gap-title">Multi-repo / cross-service / monorepo reasoning</div>
+        <div class="gap-desc">CodeRabbit just launched a limited multi-repo feature in March 2026, confirming this is the next battleground. No incumbent has solved cross-service data flow analysis. Auth defined in service A, bypassed in service B — invisible to all current PR reviewers. Microservices architectures have entirely undetected cross-service IDOR vulnerabilities.</div>
+        <div class="gap-astra">→ Astra: repo_intel builds SystemIntelReport per service; cross_file clusters by domain. Phase 3 roadmap: cross-repo graph and service-mesh analysis.</div>
+      </div>
+    </div>
+    <div class="gap-row" style="background:#f4f4f4">
+      <div class="gap-num-cell">04</div>
+      <div class="gap-content">
+        <div class="gap-title">AI-aware SAST tuned for AI-generated (vibe-coded) patterns</div>
+        <div class="gap-desc">SafeGenBench (arXiv Jun 2025): 558 test cases, 8 languages — "even advanced LLMs yield vulnerable code." AI-generated code has distinct vulnerability patterns vs human-written code. Endor Labs AURI, Sonar AI Code Assurance, Semgrep multimodal beta all targeting this. The "different model writes vs reviews" principle is the emerging architecture.</div>
+        <div class="gap-astra">→ Astra: tag AI-generated files during repo_intel; apply AI-code-specific prompt overlays in deep_scan. Use a different model family to review than typically generates the code.</div>
+      </div>
+    </div>
+    <div class="gap-row">
+      <div class="gap-num-cell">05</div>
+      <div class="gap-content">
+        <div class="gap-title">Pricing accessibility for the 11–49 developer band</div>
+        <div class="gap-desc">Snyk/Semgrep/Veracode all force enterprise sales motions above 10 devs. The 11-dev team hits ~$105/dev/month at Snyk's enterprise tier. CodeRabbit ($24) and Aikido ($350 flat) understood this gap before most security vendors. The 11–49 dev market is large, underserved, and has PLG purchase patterns — no sales call required.</div>
+        <div class="gap-astra">→ Astra: Free OSS → $20 entry → $40 Pro → $80 Enterprise per active PR author. Transparent, self-serve, no sales call under $2K/month. PLG motion from free trial.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="sec alt" id="pricing">
+  <div class="sec-eye">Pricing Intelligence</div>
+  <div class="sec-title">Competitive Pricing Matrix</div>
+  <div class="sec-sub">Per developer/contributor/month, list pricing (2026). Negotiated enterprise prices typically 20–40% below list. Astra's target shown for strategic reference.</div>
+  <div class="price-wrap">
+    <table class="price-table">
+      <thead><tr>
+        <th>Tool</th><th>Category</th><th>Entry / Free Tier</th><th>Mid Tier</th><th>Enterprise</th><th>Key Gap</th>
+      </tr></thead>
+      <tbody>
+        <tr class="astra-row">
+          <td>Astra (target)</td>
+          <td><span class="cat-tag" style="background:#dde1ff;color:#001d6c">ALL-IN-ONE</span></td>
+          <td class="price-mono">Free (OSS)</td>
+          <td class="price-mono">$20–$40/dev</td>
+          <td class="price-mono">$80/dev self-serve</td>
+          <td style="color:#0f62fe;font-size:12px;font-weight:600">—</td>
+        </tr>
+        <tr><td>CodeRabbit</td><td><span class="cat-tag ct-review">AI REVIEW</span></td><td class="price-mono">Free (OSS)</td><td class="price-mono">$24 Pro</td><td class="price-mono">~$15K/mo (500+)</td><td style="font-size:12px;color:#da1e28">Noisy · no deep SAST</td></tr>
+        <tr><td>CodeAnt AI</td><td><span class="cat-tag ct-review">AI REVIEW+SAST</span></td><td class="price-mono">$10</td><td class="price-mono">$24</td><td class="price-mono">$40 + on-prem</td><td style="font-size:12px;color:#da1e28">Tiny team · unproven SAST</td></tr>
+        <tr><td>Greptile</td><td><span class="cat-tag ct-review">AI REVIEW</span></td><td class="price-mono">—</td><td class="price-mono">$30</td><td class="price-mono">Custom</td><td style="font-size:12px;color:#da1e28">GitHub/GitLab only · no SAST</td></tr>
+        <tr><td>Qodo Merge</td><td><span class="cat-tag ct-review">AI REVIEW</span></td><td class="price-mono">Free (PR-Agent OSS)</td><td class="price-mono">$19</td><td class="price-mono">Custom</td><td style="font-size:12px;color:#da1e28">Lower accuracy ceiling</td></tr>
+        <tr><td>Cursor BugBot</td><td><span class="cat-tag ct-review">AI REVIEW</span></td><td class="price-mono">—</td><td class="price-mono">$40</td><td class="price-mono">Custom</td><td style="font-size:12px;color:#da1e28">Cursor lock-in · GitHub only</td></tr>
+        <tr><td>Semgrep</td><td><span class="cat-tag ct-sast">SAST</span></td><td class="price-mono">Free &lt;10 contrib</td><td class="price-mono">$40 Team</td><td class="price-mono">Custom 5–6 figure</td><td style="font-size:12px;color:#da1e28">No PR review · pricey at scale</td></tr>
+        <tr><td>Snyk</td><td><span class="cat-tag ct-sast">SCA + SAST</span></td><td class="price-mono">Free</td><td class="price-mono">$25 (≤10 devs)</td><td class="price-mono">~$105/dev (11+ devs)</td><td style="font-size:12px;color:#da1e28">Cliff at 11 devs · complex SKU</td></tr>
+        <tr><td>GitHub Adv Security</td><td><span class="cat-tag ct-sast">PLATFORM SAST</span></td><td class="price-mono">—</td><td class="price-mono">$19 Secret + $30 Code</td><td class="price-mono">Scales by committers</td><td style="font-size:12px;color:#da1e28">GitHub-only · CodeQL noise</td></tr>
+        <tr><td>GitLab Ultimate+Duo</td><td><span class="cat-tag ct-sast">DEVOPS+SAST</span></td><td class="price-mono">$29 Premium</td><td class="price-mono">~$99 + $39 Duo Ent</td><td class="price-mono">Custom</td><td style="font-size:12px;color:#da1e28">GitLab lock-in · credit burn</td></tr>
+        <tr><td>SonarQube Cloud</td><td><span class="cat-tag ct-sast">CODE QUALITY</span></td><td class="price-mono">Free 50K LOC</td><td class="price-mono">$32/mo (100K LOC)</td><td class="price-mono">Custom LOC-based</td><td style="font-size:12px;color:#da1e28">LOC pricing · large repos hurt</td></tr>
+        <tr><td>Aikido Security</td><td><span class="cat-tag ct-aisast">ALL-IN-ONE SMB</span></td><td class="price-mono">Free (2 users)</td><td class="price-mono">$350–$700/mo flat</td><td class="price-mono">Custom</td><td style="font-size:12px;color:#da1e28">Free→$350 step is steep</td></tr>
+        <tr><td>ZeroPath</td><td><span class="cat-tag ct-aisast">AI-NATIVE SAST</span></td><td class="price-mono">—</td><td class="price-mono">—</td><td class="price-mono">Custom only</td><td style="font-size:12px;color:#da1e28">No self-serve · narrow platforms</td></tr>
+        <tr><td>Endor Labs</td><td><span class="cat-tag ct-supply">SUPPLY CHAIN</span></td><td class="price-mono">—</td><td class="price-mono">—</td><td class="price-mono">Custom enterprise</td><td style="font-size:12px;color:#da1e28">Enterprise only · no PR review</td></tr>
+        <tr><td>Socket</td><td><span class="cat-tag ct-supply">SUPPLY CHAIN</span></td><td class="price-mono">Free CLI Firewall</td><td class="price-mono">—</td><td class="price-mono">Custom enterprise</td><td style="font-size:12px;color:#da1e28">Supply chain only · no SAST</td></tr>
+        <tr><td>StackHawk</td><td><span class="cat-tag ct-api">API DAST</span></td><td class="price-mono">—</td><td class="price-mono">$42/contributor</td><td class="price-mono">Custom</td><td style="font-size:12px;color:#da1e28">Runtime only · no SAST</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SOTA -->
+<section class="sec dark" id="sota">
+  <div class="sec-eye">State of the Art</div>
+  <div class="sec-title" style="color:#fff">What SOTA means in 2026</div>
+  <div class="sec-sub">10 mandatory capabilities. No single incumbent delivers all 10. Academic evidence converges on hybrid deterministic+LLM as the only architecture achieving both high recall and acceptable precision.</div>
+
+  <div class="callout dark-bg" style="margin-top:24px">
+    <div class="callout-t">VULSOLVER (arXiv 2509.00882) — The Key Research Finding</div>
+    <div class="callout-b">Hybrid deterministic+LLM (Semgrep dataflow + DeepSeek-V3 reasoning): <strong style="color:#fff">96.29% accuracy, 96.55% F1, 100% recall</strong> on OWASP Benchmark (1,023 labeled samples). 15 previously unknown high-severity vulnerabilities discovered in real GitHub repos (CVSS 7.5–9.8). Ensembling SAST + LLM "mitigates the drawbacks of both" — SAST's low recall and LLM's high false positives. This is the architecture. Build it.</div>
+  </div>
+
+  <div class="sota-grid">
+    <div class="sota-card filled">
+      <div class="sota-n">01 · CRITICAL</div>
+      <div class="sota-t">Hybrid deterministic + LLM detection engine</div>
+      <div class="sota-d">Semgrep-style AST/dataflow grounding + frontier model ensemble. 1.9× IDOR recall improvement (Semgrep beta). 78% false-positive rate with pure LLM alone — grounding is mandatory. VULSOLVER: 96.29% accuracy.</div>
+    </div>
+    <div class="sota-card">
+      <div class="sota-n">02 · CRITICAL</div>
+      <div class="sota-t">Whole-codebase code graph with reachability analysis</div>
+      <div class="sota-d">Not file-by-file. Greptile/Endor Labs-style. 95% of CVEs live in transitive dependencies — reachability is the only way to know if they're actually exploitable. Cross-file auth gaps are completely invisible without the full graph.</div>
+    </div>
+    <div class="sota-card">
+      <div class="sota-n">03 · CRITICAL</div>
+      <div class="sota-t">Business-logic vulnerability detection (IDOR/BOLA/BFLA)</div>
+      <div class="sota-d">49% of critical bug-bounty findings. Near-zero traditional SAST detection rate. Requires system-level context from repo_intel + cross-file reasoning. The single largest unserved gap — and Astra's primary wedge into the market.</div>
+    </div>
+    <div class="sota-card filled">
+      <div class="sota-n">04 · HIGH</div>
+      <div class="sota-t">Multi-Git-platform: GitHub + GitLab + Bitbucket + Azure DevOps</div>
+      <div class="sota-d">Only CodeRabbit and CodeAnt AI span all four. Greptile is GitHub/GitLab only. GHAS is GitHub only. Platform breadth is a hard moat — enterprise procurement requires it. No workarounds.</div>
+    </div>
+    <div class="sota-card">
+      <div class="sota-n">05 · HIGH</div>
+      <div class="sota-t">MCP / agent-friendly architecture for AI coding agent governance</div>
+      <div class="sota-d">Endor Labs AURI: "verifiable evidence — data flow, call paths, reachability — for every finding." Mend.io shipped first SAST MCP server. Claude Code, Cursor, Copilot, Codex, Devin all need a policy/verification layer. This is the forward moat.</div>
+    </div>
+    <div class="sota-card filled">
+      <div class="sota-n">06 · HIGH</div>
+      <div class="sota-t">Agentic auto-fix that opens human-approved PRs</div>
+      <div class="sota-d">Pixee: "humans approve every change." Never auto-merge. CodeRabbit Autofix + Cursor BugBot Autofix are the proof points. The 74% manual triage time reduction claim (Pixee) is the commercial hook for enterprise buyers who are drowning in findings.</div>
+    </div>
+    <div class="sota-card">
+      <div class="sota-n">07 · HIGH</div>
+      <div class="sota-t">Memory-based learning from triage decisions</div>
+      <div class="sota-d">Semgrep Assistant Memories: ~20% triage automation baseline that rises with org context. Cursor BugBot "Learned Rules." Every customer's triage history makes Astra smarter for that customer — the long-term data moat incumbents cannot replicate retroactively.</div>
+    </div>
+    <div class="sota-card filled">
+      <div class="sota-n">08 · HIGH</div>
+      <div class="sota-t">Self-hosted / air-gapped / VPC deployment</div>
+      <div class="sota-d">Commvault (800+ engineers) on-prem. Bajaj Finserv Health on Azure DevOps. Qodo self-hosted, CodeAnt air-gapped. Regulated industries (finance, healthcare, defence, government) require it by policy. No enterprise deal closes without it.</div>
+    </div>
+    <div class="sota-card">
+      <div class="sota-n">09 · MEDIUM</div>
+      <div class="sota-t">Transparent self-serve pricing in the $20–$50/dev band</div>
+      <div class="sota-d">The 11–49 dev gap where Snyk/Semgrep/Veracode all force enterprise sales. CodeRabbit ($24) and Aikido ($350 flat) understood this first. PLG motion drives the top-of-funnel from which enterprise deals eventually close.</div>
+    </div>
+    <div class="sota-card filled">
+      <div class="sota-n">10 · MEDIUM</div>
+      <div class="sota-t">Supply-chain: malicious packages + SBOM + pinned Actions</div>
+      <div class="sota-d">Shai-Hulud npm worm (Sep 2025): 500+ packages compromised. Trivy-action poisoned twice Mar 2026: 76/77 release tags. Socket blocks 100+ attacks/week. Pin Actions to commit SHAs. Malicious-package detection is table-stakes in 2026 — no longer a differentiator.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SIGNALS -->
+<section class="sec" id="signals">
+  <div class="sec-eye">Market Signals</div>
+  <div class="sec-title">Funding &amp; M&amp;A Signals</div>
+  <div class="sec-sub">Where capital flows tells you where the market is going. $32B for Wiz is the defining signal of the decade. $60M for a 2-year-old PR reviewer validates AI code review at scale.</div>
+  <div class="signal-list">
+    <div class="sig-row hdr">
+      <div class="sig-cell">Company</div>
+      <div class="sig-cell">Deal &amp; Context</div>
+      <div class="sig-cell">Amount</div>
+      <div class="sig-cell">Signal Type</div>
+    </div>
+    <div class="sig-row">
+      <div class="sig-cell"><span style="font-weight:600;color:#161616">Wiz → Google</span></div>
+      <div class="sig-cell" style="font-size:13px">Largest acquisition in Google's 28-year history. Largest security M&A ever. Closed March 11, 2026. Locks Wiz into Google Cloud GTM — multi-cloud customers in play for Orca.</div>
+      <div class="sig-cell"><span class="sig-amt">$32B cash</span></div>
+      <div class="sig-cell"><span class="pill pill-red" style="font-size:10px">CATEGORY DEFINING</span></div>
+    </div>
+    <div class="sig-row" style="background:#f4f4f4">
+      <div class="sig-cell"><span style="font-weight:600;color:#161616">CodeRabbit</span></div>
+      <div class="sig-cell" style="font-size:13px">Series B led by Scale VP + NVIDIA NVentures + CRV. 2-year-old company. 8,000+ customers, 2M+ repos, ~$15M ARR with 20% MoM growth at time of raise.</div>
+      <div class="sig-cell"><span class="sig-amt">$60M · $550M val</span></div>
+      <div class="sig-cell"><span class="pill pill-blue" style="font-size:10px">CATEGORY VALID</span></div>
+    </div>
+    <div class="sig-row">
+      <div class="sig-cell"><span style="font-weight:600;color:#161616">Endor Labs</span></div>
+      <div class="sig-cell" style="font-size:13px">Series B led by DFJ Growth + Salesforce Ventures. Acquired Autonomous Plane Feb 2026. Pioneered reachability SCA. GHAS integration Feb 2025.</div>
+      <div class="sig-cell"><span class="sig-amt">$93M · $188M total</span></div>
+      <div class="sig-cell"><span class="pill pill-purple" style="font-size:10px">SUPPLY CHAIN</span></div>
+    </div>
+    <div class="sig-row" style="background:#f4f4f4">
+      <div class="sig-cell"><span style="font-weight:600;color:#161616">Semgrep</span></div>
+      <div class="sig-cell" style="font-size:13px">Series D led by Menlo Ventures (Lightspeed, Felicis, Sequoia, Redpoint). Launched AI-Powered Detection private beta Nov 2025 — directly validating the Astra thesis.</div>
+      <div class="sig-cell"><span class="sig-amt">$100M · $204M total</span></div>
+      <div class="sig-cell"><span class="pill pill-red" style="font-size:10px">DIRECT THREAT</span></div>
+    </div>
+    <div class="sig-row">
+      <div class="sig-cell"><span style="font-weight:600;color:#161616">Greptile</span></div>
+      <div class="sig-cell" style="font-size:13px">Series A. Whole-codebase reasoning architecture proves cross-file analysis is both technically viable and commercially valuable. Reported in talks with Benchmark for more.</div>
+      <div class="sig-cell"><span class="sig-amt">$25M Series A</span></div>
+      <div class="sig-cell"><span class="pill pill-blue" style="font-size:10px">ARCH SIGNAL</span></div>
+    </div>
+    <div class="sig-row" style="background:#f4f4f4">
+      <div class="sig-cell"><span style="font-weight:600;color:#161616">Socket</span></div>
+      <div class="sig-cell" style="font-size:13px">Launched free malicious-package firewall Sep 2025 post Shai-Hulud worm. 10,000+ orgs protected. Supply chain security is now table-stakes, not premium.</div>
+      <div class="sig-cell"><span class="sig-amt">$65M total</span></div>
+      <div class="sig-cell"><span class="pill pill-yellow" style="font-size:10px">TABLE-STAKES</span></div>
+    </div>
+    <div class="sig-row">
+      <div class="sig-cell"><span style="font-weight:600;color:#161616">CodeAnt AI (YC W24)</span></div>
+      <div class="sig-cell" style="font-size:13px">YC W24. Consolidated platform: AI review + SAST + IaC + secrets. Direct architectural competitor at early stage — proof the market wants consolidation.</div>
+      <div class="sig-cell"><span class="sig-amt">$2M · $20M val</span></div>
+      <div class="sig-cell"><span class="pill pill-green" style="font-size:10px">WATCH</span></div>
+    </div>
+    <div class="sig-row" style="background:#f4f4f4">
+      <div class="sig-cell"><span style="font-weight:600;color:#161616">Amazon CodeGuru</span></div>
+      <div class="sig-cell" style="font-size:13px">EOL November 20, 2025. No migration path. All CodeGuru customers are in active displacement — a concrete acquisition opportunity for Astra's sales motion.</div>
+      <div class="sig-cell"><span class="sig-amt">EOL Nov 2025</span></div>
+      <div class="sig-cell"><span class="pill pill-green" style="font-size:10px">OPPORTUNITY</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ROADMAP -->
+<section class="sec dark" id="roadmap">
+  <div class="sec-eye">Strategic Roadmap</div>
+  <div class="sec-title" style="color:#fff">Three-Stage Path to SOTA</div>
+  <div class="sec-sub">Thresholds define when to advance. Contingency triggers define when to pivot. The window to beat Semgrep's AI-Powered Detection to GA is the critical path constraint.</div>
+
+  <div class="roadmap">
+    <div class="stage">
+      <div class="stage-n">01</div>
+      <div class="stage-t">Build the Wedge</div>
+      <div class="stage-p">Months 0–6 · Ship the differentiator</div>
+      <div class="stage-items">
+        <div class="stage-item">Ship CodeRabbit-grade conversational PR reviewer for all 4 Git platforms from day one — anything less concedes the consolidation play</div>
+        <div class="stage-item">Build hybrid deterministic+LLM engine — Semgrep-style AST grounding + frontier model ensemble (Claude + GPT + Gemini — all three caught 100% SQLi/path-traversal but only GPT caught the auth-bypass in Kilo benchmark)</div>
+        <div class="stage-item">Lead with IDOR/business-logic detection. Publish public benchmark showing Astra catching McDonald's-class IDORs other tools miss. The proof point is the marketing</div>
+        <div class="stage-item">Whole-repo code graph + cross-file reachability as non-negotiable architectural commitment — don't repeat CodeRabbit's diff-only origin</div>
+        <div class="stage-item">Free OSS → $20 entry → $40 Pro — transparent, self-serve, no sales call under $2K/month</div>
+      </div>
+      <div class="stage-thresh">Threshold to advance:<br/>500+ paying customers<br/>$2M+ ARR<br/>≥80% IDOR recall on public benchmark<br/>≤15% false-positive rate on production repos</div>
+    </div>
+    <div class="stage" style="background:#1c1c1c">
+      <div class="stage-n">02</div>
+      <div class="stage-t">Consolidate the Platform</div>
+      <div class="stage-p">Months 6–18 · Become all-in-one</div>
+      <div class="stage-items">
+        <div class="stage-item">Add reachability-based SCA + malicious-package detection — the September 2025 Shai-Hulud worm and March 2026 trivy-action compromise make this table-stakes, not a feature</div>
+        <div class="stage-item">Ship secrets + IaC scanning inside the same dashboard (Trivy/Checkov/TruffleHog/Gitleaks parity) — let customers cancel 3 point tools on day one</div>
+        <div class="stage-item">Self-hosted / air-gapped / VPC deployment — Commvault and Bajaj Finserv Health-class deals require it. No enterprise contract closes without it</div>
+        <div class="stage-item">Agentic auto-fix that opens PRs, never auto-merges — Pixee's "humans approve every change" framing is correct and legally important</div>
+        <div class="stage-item">MCP server + integrations with Claude Code, Cursor, Copilot, Codex, Gemini, Devin — Astra becomes the policy/verification layer for AI agents</div>
+      </div>
+      <div class="stage-thresh">Threshold to advance:<br/>$10M ARR<br/>5,000+ paying customers<br/>Documented displacement vs SonarQube + Snyk</div>
+    </div>
+    <div class="stage">
+      <div class="stage-n">03</div>
+      <div class="stage-t">Defend &amp; Expand</div>
+      <div class="stage-p">Months 18–36 · Build the data moat</div>
+      <div class="stage-items">
+        <div class="stage-item">Cross-repo / monorepo reasoning beating CodeRabbit's March 2026 multi-repo feature — service mesh data flow, cross-service IDOR detection</div>
+        <div class="stage-item">Runtime feedback loop: ingest exploitation data from Contrast ADR / Datadog / Wiz to prioritize Astra's findings by what's actually being exploited in production</div>
+        <div class="stage-item">API security depth — BOLA/BFLA/shadow API discovery to compete with Escape.tech and 42Crunch from the SAST direction</div>
+        <div class="stage-item">Compliance pack: NIST SSDF, OWASP Top 10, CWE Top 25, PCI-DSS, HIPAA, SOC 2, ISO 27001, FedRAMP-ready — non-optional for enterprise deals</div>
+        <div class="stage-item">Memory-based learning: each customer's triage decisions make Astra smarter for that customer — the data moat incumbents cannot replicate retroactively</div>
+      </div>
+      <div class="stage-thresh">Contingency triggers:<br/>Semgrep AI GA → ship benchmark NOW, before it launches<br/>GitHub bundles reviewer free → multi-platform + AI-SAST pivot<br/>Model API costs drop 50% → data moat is the new defensibility, not model selection</div>
+    </div>
+  </div>
+
+  <div class="callout dark-bg" style="margin-top:32px">
+    <div class="callout-t">The Critical Path Constraint</div>
+    <div class="callout-b">Semgrep's AI-Powered Detection private beta (Nov 2025) is IDOR-only and has not yet gone GA. If it goes GA at competitive pricing in Q3 2026, the IDOR-detection wedge narrows fast. Astra must ship its hybrid engine with a public benchmark before that date. The window is open — but not indefinitely.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="ft-l">
+    <div class="ft-mark">
+      <svg viewBox="0 0 16 16" width="11" height="11" fill="#fff"><path d="M8 1L1 4v8l7 3 7-3V4L8 1zm0 2.2l4.5 1.9L8 7 3.5 5.1 8 3.2zM3 6.6l4 1.7V13L3 11.3V6.6zm10 4.7l-4 1.7V8.3l4-1.7v4.7z"/></svg>
+    </div>
+    Astra Security — Competitive Intelligence Report
+  </div>
+  <div class="ft-r">30+ tools · 5 categories · May 2026<br/>Sources: TechCrunch · Gartner · arXiv · SecurityWeek · G2 · GitHub · CISA</div>
+</footer>
+
+<script src="https://unpkg.com/carbon-components@10/scripts/carbon-components.min.js"></script>
+<script>
+// Tab switcher
+const tabBtns = document.querySelectorAll('#comp-tabs .tab-btn');
+const tabPanes = document.querySelectorAll('.tab-pane');
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = btn.dataset.tab;
+    tabBtns.forEach(b => b.classList.remove('on'));
+    tabPanes.forEach(p => p.classList.remove('on'));
+    btn.classList.add('on');
+    const pane = document.getElementById(id);
+    if (pane) pane.classList.add('on');
+  });
+});
+
+// Smooth scroll + active nav
+document.querySelectorAll('.bx--header-nav-item__link[href^="#"]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    const el = document.getElementById(link.getAttribute('href').slice(1));
+    if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+    document.querySelectorAll('.bx--header-nav-item').forEach(i => i.classList.remove('bx--header-nav-item--active'));
+    link.closest('.bx--header-nav-item').classList.add('bx--header-nav-item--active');
+  });
+});
+
+// Active section tracking
+const ids = ['overview','competitors','gaps','pricing','sota','signals','roadmap'];
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const lnk = document.querySelector(`.bx--header-nav-item__link[href="#${e.target.id}"]`);
+      if (lnk) {
+        document.querySelectorAll('.bx--header-nav-item').forEach(i => i.classList.remove('bx--header-nav-item--active'));
+        lnk.closest('.bx--header-nav-item').classList.add('bx--header-nav-item--active');
+      }
+    }
+  });
+}, {threshold: 0.15, rootMargin: '-48px 0px 0px 0px'});
+ids.forEach(id => { const el = document.getElementById(id); if (el) io.observe(el); });
+</script>
+</body>
+</html>

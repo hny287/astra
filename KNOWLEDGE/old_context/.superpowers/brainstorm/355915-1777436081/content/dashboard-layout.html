@@ -1,0 +1,106 @@
+<h2>Dashboard Navigation Layout</h2>
+<p class="subtitle">Three views, three personas — how should users switch between them?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f172a;border-radius:8px;padding:12px;font-family:monospace;font-size:11px;color:#94a3b8">
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <span style="background:#6366f1;color:#fff;padding:3px 10px;border-radius:4px;font-size:10px">ASTRA</span>
+          <span style="color:#6366f1;padding:3px 8px;border-radius:4px;border:1px solid #6366f1;font-size:10px">Executive</span>
+          <span style="padding:3px 8px;border-radius:4px;font-size:10px">Engineering</span>
+          <span style="padding:3px 8px;border-radius:4px;font-size:10px">Security Ops</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+          <div style="background:#1e293b;border-radius:4px;padding:8px">
+            <div style="color:#f43f5e;font-size:16px;font-weight:bold">94</div>
+            <div style="font-size:9px">Critical Findings</div>
+          </div>
+          <div style="background:#1e293b;border-radius:4px;padding:8px">
+            <div style="color:#f59e0b;font-size:16px;font-weight:bold">12</div>
+            <div style="font-size:9px">Repos at Risk</div>
+          </div>
+          <div style="background:#1e293b;border-radius:4px;padding:8px">
+            <div style="color:#22c55e;font-size:16px;font-weight:bold">87%</div>
+            <div style="font-size:9px">Compliance Score</div>
+          </div>
+        </div>
+        <div style="background:#1e293b;border-radius:4px;padding:6px;font-size:9px;color:#64748b">Risk trend chart...</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Top Nav with Role Tabs</h3>
+      <p>Single app, persona switching via top tabs. All three views share the same shell. Simple, familiar, no login switching required.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f172a;border-radius:8px;padding:12px;font-family:monospace;font-size:11px;color:#94a3b8;display:flex;gap:8px">
+        <div style="width:90px;flex-shrink:0">
+          <div style="background:#6366f1;color:#fff;padding:4px 6px;border-radius:4px;font-size:10px;margin-bottom:8px;text-align:center">ASTRA</div>
+          <div style="background:#1e293b;border-radius:4px;padding:4px 6px;margin-bottom:3px;font-size:9px;color:#6366f1">Dashboard</div>
+          <div style="padding:4px 6px;margin-bottom:3px;font-size:9px">Findings</div>
+          <div style="padding:4px 6px;margin-bottom:3px;font-size:9px">Repos</div>
+          <div style="padding:4px 6px;margin-bottom:3px;font-size:9px">Integrations</div>
+          <div style="padding:4px 6px;margin-bottom:3px;font-size:9px">Policies</div>
+          <div style="padding:4px 6px;margin-bottom:3px;font-size:9px">Reports</div>
+          <div style="padding:4px 6px;font-size:9px">Settings</div>
+        </div>
+        <div style="flex:1">
+          <div style="background:#1e293b;border-radius:4px;padding:6px;margin-bottom:6px">
+            <div style="font-size:9px;color:#6366f1;margin-bottom:4px">EXECUTIVE SUMMARY</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+              <div style="background:#0f172a;padding:4px;border-radius:3px;font-size:9px">94 Critical</div>
+              <div style="background:#0f172a;padding:4px;border-radius:3px;font-size:9px">87% Compliance</div>
+            </div>
+          </div>
+          <div style="background:#1e293b;border-radius:4px;padding:6px;font-size:9px;color:#64748b">Recent scan activity...</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Persistent Left Sidebar</h3>
+      <p>Classic enterprise app layout. Sidebar nav with feature sections. Role-specific sections appear based on user permissions. Power users prefer this.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#0f172a;border-radius:8px;padding:12px;font-family:monospace;font-size:11px;color:#94a3b8">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="background:#6366f1;color:#fff;padding:3px 10px;border-radius:4px;font-size:10px">ASTRA</span>
+          <span style="font-size:9px;color:#64748b">Org: Acme Corp  ▾  |  Role: CISO  ▾</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div style="background:#1e293b;border-radius:4px;padding:8px;border:1px solid #6366f1">
+            <div style="font-size:9px;color:#6366f1;margin-bottom:4px">EXECUTIVE</div>
+            <div style="font-size:9px">Risk Scores</div>
+            <div style="font-size:9px">Compliance</div>
+            <div style="font-size:9px">Trends</div>
+          </div>
+          <div style="background:#1e293b;border-radius:4px;padding:8px">
+            <div style="font-size:9px;color:#64748b;margin-bottom:4px">ENGINEERING</div>
+            <div style="font-size:9px">Findings</div>
+            <div style="font-size:9px">PRs / Repos</div>
+            <div style="font-size:9px">Fix Guidance</div>
+          </div>
+          <div style="background:#1e293b;border-radius:4px;padding:8px">
+            <div style="font-size:9px;color:#64748b;margin-bottom:4px">SEC OPS</div>
+            <div style="font-size:9px">Workflows</div>
+            <div style="font-size:9px">SLA Tracking</div>
+            <div style="font-size:9px">Jira / Slack</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Role-Based Home with Workspace Switcher</h3>
+      <p>Each role gets a purpose-built workspace. Users land on their role's view. Admins can switch between workspaces. Cleanest separation of concerns.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px">Click a layout to select it, then tell me your preference in the terminal.</p>

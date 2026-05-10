@@ -1,0 +1,224 @@
+{
+  "providers": {
+    "cloud-ollama": {
+      "baseURL": "https://ollama.com",
+      "apiKeyEnv": "OLLAMA_API_KEY",
+      "models": {
+        "gpt-oss:120b": {
+          "inputTokenLimit": 131072,
+          "outputTokenLimit": 8192,
+          "contextWindow": 131072,
+          "temperature": 0.2,
+          "supportsThinking": true,
+          "maxThinkingTokens": 8192
+        },
+        "glm-5.1:cloud": {
+          "inputTokenLimit": 131072,
+          "outputTokenLimit": 8192,
+          "contextWindow": 131072,
+          "temperature": 0.2,
+          "supportsThinking": true,
+          "maxThinkingTokens": 16384
+        },
+        "kimi-k2.6:cloud": {
+          "inputTokenLimit": 131072,
+          "outputTokenLimit": 8192,
+          "contextWindow": 131072,
+          "temperature": 0.2,
+          "supportsThinking": true,
+          "maxThinkingTokens": 8192
+        },
+        "gemma4:31b-cloud": {
+          "inputTokenLimit": 131072,
+          "outputTokenLimit": 8192,
+          "contextWindow": 131072,
+          "temperature": 0.2,
+          "supportsThinking": true,
+          "maxThinkingTokens": 16384
+        },
+        "gemma3:27b-cloud": {
+          "inputTokenLimit": 131072,
+          "outputTokenLimit": 8192,
+          "contextWindow": 131072,
+          "temperature": 0.2,
+          "supportsThinking": true,
+          "maxThinkingTokens": 8192
+        }
+      }
+    },
+    "hosted-ollama": {
+      "baseURL": "http://localhost:11434",
+      "models": {
+        "deepseek-coder": {
+          "inputTokenLimit": 8192,
+          "outputTokenLimit": 8192,
+          "contextWindow": 8192,
+          "temperature": 0.2,
+          "supportsThinking": false
+        },
+        "llama3": {
+          "inputTokenLimit": 8192,
+          "outputTokenLimit": 8192,
+          "contextWindow": 8192,
+          "temperature": 0.2,
+          "supportsThinking": false
+        }
+      }
+    },
+    "openai": {
+      "apiKeyEnv": "OPENAI_API_KEY",
+      "models": {
+        "gpt-4o": {
+          "inputTokenLimit": 128000,
+          "outputTokenLimit": 16384,
+          "contextWindow": 128000,
+          "temperature": 0.2,
+          "supportsThinking": true,
+          "maxThinkingTokens": 16384
+        }
+      }
+    },
+    "anthropic": {
+      "apiKeyEnv": "ANTHROPIC_API_KEY",
+      "models": {
+        "claude-sonnet-4-20250514": {
+          "inputTokenLimit": 200000,
+          "outputTokenLimit": 8192,
+          "contextWindow": 200000,
+          "temperature": 0.2,
+          "supportsThinking": true,
+          "maxThinkingTokens": 16000
+        }
+      }
+    },
+    "bedrock": {
+      "models": {}
+    },
+    "azure-ai-foundry": {
+      "models": {}
+    },
+    "langgraph": {
+      "models": {}
+    }
+  },
+  "scan": {
+    "nodes": {
+      "discover": {
+        "provider": "cloud-ollama",
+        "model": "gpt-oss:120b",
+        "temperature": 0.2,
+        "thinkingDepth": "medium",
+        "thinkingBudget": null,
+        "topP": 0.9,
+        "topK": null,
+        "frequencyPenalty": 0,
+        "presencePenalty": 0,
+        "stopSequences": [],
+        "scanDepth": "standard",
+        "maxFileBytes": 10240,
+        "maxOutputTokens": 2048,
+        "contextWindowOverride": null,
+        "instructions": "",
+        "tools": [
+          "directory-lister",
+          "pattern-matcher"
+        ],
+        "knowledge": [
+          "patterns:injection",
+          "patterns:auth",
+          "guidelines:owasp-top10"
+        ],
+        "maxRetries": 3,
+        "retryBackoffMs": 2000,
+        "timeoutMs": 60000
+      },
+      "deepScan": {
+        "provider": "cloud-ollama",
+        "model": "kimi-k2.6:cloud",
+        "temperature": 0.2,
+        "thinkingDepth": "high",
+        "thinkingBudget": 8192,
+        "topP": 0.9,
+        "topK": null,
+        "frequencyPenalty": 0,
+        "presencePenalty": 0,
+        "stopSequences": [],
+        "scanDepth": "deep",
+        "maxFileBytes": 51200,
+        "maxOutputTokens": 4096,
+        "contextWindowOverride": null,
+        "instructions": "",
+        "tools": [
+          "file-reader",
+          "pattern-matcher"
+        ],
+        "knowledge": [
+          "patterns:*",
+          "guidelines:*"
+        ],
+        "maxRetries": 3,
+        "retryBackoffMs": 2000,
+        "timeoutMs": 120000,
+        "concurrency": 5
+      },
+      "crossFile": {
+        "provider": "cloud-ollama",
+        "model": "kimi-k2.6:cloud",
+        "temperature": 0.2,
+        "thinkingDepth": "max",
+        "thinkingBudget": 16384,
+        "topP": 0.9,
+        "topK": null,
+        "frequencyPenalty": 0,
+        "presencePenalty": 0,
+        "stopSequences": [],
+        "scanDepth": "exhaustive",
+        "maxFileBytes": 51200,
+        "maxOutputTokens": 8192,
+        "contextWindowOverride": null,
+        "instructions": "",
+        "tools": [
+          "file-reader",
+          "code-searcher"
+        ],
+        "knowledge": [
+          "patterns:data-flow",
+          "guidelines:business-logic",
+          "patterns:injection",
+          "patterns:auth",
+          "patterns:*",
+          "guidelines:owasp-top10",
+          "guidelines:*"
+        ],
+        "maxRetries": 3,
+        "retryBackoffMs": 2000,
+        "timeoutMs": 180000
+      }
+    },
+    "severity": [
+      "CRITICAL",
+      "HIGH",
+      "MEDIUM",
+      "LOW",
+      "INFO"
+    ],
+    "ignore": []
+  },
+  "chat": {
+    "provider": "cloud-ollama",
+    "model": "glm-5.1:cloud",
+    "temperature": 0.3,
+    "thinkingDepth": "low",
+    "thinkingBudget": null,
+    "topP": 0.9,
+    "topK": null,
+    "frequencyPenalty": 0,
+    "presencePenalty": 0,
+    "stopSequences": [],
+    "maxOutputTokens": 2048,
+    "maxRetries": 2,
+    "retryBackoffMs": 1000,
+    "timeoutMs": 30000,
+    "systemPrompt": "You are New Age Gen 1, an AI security assistant. You help users understand security findings, vulnerabilities, and remediation strategies. Be concise, technical, and actionable. When discussing findings, reference specific details like severity, file paths, CWE/OWASP identifiers, and provide concrete remediation advice."
+  }
+}

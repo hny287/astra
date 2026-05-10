@@ -1,0 +1,489 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ScanStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum Category {
+  SAST
+  SCA
+  SECRETS
+  IAC
+  DATA_FLOW
+  BUSINESS_LOGIC
+}
+
+enum RuleStatus {
+  CANDIDATE
+  CONFIRMED
+  REJECTED
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum UserRole {
+  ADMIN
+  ANALYST
+  VIEWER
+}
+
+enum AlertStatus {
+  OPEN
+  CONFIRMED
+  FALSE_POSITIVE
+  REMEDIATED
+  ACCEPTED_RISK
+  IN_PROGRESS
+}
+
+enum AiCallStatus {
+  SUCCESS
+  ERROR
+  TIMEOUT
+  RATE_LIMITED
+  CANCELLED
+}
+
+enum TaskType {
+  FINDING_TRIAGE
+  REMEDIATION
+  MANUAL_REVIEW
+  MANUAL
+  AI_GENERATED
+}
+
+enum TaskPriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+  INFO
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  IN_REVIEW
+  COMPLETED
+  CANCELLED
+  DUPLICATE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         UserRole @default(VIEWER)
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  scans             Scan[]
+  assignedFindings  Finding[]
+  aiCallLogs        AiCallLog[]
+  tasksAssigned     Task[]      @relation("TaskAssignedTo")
+  tasksCreated      Task[]      @relation("TaskCreatedBy")
+  taskHistory       TaskHistory[]
+  taskComments      TaskComment[]
+  alertComments     AlertComment[]
+  alertHistory      AlertHistory[]
+  chatMessages      AiConversation[]
+  githubProfile     GithubProfile?
+  presets           Preset[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model GithubProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  githubId    Int      @unique
+  username    String
+  accessToken String
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Scan {
+  id               String            @id @default(cuid())
+  repoUrl          String
+  branch           String            @default("main")
+  commitSha        String?
+  status           ScanStatus        @default(PENDING)
+  configJson       Json
+  durationSeconds  Int?
+  totalInputTokens Int               @default(0)
+  totalOutputTokens Int              @default(0)
+  userId           String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  findings        Finding[]
+  businessRules   BusinessLogicRule[]
+  nodeOutputs     NodeOutput[]
+  jobs            Job[]
+  logs            ScanLog[]
+  rules           UserRule[]
+  conversations   AiConversation[]
+  aiCallLogs      AiCallLog[]
+  tasks           Task[]
+  user            User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model Finding {
+  id              String      @id @default(cuid())
+  fingerprint     String
+  scanId          String
+  scanner         String
+  ruleId          String
+  title           String
+  description     String      @default("")
+  severity        Severity
+  category        Category
+  file            String
+  lineStart       Int         @default(0)
+  lineEnd         Int         @default(0)
+  codeSnippet     String      @default("")
+  language        String      @default("")
+  cwe             String[]   @default([])
+  owasp           String[]   @default([])
+  aiExplanation        String?
+  aiFix                String?
+  exploitationScenario String?
+  exploitScore         Float?
+  confidence           Float     @default(0.5)
+  remediation          String    @default("")
+  rawJson              Json      @default("{}")
+  status          AlertStatus @default(OPEN)
+  assignedToId    String?
+  createdAt       DateTime    @default(now())
+
+  scan        Scan?           @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  assignedTo  User?           @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  comments    AlertComment[]
+  history     AlertHistory[]
+  chatMessages AiConversation[]
+  aiCallLogs   AiCallLog[]
+  task         Task?
+
+  @@unique([fingerprint, scanId])
+  @@index([scanId])
+  @@index([severity])
+  @@index([category])
+  @@index([status])
+  @@index([assignedToId])
+}
+
+model BusinessLogicRule {
+  id                  String     @id @default(cuid())
+  scanId              String
+  ruleText            String
+  confidence          Float
+  evidenceFiles        String[]
+  status              RuleStatus @default(CANDIDATE)
+  violationDescription String?
+  createdAt           DateTime   @default(now())
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+}
+
+model AlertComment {
+  id        String   @id @default(cuid())
+  findingId String
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+
+  finding Finding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([findingId])
+  @@index([findingId, createdAt])
+}
+
+model AlertHistory {
+  id        String   @id @default(cuid())
+  findingId String
+  userId    String
+  action    String
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+
+  finding Finding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([findingId])
+  @@index([findingId, createdAt])
+}
+
+model NodeOutput {
+  id            String   @id @default(cuid())
+  scanId        String
+  node          String
+  modelUsed     String
+  provider      String
+  nodeConfig    Json
+  inputJson     Json
+  outputJson    Json
+  inputTokens   Int      @default(0)
+  outputTokens  Int      @default(0)
+  thinkingTokens Int     @default(0)
+  durationMs    Int      @default(0)
+  error         String?
+  createdAt     DateTime @default(now())
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+  @@index([node])
+}
+
+model Preset {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String   @default("")
+  configJson  Json
+  isBuiltin   Boolean  @default(false)
+  userId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  scanId      String
+  node        String
+  status      JobStatus @default(PENDING)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  inputJson   Json      @default("{}")
+  outputJson  Json?
+  error       String?
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  aiCallLogs AiCallLog[]
+
+  @@index([scanId])
+  @@index([status])
+  @@index([scanId, node])
+}
+
+model ScanLog {
+  id        String   @id @default(cuid())
+  scanId    String
+  level     String   @default("info")
+  source    String
+  message   String
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  scan Scan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+  @@index([scanId, createdAt])
+}
+
+model UserRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  ruleText    String
+  severity    String   @default("MEDIUM")
+  category    String   @default("SAST")
+  cwe         String[] @default([])
+  isActive   Boolean  @default(true)
+  isBuiltin  Boolean  @default(false)
+  scanId     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  scan Scan? @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+  @@index([isActive])
+}
+
+model UserPreference {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model Config {
+  id    String @id @default(cuid())
+  key   String @unique
+  value Json
+}
+
+model AiConversation {
+  id        String   @id @default(cuid())
+  scanId    String?
+  findingId String?
+  userId    String?
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  scan    Scan?     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  finding Finding?  @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  user    User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([scanId])
+  @@index([findingId])
+  @@index([scanId, findingId])
+  @@index([userId])
+}
+
+model AiCallLog {
+  id             String       @id @default(cuid())
+  scanId         String?
+  jobId          String?
+  findingId      String?
+  userId         String?
+  source         String
+  node           String?
+  provider       String
+  model          String
+  endpoint       String
+  sdk            String?
+  sdkVersion     String?
+  rawRequest     Json?
+  rawResponse    Json?
+  systemPrompt   String?
+  userPrompt     String?
+  response       String?
+  inputTokens    Int          @default(0)
+  outputTokens   Int          @default(0)
+  thinkingTokens Int          @default(0)
+  latencyMs      Int          @default(0)
+  temperature    Float?
+  thinkingDepth  String?
+  thinkingBudget Int?
+  topP           Float?
+  topK           Int?
+  maxOutputTokens Int?
+  nodeConfig     Json?
+  status         AiCallStatus @default(SUCCESS)
+  error          String?
+  createdAt      DateTime     @default(now())
+
+  scan     Scan?     @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  job      Job?      @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  finding  Finding?  @relation(fields: [findingId], references: [id], onDelete: SetNull)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([scanId])
+  @@index([provider])
+  @@index([model])
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model Task {
+  id           String      @id @default(cuid())
+  title        String
+  description  String      @default("")
+  type         TaskType    @default(MANUAL)
+  priority     TaskPriority @default(MEDIUM)
+  status       TaskStatus  @default(OPEN)
+  findingId    String?    @unique
+  scanId       String?
+  assignedToId String?
+  createdById  String?
+  dueDate      DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  finding     Finding?    @relation(fields: [findingId], references: [id], onDelete: SetNull)
+  scan       Scan?        @relation(fields: [scanId], references: [id], onDelete: SetNull)
+  assignedTo User?        @relation("TaskAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy  User?        @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  comments    TaskComment[]
+  history     TaskHistory[]
+
+  @@index([status])
+  @@index([type])
+  @@index([priority])
+  @@index([assignedToId])
+  @@index([scanId])
+  @@index([findingId])
+  @@index([createdAt])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  text      String
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([taskId, createdAt])
+}
+
+model TaskHistory {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String?
+  action    String
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([taskId])
+  @@index([taskId, createdAt])
+}

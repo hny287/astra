@@ -1,0 +1,7 @@
+{"type":"server-started","port":54186,"host":"0.0.0.0","url_host":"localhost","url":"http://localhost:54186","screen_dir":"/root/astra/.superpowers/brainstorm/355915-1777436081/content","state_dir":"/root/astra/.superpowers/brainstorm/355915-1777436081/state"}
+{"type":"screen-added","file":"/root/astra/.superpowers/brainstorm/355915-1777436081/content/dashboard-layout.html"}
+{"source":"user-event","type":"click","text":"ASTRA\n          Org: Acme Corp  ▾  |  Role: CISO  ▾\n        \n        \n          \n            EXECUTIVE\n            Risk Scores\n            Compliance\n            Trends\n          \n          \n            ENGINEERING\n            Findings\n            PRs / Repos\n            Fix Guidance\n          \n          \n            SEC OPS\n            Workflows\n            SLA Tracking\n            Jira / Slack\n          \n        \n      \n    \n    \n      C — Role-Based Home with Workspace Switcher\n      Each role gets a purpose-built workspace. Users land on their role's view. Admins can switch between workspaces. Cleanest separation of concerns.","choice":"c","id":null,"timestamp":1777436142277}
+{"type":"screen-added","file":"/root/astra/.superpowers/brainstorm/355915-1777436081/content/waiting-1.html"}
+{"type":"screen-added","file":"/root/astra/.superpowers/brainstorm/355915-1777436081/content/architecture-overview.html"}
+{"type":"screen-added","file":"/root/astra/.superpowers/brainstorm/355915-1777436081/content/full-infra.html"}
+{"type":"server-stopped","reason":"owner process exited"}

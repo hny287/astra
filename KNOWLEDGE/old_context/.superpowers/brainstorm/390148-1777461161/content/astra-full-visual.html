@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Astra — Complete Architecture</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #050810;
+  color: #94a3b8;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 12px;
+  padding: 24px;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+.logo { background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 10px; padding: 8px 16px; font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+.header-meta { flex: 1; }
+.header-title { font-size: 16px; color: #e2e8f0; font-weight: 700; }
+.header-sub { font-size: 10px; color: #475569; margin-top: 2px; }
+.badges { display: flex; gap: 6px; }
+.badge { font-size: 9px; padding: 3px 8px; border-radius: 10px; font-weight: 600; }
+.badge-closed { background: #1e1b4b; color: #818cf8; border: 1px solid #3730a3; }
+.badge-multi { background: #0f2a18; color: #4ade80; border: 1px solid #166534; }
+.badge-onprem { background: #1c1917; color: #f59e0b; border: 1px solid #92400e; }
+
+/* ── Layout ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 14px;
+  align-items: start;
+}
+.left-col { display: flex; flex-direction: column; gap: 10px; }
+.right-col { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── Zone containers ── */
+.zone {
+  border-radius: 10px;
+  padding: 14px;
+  position: relative;
+}
+.zone-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.zone-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+.zone-ci    { background: #0d1117; border: 1px solid #21262d; }
+.zone-dp    { background: #150f00; border: 2px solid #f59e0b; }
+.zone-cp    { background: #080820; border: 2px solid #6366f1; }
+.zone-dash  { background: #071510; border: 2px solid #22c55e; }
+.zone-int   { background: #120818; border: 2px solid #a855f7; }
+.zone-store { background: #080f1c; border: 1px solid #1e40af; }
+.zone-mt    { background: #120a00; border: 2px solid #f97316; }
+
+/* ── Flow arrows ── */
+.arrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 9px;
+  color: #334155;
+}
+.arrow-label { font-size: 9px; color: #475569; letter-spacing: 0.5px; }
+
+/* ── Boxes inside zones ── */
+.box {
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.box-title { font-size: 10px; font-weight: 700; margin-bottom: 3px; }
+.box-sub { font-size: 9px; color: #475569; line-height: 1.6; }
+.row { display: flex; gap: 8px; }
+.row-wrap { display: flex; gap: 6px; flex-wrap: wrap; }
+.flex1 { flex: 1; min-width: 0; }
+
+/* ── Scanner grid ── */
+.scanner-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.scanner-box {
+  background: rgba(255,255,255,0.04);
+  border-radius: 5px;
+  padding: 7px 8px;
+  border: 1px solid rgba(245,158,11,0.2);
+}
+.scanner-name { font-size: 10px; font-weight: 700; }
+.scanner-desc { font-size: 8px; color: #64748b; margin-top: 2px; }
+.scanner-tag { display: inline-block; font-size: 7px; padding: 1px 4px; border-radius: 3px; margin-top: 3px; font-weight: 700; }
+
+/* ── Module grid ── */
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.module {
+  background: rgba(99,102,241,0.08);
+  border-radius: 5px;
+  padding: 8px 7px;
+  border: 1px solid rgba(99,102,241,0.2);
+  text-align: center;
+}
+.module-icon { font-size: 16px; }
+.module-name { font-size: 9px; font-weight: 700; color: #818cf8; margin-top: 3px; }
+.module-desc { font-size: 8px; color: #475569; margin-top: 2px; line-height: 1.4; }
+
+/* ── Workspace grid ── */
+.ws-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.workspace {
+  background: rgba(34,197,94,0.06);
+  border-radius: 5px;
+  padding: 8px;
+  border: 1px solid rgba(34,197,94,0.2);
+}
+.ws-title { font-size: 9px; font-weight: 700; color: #4ade80; margin-bottom: 5px; }
+.ws-item { font-size: 8px; color: #475569; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.ws-item:last-child { border: none; }
+
+/* ── Pipeline ── */
+.pipeline { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; margin-top: 6px; }
+.pipe-step {
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 4px;
+  padding: 4px 7px;
+  font-size: 8px;
+  color: #fbbf24;
+  white-space: nowrap;
+}
+.pipe-arr { color: #92400e; font-size: 9px; }
+
+/* ── AI box ── */
+.ai-provider {
+  background: rgba(168,85,247,0.08);
+  border-radius: 4px;
+  padding: 5px 7px;
+  border: 1px solid rgba(168,85,247,0.2);
+  margin-bottom: 4px;
+}
+.ai-provider:last-child { margin-bottom: 0; }
+.ai-name { font-size: 9px; font-weight: 700; color: #c084fc; }
+.ai-desc { font-size: 8px; color: #475569; }
+
+/* ── Multi-tenant ── */
+.tenant-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.tenant-box {
+  background: rgba(249,115,22,0.08);
+  border-radius: 5px;
+  padding: 6px 8px;
+  border: 1px solid rgba(249,115,22,0.2);
+}
+.tenant-name { font-size: 9px; font-weight: 700; color: #fb923c; }
+.tenant-desc { font-size: 8px; color: #475569; margin-top: 2px; }
+
+/* ── Integration pills ── */
+.int-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+.int-pill {
+  background: rgba(168,85,247,0.07);
+  border-radius: 4px;
+  padding: 6px 8px;
+  border: 1px solid rgba(168,85,247,0.18);
+}
+.int-name { font-size: 9px; font-weight: 700; color: #c084fc; }
+.int-desc { font-size: 8px; color: #475569; margin-top: 1px; }
+
+/* ── Storage ── */
+.store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.store-box {
+  background: rgba(96,165,250,0.07);
+  border-radius: 4px;
+  padding: 6px 8px;
+  border: 1px solid rgba(96,165,250,0.18);
+}
+.store-name { font-size: 9px; font-weight: 700; color: #60a5fa; }
+.store-desc { font-size: 8px; color: #475569; margin-top: 2px; line-height: 1.4; }
+
+/* ── Stack pills ── */
+.stack-row { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+.stack-pill {
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #94a3b8;
+}
+
+/* ── Tiers ── */
+.tier-row { display: flex; gap: 6px; }
+.tier {
+  flex: 1;
+  border-radius: 5px;
+  padding: 7px 8px;
+  border: 1px solid;
+}
+.tier-free   { background: rgba(100,116,139,0.1); border-color: #475569; }
+.tier-pro    { background: rgba(96,165,250,0.08); border-color: #1d4ed8; }
+.tier-ent    { background: rgba(245,158,11,0.08); border-color: #b45309; }
+.tier-name   { font-size: 10px; font-weight: 800; margin-bottom: 3px; }
+.tier-item   { font-size: 8px; color: #64748b; line-height: 1.7; }
+.tier-free .tier-name { color: #94a3b8; }
+.tier-pro  .tier-name { color: #60a5fa; }
+.tier-ent  .tier-name { color: #f59e0b; }
+
+/* ── Legend ── */
+.legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 9px; color: #64748b; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* colors */
+.c-yellow { color: #fbbf24; }
+.c-indigo { color: #818cf8; }
+.c-green  { color: #4ade80; }
+.c-purple { color: #c084fc; }
+.c-blue   { color: #60a5fa; }
+.c-orange { color: #fb923c; }
+.c-red    { color: #f87171; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">ASTRA</div>
+  <div class="header-meta">
+    <div class="header-title">Complete System Architecture</div>
+    <div class="header-sub">On-Prem Multi-Tenant · Control/Data Plane Separated · AI-Augmented · Closed Source</div>
+  </div>
+  <div class="badges">
+    <span class="badge badge-closed">Closed Source</span>
+    <span class="badge badge-multi">Multi-Tenant</span>
+    <span class="badge badge-onprem">On-Prem First</span>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Data Plane (customer CI)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div>Control Plane (on-prem server)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>Dashboard (Next.js)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div>Integrations</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e40af"></div>Storage</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Multi-Tenancy</div>
+</div>
+
+<div class="main-grid">
+<div class="left-col">
+
+  <!-- MULTI-TENANCY -->
+  <div class="zone zone-mt">
+    <div class="zone-label"><div class="zone-dot" style="background:#f97316"></div><span class="c-orange">MULTI-TENANCY — Row-Level Org Isolation (org_id on every table)</span></div>
+    <div class="tenant-grid">
+      <div class="tenant-box">
+        <div class="tenant-name">Org: Acme Corp</div>
+        <div class="tenant-desc">Teams · Repos · Findings · Policies</div>
+      </div>
+      <div class="tenant-box">
+        <div class="tenant-name">Org: Globex Inc</div>
+        <div class="tenant-desc">Teams · Repos · Findings · Policies</div>
+      </div>
+      <div class="tenant-box">
+        <div class="tenant-name">Org: Initech</div>
+        <div class="tenant-desc">Teams · Repos · Findings · Policies</div>
+      </div>
+      <div class="tenant-box" style="border-style:dashed">
+        <div class="tenant-name" style="color:#64748b">+ Add Org</div>
+        <div class="tenant-desc">Self-service onboarding</div>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-size:8px;color:#92400e;background:rgba(249,115,22,0.06);border-radius:4px;padding:5px 8px">
+      Every DB query is scoped to <code style="color:#fb923c">org_id</code>. Orgs are completely isolated — no cross-org data access possible. On-prem v1 · SaaS-ready architecture.
+    </div>
+  </div>
+
+  <!-- CI LAYER -->
+  <div class="zone zone-ci">
+    <div class="zone-label"><div class="zone-dot" style="background:#58a6ff"></div><span style="color:#58a6ff">CI TRIGGER LAYER — Customer CI Environment (public wrappers only, zero logic exposed)</span></div>
+    <div class="row">
+      <div class="box flex1">
+        <div class="box-title" style="color:#58a6ff">GitHub Actions</div>
+        <div class="box-sub">uses: astra-security/scan-action@v1<br/>5-line wrapper → calls Docker image</div>
+      </div>
+      <div class="box flex1">
+        <div class="box-title" style="color:#58a6ff">GitLab CI</div>
+        <div class="box-sub">image: ghcr.io/astra/agent:latest<br/>docker pull with license key</div>
+      </div>
+      <div class="box flex1">
+        <div class="box-title" style="color:#58a6ff">Jenkins</div>
+        <div class="box-sub">Docker agent in Jenkinsfile<br/>Same image, same token model</div>
+      </div>
+      <div class="box flex1">
+        <div class="box-title" style="color:#58a6ff">Any CI</div>
+        <div class="box-sub">docker run astra/agent scan<br/>--token $ASTRA_TOKEN</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-row">▼ <span class="arrow-label">mounts repo as volume · reads ASTRA_TOKEN · pulls image from private registry</span> ▼</div>
+
+  <!-- DATA PLANE -->
+  <div class="zone zone-dp">
+    <div class="zone-label"><div class="zone-dot" style="background:#f59e0b"></div><span class="c-yellow">DATA PLANE — astra/agent Docker Container (closed-source · node:22-slim + Python runtime)</span></div>
+
+    <!-- Pipeline -->
+    <div class="box" style="margin-bottom:8px; border-color:rgba(245,158,11,0.2)">
+      <div class="box-title c-yellow">Scan Execution Pipeline</div>
+      <div class="pipeline">
+        <div class="pipe-step">1. Token<br/>Validate</div><div class="pipe-arr">→</div>
+        <div class="pipe-step">2. Context<br/>Collect</div><div class="pipe-arr">→</div>
+        <div class="pipe-step">3. Language<br/>Detect</div><div class="pipe-arr">→</div>
+        <div class="pipe-step">4. Parallel<br/>Scan</div><div class="pipe-arr">→</div>
+        <div class="pipe-step">5. Normalize<br/>Findings</div><div class="pipe-arr">→</div>
+        <div class="pipe-step">6. AI<br/>Enrich</div><div class="pipe-arr">→</div>
+        <div class="pipe-step">7. Biz Logic<br/>Infer</div><div class="pipe-arr">→</div>
+        <div class="pipe-step">8. Emit<br/>JSON</div>
+      </div>
+    </div>
+
+    <div class="row" style="gap:8px">
+      <!-- Scanners -->
+      <div style="flex:2; min-width:0">
+        <div style="font-size:9px;color:#f59e0b;font-weight:700;margin-bottom:6px">ALL SCANNER BINARIES LIVE INSIDE THIS CONTAINER</div>
+        <div class="scanner-grid">
+          <div class="scanner-box">
+            <div class="scanner-name c-red">Trivy</div>
+            <div class="scanner-desc">CVEs in deps, container images, IaC misconfigs</div>
+            <span class="scanner-tag" style="background:#450a0a;color:#f87171">SCA</span>
+            <span class="scanner-tag" style="background:#1e3a5f;color:#60a5fa">IaC</span>
+          </div>
+          <div class="scanner-box">
+            <div class="scanner-name" style="color:#fb923c">Semgrep</div>
+            <div class="scanner-desc">SAST · 500+ bundled rules · custom rules</div>
+            <span class="scanner-tag" style="background:#7c2d12;color:#fb923c">SAST</span>
+          </div>
+          <div class="scanner-box">
+            <div class="scanner-name" style="color:#facc15">Bearer CI</div>
+            <div class="scanner-desc">Sensitive data flows, PII, OWASP API Top 10</div>
+            <span class="scanner-tag" style="background:#4a1d96;color:#c4b5fd">DataFlow</span>
+          </div>
+          <div class="scanner-box">
+            <div class="scanner-name" style="color:#4ade80">Gitleaks</div>
+            <div class="scanner-desc">Secrets + credentials in code & git history</div>
+            <span class="scanner-tag" style="background:#14532d;color:#4ade80">Secrets</span>
+          </div>
+          <div class="scanner-box">
+            <div class="scanner-name c-blue">Checkov</div>
+            <div class="scanner-desc">Terraform, Helm, K8s, CloudFormation, Dockerfile</div>
+            <span class="scanner-tag" style="background:#1e3a5f;color:#60a5fa">IaC</span>
+          </div>
+          <div class="scanner-box">
+            <div class="scanner-name" style="color:#22d3ee">Bandit</div>
+            <div class="scanner-desc">Python-specific SAST. Complements Semgrep.</div>
+            <span class="scanner-tag" style="background:#7c2d12;color:#fb923c">SAST</span>
+          </div>
+        </div>
+        <div class="box" style="border-color:rgba(168,85,247,0.3)">
+          <div class="box-title c-purple">Plugin Interface — .astra/plugins.yml</div>
+          <div class="box-sub">Any tool outputting JSON/SARIF can plug in: Snyk CLI, CodeQL, custom scripts, proprietary scanners. Agent auto-discovers and runs them alongside bundled scanners.</div>
+        </div>
+      </div>
+
+      <!-- AI Engine -->
+      <div style="flex:1; min-width:160px; display:flex; flex-direction:column; gap:6px">
+        <div style="font-size:9px;color:#f59e0b;font-weight:700">AI ENGINE (runs in container)</div>
+        <div class="ai-provider">
+          <div class="ai-name">Ollama (Default)</div>
+          <div class="ai-desc">CodeLlama 13b · Llama 3 · Mistral<br/>Fully local · zero egress · free</div>
+        </div>
+        <div class="ai-provider">
+          <div class="ai-name">AWS Bedrock</div>
+          <div class="ai-desc">Llama 3 70b · Mistral<br/>Stays in customer AWS account</div>
+        </div>
+        <div class="ai-provider">
+          <div class="ai-name">Cloud AI (opt-in)</div>
+          <div class="ai-desc">OpenAI GPT-4o · Anthropic Claude<br/>Org admin must explicitly enable</div>
+        </div>
+        <div class="box" style="border-color:rgba(168,85,247,0.3);flex:1">
+          <div class="box-title c-purple" style="margin-bottom:4px">AI Tasks</div>
+          <div class="box-sub">① Finding explanation<br/>② Fix code snippet<br/>③ Exploitability score<br/>④ Business logic inference<br/>⑤ Rule violation check</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:8px;font-size:8px;color:#92400e;background:rgba(245,158,11,0.06);border-radius:4px;padding:5px 8px">
+      <strong style="color:#f59e0b">Boundary:</strong> Only structured findings JSON crosses to control plane. Raw source code, file contents, git history — none of it leaves this container.
+    </div>
+  </div>
+
+  <div class="arrow-row">▼ <span class="arrow-label">HTTPS POST · gzip-JSON findings only · scan token auth · no raw code transmitted</span> ▼</div>
+
+  <!-- CONTROL PLANE -->
+  <div class="zone zone-cp">
+    <div class="zone-label"><div class="zone-dot" style="background:#6366f1"></div><span class="c-indigo">CONTROL PLANE — Fastify v5 API · Node.js 22 + TypeScript · Runs on customer's on-prem server</span></div>
+
+    <div class="module-grid" style="margin-bottom:10px">
+      <div class="module">
+        <div class="module-icon">🔐</div>
+        <div class="module-name">Auth Module</div>
+        <div class="module-desc">Sessions · RBAC · SAML/OIDC · Scan token lifecycle · API keys</div>
+      </div>
+      <div class="module">
+        <div class="module-icon">🔍</div>
+        <div class="module-name">Findings Module</div>
+        <div class="module-desc">Ingest · Deduplicate (fingerprint) · State transitions · Trends</div>
+      </div>
+      <div class="module">
+        <div class="module-icon">📋</div>
+        <div class="module-name">Policies Module</div>
+        <div class="module-desc">Routing rules · SLA config · Fail thresholds · Allowlists</div>
+      </div>
+      <div class="module">
+        <div class="module-icon">🤖</div>
+        <div class="module-name">AI Orchestration</div>
+        <div class="module-desc">Biz logic rule store · Human confirmation · Violation tracking</div>
+      </div>
+      <div class="module">
+        <div class="module-icon">🔗</div>
+        <div class="module-name">Integrations Module</div>
+        <div class="module-desc">Jira · Slack · PagerDuty · Webhook dispatcher</div>
+      </div>
+      <div class="module">
+        <div class="module-icon">📡</div>
+        <div class="module-name">Dashboard API</div>
+        <div class="module-desc">REST v1 · WebSocket · OpenAPI spec · Multi-tenant routing</div>
+      </div>
+    </div>
+
+    <!-- Business Logic Loop -->
+    <div class="box" style="margin-bottom:8px; border-color:rgba(168,85,247,0.3)">
+      <div class="box-title c-purple" style="margin-bottom:6px">Business Logic Flaw Engine — Hybrid AI + Human Loop</div>
+      <div class="pipeline" style="gap:4px">
+        <div class="pipe-step" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:#c084fc">AI infers<br/>rules from code</div><div class="pipe-arr" style="color:#7c3aed">→</div>
+        <div class="pipe-step" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:#c084fc">Proposals sent<br/>to control plane</div><div class="pipe-arr" style="color:#7c3aed">→</div>
+        <div class="pipe-step" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:#c084fc">Security team<br/>confirm/edit/reject</div><div class="pipe-arr" style="color:#7c3aed">→</div>
+        <div class="pipe-step" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:#c084fc">Rules stored<br/>in policy DB</div><div class="pipe-arr" style="color:#7c3aed">→</div>
+        <div class="pipe-step" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:#c084fc">Future scans<br/>enforce rules</div><div class="pipe-arr" style="color:#7c3aed">→</div>
+        <div class="pipe-step" style="background:rgba(168,85,247,0.1);border-color:rgba(168,85,247,0.3);color:#c084fc">Violations →<br/>BIZ_LOGIC finding</div>
+      </div>
+    </div>
+
+    <!-- Tech stack pills -->
+    <div class="stack-row">
+      <span class="stack-pill" style="background:rgba(34,197,94,0.1);color:#4ade80;border-color:rgba(34,197,94,0.2)">Node.js 22 LTS</span>
+      <span class="stack-pill" style="background:rgba(99,102,241,0.1);color:#818cf8;border-color:rgba(99,102,241,0.2)">TypeScript</span>
+      <span class="stack-pill" style="background:rgba(245,158,11,0.1);color:#fbbf24;border-color:rgba(245,158,11,0.2)">Fastify v5</span>
+      <span class="stack-pill" style="background:rgba(96,165,250,0.1);color:#60a5fa;border-color:rgba(96,165,250,0.2)">Drizzle ORM</span>
+      <span class="stack-pill" style="background:rgba(168,85,247,0.1);color:#c084fc;border-color:rgba(168,85,247,0.2)">Zod validation</span>
+      <span class="stack-pill">Vitest</span>
+      <span class="stack-pill">ioredis</span>
+    </div>
+  </div>
+
+  <div class="arrow-row">▼ <span class="arrow-label">REST API + WebSocket (live scan progress)</span> ▼</div>
+
+  <!-- DASHBOARD -->
+  <div class="zone zone-dash">
+    <div class="zone-label"><div class="zone-dot" style="background:#22c55e"></div><span class="c-green">DASHBOARD — Next.js 15 App Router · TypeScript · Runs on customer's on-prem server</span></div>
+    <div class="ws-grid" style="margin-bottom:8px">
+      <div class="workspace">
+        <div class="ws-title">👔 Executive Workspace</div>
+        <div class="ws-item">Org risk score (0–100)</div>
+        <div class="ws-item">Compliance posture</div>
+        <div class="ws-item">Finding trends (90 days)</div>
+        <div class="ws-item">Top vulnerable repos</div>
+        <div class="ws-item">SLA breach summary</div>
+        <div class="ws-item">Remediation velocity</div>
+        <div class="ws-item">Executive PDF reports</div>
+      </div>
+      <div class="workspace">
+        <div class="ws-title">👩‍💻 Engineering Workspace</div>
+        <div class="ws-item">Per-repo finding list</div>
+        <div class="ws-item">PR-level scan results inline</div>
+        <div class="ws-item">AI fix guidance per finding</div>
+        <div class="ws-item">Code snippet + context</div>
+        <div class="ws-item">Severity triage + suppress</div>
+        <div class="ws-item">Scanner breakdown</div>
+      </div>
+      <div class="workspace">
+        <div class="ws-title">🛡️ Sec Ops Workspace</div>
+        <div class="ws-item">Finding assignment + SLA</div>
+        <div class="ws-item">Jira ticket lifecycle</div>
+        <div class="ws-item">Policy rule builder</div>
+        <div class="ws-item">Biz logic rule review queue</div>
+        <div class="ws-item">Integration config</div>
+        <div class="ws-item">Scan token manager</div>
+        <div class="ws-item">Audit log</div>
+      </div>
+    </div>
+    <div class="stack-row">
+      <span class="stack-pill" style="background:rgba(34,197,94,0.1);color:#4ade80;border-color:rgba(34,197,94,0.2)">Next.js 15</span>
+      <span class="stack-pill" style="background:rgba(99,102,241,0.1);color:#818cf8;border-color:rgba(99,102,241,0.2)">TypeScript</span>
+      <span class="stack-pill">Tailwind CSS</span>
+      <span class="stack-pill">shadcn/ui</span>
+      <span class="stack-pill">Recharts</span>
+      <span class="stack-pill">TanStack Query v5</span>
+      <span class="stack-pill">NextAuth.js v5</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- RIGHT COLUMN -->
+<div class="right-col">
+
+  <!-- INTEGRATIONS -->
+  <div class="zone zone-int">
+    <div class="zone-label"><div class="zone-dot" style="background:#a855f7"></div><span class="c-purple">EXTERNAL INTEGRATIONS</span></div>
+    <div class="int-grid">
+      <div class="int-pill">
+        <div class="int-name">Slack</div>
+        <div class="int-desc">Alerts · Digest · SLA pings · Blocks API</div>
+      </div>
+      <div class="int-pill">
+        <div class="int-name">Jira</div>
+        <div class="int-desc">Auto-tickets · Bi-directional status sync</div>
+      </div>
+      <div class="int-pill">
+        <div class="int-name">PagerDuty</div>
+        <div class="int-desc">Critical → on-call page · Auto-resolve</div>
+      </div>
+      <div class="int-pill">
+        <div class="int-name">GitHub / GitLab</div>
+        <div class="int-desc">PR comments · Merge blocking · Check runs</div>
+      </div>
+      <div class="int-pill">
+        <div class="int-name">SSO / IdP</div>
+        <div class="int-desc">SAML 2.0 · OIDC · Okta · Azure AD</div>
+      </div>
+      <div class="int-pill">
+        <div class="int-name">Webhooks</div>
+        <div class="int-desc">Generic outbound · HMAC signed · Retries</div>
+      </div>
+      <div class="int-pill">
+        <div class="int-name">Email</div>
+        <div class="int-desc">SLA alerts · Weekly digest · PDF reports</div>
+      </div>
+      <div class="int-pill">
+        <div class="int-name">REST API</div>
+        <div class="int-desc">Full API access · Custom integrations</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STORAGE -->
+  <div class="zone zone-store">
+    <div class="zone-label"><div class="zone-dot" style="background:#1e40af"></div><span class="c-blue">STORAGE — Control Plane Only · No data in CI</span></div>
+    <div class="store-grid">
+      <div class="store-box">
+        <div class="store-name">PostgreSQL 16</div>
+        <div class="store-desc">Findings · Orgs · Users · Repos · Policies · Scans · Audit log · Biz logic rules</div>
+      </div>
+      <div class="store-box">
+        <div class="store-name">Redis 7</div>
+        <div class="store-desc">Job queues · Dedup cache · WebSocket pub/sub · Rate limiting · Sessions</div>
+      </div>
+      <div class="store-box">
+        <div class="store-name">MinIO (S3)</div>
+        <div class="store-desc">Scan artifacts · PDF reports · Raw scanner outputs · Large payloads</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONOREPO -->
+  <div class="zone" style="background:#0a100a;border:1px solid #166534">
+    <div class="zone-label"><div class="zone-dot" style="background:#4ade80"></div><span class="c-green">MONOREPO — Turborepo + pnpm workspaces</span></div>
+    <div style="font-family:monospace;font-size:9px;color:#475569;line-height:2;background:#060f06;border-radius:5px;padding:10px">
+      <span style="color:#4ade80">astra/</span><br/>
+      ├── <span style="color:#60a5fa">apps/</span><br/>
+      │&nbsp;&nbsp;&nbsp;├── <span style="color:#818cf8">api/</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#334155">← Fastify control plane</span><br/>
+      │&nbsp;&nbsp;&nbsp;├── <span style="color:#818cf8">agent/</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#334155">← Node.js CLI scanner</span><br/>
+      │&nbsp;&nbsp;&nbsp;└── <span style="color:#818cf8">dashboard/</span> <span style="color:#334155">← Next.js 15</span><br/>
+      ├── <span style="color:#60a5fa">packages/</span><br/>
+      │&nbsp;&nbsp;&nbsp;└── <span style="color:#c084fc">types/</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#334155">← shared TS types</span><br/>
+      │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#334155">&nbsp;&nbsp;UnifiedFinding, Scan</span><br/>
+      │&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#334155">&nbsp;&nbsp;Policy, Org, User</span><br/>
+      ├── <span style="color:#64748b">turbo.json</span><br/>
+      ├── <span style="color:#64748b">pnpm-workspace.yaml</span><br/>
+      └── <span style="color:#64748b">package.json</span>
+    </div>
+  </div>
+
+  <!-- LANGUAGES -->
+  <div class="zone" style="background:#0a0a12;border:1px solid #1e293b">
+    <div class="zone-label"><div class="zone-dot" style="background:#94a3b8"></div><span>LANGUAGE SUPPORT (v1)</span></div>
+    <div class="row-wrap">
+      <span class="stack-pill" style="color:#3b82f6">Python</span>
+      <span class="stack-pill" style="color:#f7df1e">JavaScript</span>
+      <span class="stack-pill" style="color:#3178c6">TypeScript</span>
+      <span class="stack-pill" style="color:#b07219">Java</span>
+      <span class="stack-pill" style="color:#00add8">Go</span>
+      <span class="stack-pill" style="color:#cc342d">Ruby</span>
+      <span class="stack-pill" style="color:#dea584">Rust</span>
+      <span class="stack-pill" style="color:#dc322f">Scala</span>
+      <span class="stack-pill" style="color:#198ce7">R</span>
+      <span class="stack-pill" style="color:#7b42bc">Terraform</span>
+      <span class="stack-pill">Dockerfile</span>
+      <span class="stack-pill">YAML/K8s</span>
+    </div>
+  </div>
+
+  <!-- DEPLOYMENT -->
+  <div class="zone" style="background:#0a0c18;border:1px solid #1e293b">
+    <div class="zone-label"><div class="zone-dot" style="background:#64748b"></div><span>DEPLOYMENT</span></div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+      <div class="box">
+        <div class="box-title" style="color:#f59e0b">On-Prem (v1 focus)</div>
+        <div class="box-sub">Docker Compose or Helm chart. Customer runs control plane + dashboard + storage. Multi-tenant within their org.</div>
+      </div>
+      <div class="box">
+        <div class="box-title" style="color:#60a5fa">SaaS (future)</div>
+        <div class="box-sub">Same architecture, Astra-hosted. Multi-tenant across paying customers. DB isolation already built in.</div>
+      </div>
+      <div class="box">
+        <div class="box-title" style="color:#4ade80">Data Plane (always)</div>
+        <div class="box-sub">Docker container in customer CI. Pulled from private GHCR registry with license key. Code never leaves.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIERS -->
+  <div class="zone" style="background:#080808;border:1px solid #1e293b">
+    <div class="zone-label"><div class="zone-dot" style="background:#94a3b8"></div><span>LICENSING TIERS</span></div>
+    <div class="tier-row">
+      <div class="tier tier-free">
+        <div class="tier-name">FREE</div>
+        <div class="tier-item">✓ CLI scan<br/>✓ Trivy SCA<br/>✓ Semgrep community<br/>✓ Gitleaks</div>
+      </div>
+      <div class="tier tier-pro">
+        <div class="tier-name">PRO</div>
+        <div class="tier-item">✓ Dashboard<br/>✓ All scanners<br/>✓ AI enrichment<br/>✓ Slack + Jira</div>
+      </div>
+      <div class="tier tier-ent">
+        <div class="tier-name">ENTERPRISE</div>
+        <div class="tier-item">✓ Biz logic AI<br/>✓ SSO + RBAC<br/>✓ Custom policies<br/>✓ Self-hosted</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+</body>
+</html>

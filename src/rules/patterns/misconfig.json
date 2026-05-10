@@ -1,0 +1,8 @@
+{
+  "rules": [
+    {"id": "AST-CFG-001", "title": "Overly permissive CORS configuration", "severity": "HIGH", "category": "IAC"},
+    {"id": "AST-CFG-002", "title": "Missing Content-Security-Policy header", "severity": "MEDIUM", "category": "IAC"},
+    {"id": "AST-CFG-003", "title": "Insecure TLS configuration", "severity": "HIGH", "category": "IAC"},
+    {"id": "AST-CFG-004", "title": "Debug mode enabled in production", "severity": "HIGH", "category": "IAC"}
+  ]
+}

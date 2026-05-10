@@ -1,0 +1,2331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Astra — Platform Specification v3 · IBM Carbon g100</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   IBM CARBON g100 DESIGN TOKENS
+═══════════════════════════════════════════════════════════ */
+:root {
+  --bg:#161616; --bg-h:#262626; --bg-a:#393939;
+  --layer-01:#262626; --layer-02:#393939; --layer-03:#525252;
+  --layer-h-01:#333; --layer-h-02:#474747;
+  --border-00:#393939; --border-01:#525252; --border-02:#6f6f6f;
+  --border-strong:#8d8d8d; --border-inter:#4589ff;
+  --text-pri:#f4f4f4; --text-sec:#c6c6c6; --text-ph:#6f6f6f;
+  --text-dis:#525252; --text-on:#ffffff; --text-inv:#161616;
+  --link:#78a9ff; --link-v:#be95ff;
+  --inter:#4589ff; --focus:#ffffff;
+  --err:#fa4d56; --warn:#f1c21b; --ok:#42be65; --info:#4589ff;
+  --caution:#ff832b;
+  --err-bg:#2d1618; --warn-bg:#302400; --ok-bg:#071908; --info-bg:#001d6c;
+  --tag-blue-bg:#001d6c; --tag-blue:#78a9ff;
+  --tag-cyan-bg:#012749; --tag-cyan:#82cfff;
+  --tag-teal-bg:#081a1c; --tag-teal:#3ddbd9;
+  --tag-green-bg:#022d0d; --tag-green:#42be65;
+  --tag-red-bg:#2d1618; --tag-red:#ff8389;
+  --tag-orange-bg:#231000; --tag-orange:#ff832b;
+  --tag-yellow-bg:#302400; --tag-yellow:#f1c21b;
+  --tag-purple-bg:#1c0f30; --tag-purple:#d4bbff;
+  --tag-gray-bg:#393939; --tag-gray:#c6c6c6;
+  --b20:#d0e2ff; --b30:#a6c8ff; --b40:#78a9ff;
+  --b50:#4589ff; --b60:#0f62fe; --b70:#0043ce;
+  --b80:#002d9c; --b90:#001d6c; --b100:#001141;
+  --s01:.125rem;--s02:.25rem;--s03:.5rem;--s04:.75rem;
+  --s05:1rem;--s06:1.5rem;--s07:2rem;--s08:2.5rem;
+  --s09:3rem;--s10:4rem;--s11:5rem;--s12:6rem;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text-pri);line-height:1.5;min-height:100vh}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+::selection{background:var(--b70);color:#fff}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border-01)}
+code,pre{font-family:'IBM Plex Mono',monospace}
+
+/* ── TOP NAV ─────────────────────────────────────────────── */
+.nav{
+  position:sticky;top:0;z-index:300;
+  height:48px;background:var(--layer-01);
+  border-bottom:1px solid var(--border-00);
+  display:flex;align-items:center;padding:0 var(--s06);gap:0;
+}
+.nav-brand{
+  display:flex;align-items:center;gap:var(--s03);
+  font-family:'IBM Plex Mono',monospace;font-size:.875rem;font-weight:500;
+  color:var(--text-pri);white-space:nowrap;margin-right:var(--s05);
+  padding-right:var(--s05);border-right:1px solid var(--border-00);flex-shrink:0;
+}
+.nav-dot{width:8px;height:8px;background:var(--b60);flex-shrink:0}
+.nav-links{display:flex;list-style:none;flex:1;overflow:hidden}
+.nav-links a{
+  display:block;padding:0 var(--s04);line-height:48px;
+  font-size:.8125rem;color:var(--text-sec);white-space:nowrap;
+  border-bottom:2px solid transparent;transition:all .1s;
+}
+.nav-links a:hover{background:var(--bg-h);color:var(--text-pri);text-decoration:none}
+.nav-meta{font-family:'IBM Plex Mono',monospace;font-size:.625rem;color:var(--text-ph);white-space:nowrap;margin-left:auto;flex-shrink:0;padding-left:var(--s05)}
+.nav-badge{font-size:.625rem;padding:2px 6px;background:var(--b90);color:var(--b40);font-family:'IBM Plex Mono',monospace;margin-left:var(--s03)}
+
+/* ── PAGE GRID ───────────────────────────────────────────── */
+.page-grid{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 48px)}
+
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar{
+  background:var(--layer-01);border-right:1px solid var(--border-00);
+  position:sticky;top:48px;height:calc(100vh - 48px);overflow-y:auto;
+  padding:var(--s04) 0 var(--s09);flex-shrink:0;
+}
+.sidebar::-webkit-scrollbar{width:3px}
+.sb-group{
+  font-size:.625rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--text-ph);padding:var(--s05) var(--s05) var(--s02);margin-top:var(--s03);
+}
+.sidebar a{
+  display:flex;align-items:baseline;gap:var(--s03);padding:5px var(--s05);
+  font-size:.8125rem;color:var(--text-sec);border-left:2px solid transparent;
+  transition:all .1s;line-height:1.4;
+}
+.sidebar a:hover{background:var(--bg-h);color:var(--text-pri);border-left-color:var(--border-strong);text-decoration:none}
+.sidebar a.active{background:var(--b90);color:var(--b40);border-left-color:var(--b60);font-weight:500}
+.sb-num{font-family:'IBM Plex Mono',monospace;font-size:.5625rem;color:var(--text-ph);flex-shrink:0;min-width:18px}
+.sb-divider{height:1px;background:var(--border-00);margin:var(--s03) 0}
+
+/* ── MAIN ────────────────────────────────────────────────── */
+.main{padding:var(--s09) var(--s09) var(--s12);max-width:1100px;overflow-x:hidden}
+
+/* ── HERO ────────────────────────────────────────────────── */
+.hero{margin-bottom:var(--s10);padding-bottom:var(--s09);border-bottom:1px solid var(--border-00)}
+.hero-eye{font-size:.625rem;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--b40);margin-bottom:var(--s04);font-family:'IBM Plex Mono',monospace}
+.hero-title{font-size:2.75rem;font-weight:300;line-height:1.13;letter-spacing:-.02em;color:var(--text-pri);margin-bottom:var(--s05)}
+.hero-title strong{font-weight:600;color:#fff}
+.hero-sub{font-size:1.0625rem;font-weight:300;color:var(--text-sec);max-width:660px;line-height:1.7;margin-bottom:var(--s07)}
+.hero-meta{display:flex;flex-wrap:wrap;gap:var(--s07)}
+.meta-item label{display:block;font-size:.5625rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-ph);margin-bottom:3px}
+.meta-item value{font-family:'IBM Plex Mono',monospace;font-size:.875rem;color:var(--text-pri)}
+
+/* ── SECTIONS ────────────────────────────────────────────── */
+.section{margin-bottom:var(--s11);scroll-margin-top:60px}
+.sec-hdr{display:flex;align-items:baseline;gap:var(--s04);margin-bottom:var(--s06);padding-bottom:var(--s04);border-bottom:1px solid var(--border-00)}
+.sec-num{font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--text-ph);flex-shrink:0}
+h2{font-size:1.75rem;font-weight:300;color:var(--text-pri);letter-spacing:-.01em}
+h3{font-size:1rem;font-weight:600;color:var(--text-pri);margin:var(--s07) 0 var(--s04)}
+h3:first-child{margin-top:0}
+h4{font-size:.875rem;font-weight:600;color:var(--text-sec);margin:var(--s06) 0 var(--s03)}
+p{font-size:.9375rem;color:var(--text-sec);line-height:1.65;margin-bottom:var(--s04)}
+p:last-child{margin-bottom:0}
+
+/* ── NOTIFICATIONS ───────────────────────────────────────── */
+.notif{padding:var(--s04) var(--s05);margin-bottom:var(--s06);border-left:3px solid;font-size:.875rem;line-height:1.6}
+.notif-label{font-size:.625rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.notif-info{background:var(--info-bg);border-color:var(--b50);color:var(--b30)}
+.notif-info .notif-label{color:var(--b40)}
+.notif-warn{background:var(--warn-bg);border-color:var(--warn);color:#fdd13a}
+.notif-warn .notif-label{color:var(--warn)}
+.notif-err{background:var(--err-bg);border-color:var(--err);color:#ff8389}
+.notif-err .notif-label{color:var(--err)}
+.notif-ok{background:var(--ok-bg);border-color:var(--ok);color:#6fdc8c}
+.notif-ok .notif-label{color:var(--ok)}
+
+/* ── TAGS ────────────────────────────────────────────────── */
+.tag{display:inline-flex;align-items:center;font-size:.6875rem;padding:2px 8px;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.tag-blue{background:var(--tag-blue-bg);color:var(--tag-blue)}
+.tag-cyan{background:var(--tag-cyan-bg);color:var(--tag-cyan)}
+.tag-green{background:var(--tag-green-bg);color:var(--tag-green)}
+.tag-red{background:var(--tag-red-bg);color:var(--tag-red)}
+.tag-yellow{background:var(--tag-yellow-bg);color:var(--tag-yellow)}
+.tag-orange{background:var(--tag-orange-bg);color:var(--tag-orange)}
+.tag-purple{background:var(--tag-purple-bg);color:var(--tag-purple)}
+.tag-gray{background:var(--tag-gray-bg);color:var(--tag-gray)}
+.tag-teal{background:var(--tag-teal-bg);color:var(--tag-teal)}
+
+/* ── CARDS ───────────────────────────────────────────────── */
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:1px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1px}
+.g-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1px}
+.card-wrap{background:var(--border-00);gap:1px;margin-bottom:var(--s06)}
+.card{background:var(--layer-01);padding:var(--s05);border:1px solid var(--border-00)}
+.card-ok{border-top:2px solid var(--ok)}
+.card-err{border-top:2px solid var(--err)}
+.card-warn{border-top:2px solid var(--warn)}
+.card-info{border-top:2px solid var(--b50)}
+.card-num{font-size:2.25rem;font-weight:300;color:var(--b40);font-family:'IBM Plex Mono',monospace;line-height:1;margin-bottom:var(--s03)}
+.card-lbl{font-size:.625rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-ph);margin-bottom:var(--s02)}
+.card-val{font-size:1rem;font-weight:500;color:var(--text-pri);margin-bottom:var(--s03)}
+.card-desc{font-size:.8125rem;color:var(--text-sec);line-height:1.55}
+.card-mono{font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--b40);margin-bottom:var(--s02)}
+
+/* ── TABLES ──────────────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;margin-bottom:var(--s06);border:1px solid var(--border-00)}
+table{width:100%;border-collapse:collapse;font-size:.8125rem}
+thead tr{background:var(--layer-02)}
+th{padding:var(--s03) var(--s04);text-align:left;font-size:.625rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-ph);white-space:nowrap;border-bottom:1px solid var(--border-01)}
+td{padding:var(--s03) var(--s04);border-bottom:1px solid var(--border-00);color:var(--text-sec);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg-h)}
+.td-mono{font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:var(--b40)}
+.td-strong{color:var(--text-pri);font-weight:500}
+.td-ok{color:var(--ok)}
+.td-part{color:var(--warn)}
+.td-no{color:var(--text-ph)}
+.td-err{color:var(--err)}
+.comp-us td{background:var(--b90)!important}
+.comp-us .td-strong{color:#fff}
+
+/* ── PIPELINE ────────────────────────────────────────────── */
+.pipe-flow{display:flex;align-items:stretch;gap:0;margin:var(--s06) 0;overflow-x:auto}
+.pipe-node{
+  flex:1;min-width:140px;background:var(--layer-01);border:1px solid var(--border-00);
+  padding:var(--s04);position:relative;
+}
+.pipe-node::after{
+  content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);
+  color:var(--b60);font-size:1rem;z-index:1;background:var(--bg);padding:0 2px;
+}
+.pipe-node:last-child::after{display:none}
+.pipe-num{font-family:'IBM Plex Mono',monospace;font-size:.5625rem;color:var(--text-ph);letter-spacing:.08em;margin-bottom:4px}
+.pipe-name{font-size:.875rem;font-weight:600;color:var(--text-pri);margin-bottom:var(--s03)}
+.pipe-desc{font-size:.75rem;color:var(--text-sec);line-height:1.5;margin-bottom:var(--s03)}
+.pipe-ok{border-top:2px solid var(--ok)}
+.pipe-warn{border-top:2px solid var(--warn)}
+.pipe-err{border-top:2px solid var(--err)}
+
+/* ── DFD ─────────────────────────────────────────────────── */
+.dfd-row{display:flex;align-items:center;gap:var(--s03);flex-wrap:wrap;margin-bottom:var(--s04)}
+.dfd-box{
+  background:var(--layer-02);border:1px solid var(--border-01);
+  padding:var(--s03) var(--s04);font-size:.8125rem;font-family:'IBM Plex Mono',monospace;
+  color:var(--text-pri);min-width:120px;text-align:center;
+}
+.dfd-arrow{font-size:1.125rem;color:var(--b60);padding:0 var(--s02)}
+.dfd-label{font-size:.625rem;color:var(--text-ph);text-align:center;margin-top:3px}
+.dfd-store{
+  background:transparent;border:1px solid var(--border-01);border-left:3px solid var(--b60);
+  padding:var(--s03) var(--s04);font-size:.75rem;font-family:'IBM Plex Mono',monospace;
+  color:var(--b40);
+}
+
+/* ── SPEC LIST ───────────────────────────────────────────── */
+ul.sl{list-style:none;margin-bottom:var(--s05)}
+ul.sl li{
+  padding:var(--s03) 0 var(--s03) var(--s06);
+  border-bottom:1px solid var(--border-00);
+  font-size:.875rem;color:var(--text-sec);line-height:1.6;
+  position:relative;
+}
+ul.sl li::before{content:'→';position:absolute;left:0;color:var(--b60);font-family:'IBM Plex Mono',monospace;font-size:.75rem}
+ul.sl li:last-child{border-bottom:none}
+
+/* ── CODE BLOCK ──────────────────────────────────────────── */
+.code-block{
+  background:var(--layer-02);border:1px solid var(--border-00);
+  padding:var(--s05);margin-bottom:var(--s06);overflow-x:auto;
+}
+.code-block pre{font-size:.75rem;line-height:1.65;color:var(--b30)}
+.code-label{font-size:.5625rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-ph);margin-bottom:var(--s02)}
+
+/* ── TASK ROW ────────────────────────────────────────────── */
+.task-row{
+  display:flex;align-items:baseline;gap:var(--s04);
+  padding:var(--s03) var(--s04);border-bottom:1px solid var(--border-00);
+  font-size:.8125rem;
+}
+.task-id{font-family:'IBM Plex Mono',monospace;font-size:.625rem;color:var(--text-ph);flex-shrink:0;min-width:32px}
+.task-title{flex:1;color:var(--text-pri)}
+.task-done{color:var(--text-dis);text-decoration:line-through}
+.task-note{font-size:.75rem;color:var(--text-ph);margin-top:2px}
+
+/* ── CHANGELOG ───────────────────────────────────────────── */
+.cl-entry{
+  border:1px solid var(--border-00);margin-bottom:var(--s05);
+  background:var(--layer-01);
+}
+.cl-hdr{
+  display:flex;align-items:center;gap:var(--s04);flex-wrap:wrap;
+  padding:var(--s04) var(--s05);border-bottom:1px solid var(--border-00);
+  background:var(--layer-02);
+}
+.cl-ver{font-family:'IBM Plex Mono',monospace;font-size:.875rem;font-weight:600;color:var(--text-pri)}
+.cl-date{font-size:.75rem;color:var(--text-ph);font-family:'IBM Plex Mono',monospace}
+.cl-title{font-size:.9375rem;font-weight:600;color:var(--text-pri);padding:var(--s04) var(--s05) var(--s02)}
+.cl-desc{font-size:.8125rem;color:var(--text-sec);padding:0 var(--s05) var(--s03);line-height:1.6}
+.cl-cat{font-size:.5625rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;padding:var(--s02) var(--s05);margin-top:var(--s02)}
+.cl-new{color:var(--ok)}
+.cl-changed{color:var(--b40)}
+.cl-fixed{color:var(--warn)}
+.cl-security{color:var(--err)}
+ul.cl-items{list-style:none;padding:0 var(--s05) var(--s03)}
+ul.cl-items li{font-size:.8125rem;color:var(--text-sec);padding:3px 0 3px var(--s05);border-bottom:1px solid var(--border-00);line-height:1.55;position:relative}
+ul.cl-items li::before{content:'›';position:absolute;left:0;color:var(--b60);font-family:'IBM Plex Mono',monospace}
+ul.cl-items li:last-child{border-bottom:none}
+
+/* ── TWO COL ─────────────────────────────────────────────── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:var(--s06);margin-bottom:var(--s06)}
+
+/* ── STATUS GRID ─────────────────────────────────────────── */
+.status-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1px;background:var(--border-00);margin-bottom:var(--s06)}
+.status-card{background:var(--layer-01);padding:var(--s04)}
+.status-dot{width:8px;height:8px;display:inline-block;margin-right:6px}
+.dot-ok{background:var(--ok)}
+.dot-warn{background:var(--warn)}
+.dot-err{background:var(--err)}
+.dot-blue{background:var(--b50)}
+.dot-ph{background:var(--border-strong)}
+
+/* ── SCAN GRAPH EMBED ────────────────────────────────────── */
+.graph-embed{
+  background:var(--layer-01);border:1px solid var(--border-00);
+  padding:var(--s06);margin-bottom:var(--s06);
+}
+.graph-embed-title{font-size:.875rem;font-weight:600;color:var(--text-pri);margin-bottom:var(--s04)}
+.graph-nodes{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--s03)}
+.gn{
+  background:var(--layer-02);border:1px solid var(--border-01);
+  padding:var(--s04);
+}
+.gn-phase{font-family:'IBM Plex Mono',monospace;font-size:.5rem;color:var(--text-ph);letter-spacing:.1em;margin-bottom:4px}
+.gn-name{font-size:.875rem;font-weight:600;color:var(--text-pri);margin-bottom:var(--s02)}
+.gn-desc{font-size:.75rem;color:var(--text-sec);line-height:1.5;margin-bottom:var(--s03)}
+.gn-output{font-family:'IBM Plex Mono',monospace;font-size:.625rem;color:var(--b40);padding:2px 6px;background:var(--bg);display:inline-block;margin-right:4px;margin-bottom:4px}
+.gn-timing{font-family:'IBM Plex Mono',monospace;font-size:.625rem;color:var(--ok);padding:2px 6px;background:var(--ok-bg);display:inline-block;margin-top:var(--s02)}
+.gn-ai{border-top:2px solid var(--tag-teal)}
+.gn-data{border-top:2px solid var(--b50)}
+.gn-io{border-top:2px solid var(--tag-gray)}
+
+/* ── DATA FLOW DIAGRAM ───────────────────────────────────── */
+.dfd-section{margin-bottom:var(--s07)}
+.dfd-section-title{font-size:.75rem;font-weight:600;color:var(--text-ph);text-transform:uppercase;letter-spacing:.1em;margin-bottom:var(--s04)}
+.flow-row{
+  display:flex;align-items:center;gap:var(--s02);margin-bottom:var(--s03);
+  flex-wrap:wrap;
+}
+.flow-node{
+  background:var(--layer-02);border:1px solid var(--border-01);
+  padding:6px 12px;font-size:.75rem;font-family:'IBM Plex Mono',monospace;
+  color:var(--text-pri);text-align:center;
+}
+.flow-ext{border-style:dashed;border-color:var(--border-strong)}
+.flow-db{background:var(--b90);border-color:var(--b70);color:var(--b30)}
+.flow-ai{background:var(--tag-teal-bg);border-color:var(--tag-teal);color:var(--tag-teal)}
+.flow-err-node{background:var(--err-bg);border-color:var(--err);color:var(--tag-red)}
+.flow-arrow{font-size:.875rem;color:var(--b60);flex-shrink:0}
+.flow-label{font-size:.625rem;color:var(--text-ph);padding:2px 4px;background:var(--layer-01);border:1px solid var(--border-00)}
+
+/* ── ARCH DIAGRAM ────────────────────────────────────────── */
+.arch-wrap{border:1px solid var(--border-00);margin-bottom:var(--s06);overflow:hidden}
+.arch-layer{border-bottom:1px solid var(--border-00)}
+.arch-layer:last-child{border-bottom:none}
+.arch-label{
+  font-size:.5625rem;font-weight:600;text-transform:uppercase;letter-spacing:.12em;
+  color:var(--text-ph);padding:var(--s03) var(--s05);
+  background:var(--layer-02);border-bottom:1px solid var(--border-00);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.arch-content{
+  display:flex;flex-wrap:wrap;gap:1px;background:var(--border-00);padding:1px;
+}
+.arch-box{
+  background:var(--layer-01);padding:var(--s04) var(--s05);
+  font-size:.8125rem;flex:1;min-width:140px;
+}
+.arch-box strong{display:block;font-weight:600;color:var(--text-pri);margin-bottom:4px;font-size:.875rem}
+.arch-box span{font-size:.75rem;color:var(--text-sec)}
+
+/* ── REVIEW CARDS ────────────────────────────────────────── */
+.review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s04);margin-bottom:var(--s06)}
+.review-card{background:var(--layer-01);border:1px solid var(--border-00);padding:var(--s05)}
+.review-score{font-size:2rem;font-weight:300;font-family:'IBM Plex Mono',monospace;margin-bottom:var(--s02)}
+.score-5{color:var(--ok)}
+.score-4{color:var(--tag-cyan)}
+.score-3{color:var(--warn)}
+.score-2{color:var(--caution)}
+.score-1{color:var(--err)}
+.review-category{font-size:.625rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-ph);margin-bottom:var(--s03)}
+.review-text{font-size:.8125rem;color:var(--text-sec);line-height:1.6}
+.review-verdict{font-size:.75rem;font-weight:600;margin-top:var(--s03)}
+
+/* ── FOOTER ──────────────────────────────────────────────── */
+.doc-footer{
+  margin-top:var(--s12);padding:var(--s07) 0;
+  border-top:1px solid var(--border-00);
+  font-family:'IBM Plex Mono',monospace;font-size:.625rem;color:var(--text-ph);
+  display:flex;gap:var(--s07);flex-wrap:wrap;
+}
+
+/* ── SCROLL SPY ──────────────────────────────────────────── */
+.sidebar a.active-spy{background:var(--b90);color:var(--b40);border-left-color:var(--b60)}
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media(max-width:960px){
+  .page-grid{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .main{padding:var(--s06) var(--s05) var(--s10)}
+  .g2,.g3,.g4,.g-auto{grid-template-columns:1fr}
+  .two-col{grid-template-columns:1fr}
+  .pipe-flow{flex-direction:column}
+  .pipe-node::after{content:'↓';right:50%;bottom:-14px;top:auto;transform:translateX(50%)}
+  .review-grid{grid-template-columns:1fr}
+}
+@media print{
+  .nav,.sidebar{display:none}
+  .page-grid{grid-template-columns:1fr}
+  .main{padding:1rem;max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ TOP NAV ═══════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-dot"></div>
+    Astra Platform Spec
+    <span class="nav-badge">v3.0</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#s01">Overview</a></li>
+    <li><a href="#s03">Architecture</a></li>
+    <li><a href="#s04">Data Flows</a></li>
+    <li><a href="#s05">Pipeline</a></li>
+    <li><a href="#s06">Scan Graph</a></li>
+    <li><a href="#s08">Current State</a></li>
+    <li><a href="#s09">Improvements</a></li>
+    <li><a href="#s10">Integrations</a></li>
+    <li><a href="#s12">Competitive</a></li>
+    <li><a href="#s14">Reviews</a></li>
+    <li><a href="#s15">Roadmap</a></li>
+    <li><a href="#s18">Changelog</a></li>
+  </ul>
+  <div class="nav-meta">v2.17.0 · 2026-05-10 · IBM Carbon g100</div>
+</nav>
+
+<div class="page-grid">
+
+<!-- ══ SIDEBAR ═══════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sb-group">Document</div>
+  <a href="#s01" class="active"><span class="sb-num">01</span> Overview</a>
+  <a href="#s02"><span class="sb-num">02</span> Goals &amp; Non-Goals</a>
+  <a href="#s03"><span class="sb-num">03</span> Architecture</a>
+  <a href="#s04"><span class="sb-num">04</span> Data Flows (DFDs)</a>
+  <a href="#s05"><span class="sb-num">05</span> Scan Pipeline</a>
+  <a href="#s06"><span class="sb-num">06</span> Scan Graph</a>
+  <a href="#s07"><span class="sb-num">07</span> Scanners &amp; AI Engine</a>
+  <a href="#s08"><span class="sb-num">08</span> Current State</a>
+  <a href="#s09"><span class="sb-num">09</span> Improvements Needed</a>
+  <a href="#s10"><span class="sb-num">10</span> Integrations</a>
+  <a href="#s11"><span class="sb-num">11</span> Security Model</a>
+  <a href="#s12"><span class="sb-num">12</span> Competitive Analysis</a>
+  <a href="#s13"><span class="sb-num">13</span> Data Models</a>
+  <a href="#s14"><span class="sb-num">14</span> Architecture Reviews</a>
+  <a href="#s15"><span class="sb-num">15</span> Roadmap &amp; Tasks</a>
+  <a href="#s16"><span class="sb-num">16</span> Language Matrix</a>
+  <a href="#s17"><span class="sb-num">17</span> License &amp; Deployment</a>
+  <div class="sb-divider"></div>
+  <a href="#s18"><span class="sb-num">18</span> Full Changelog</a>
+</aside>
+
+<!-- ══ MAIN ══════════════════════════════════════════════ -->
+<main class="main">
+
+<!-- ══ HERO ══════════════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-eye">Platform Design Specification · v3.0 · 2026-05-10</div>
+  <h1 class="hero-title">Astra — <strong>AI-Native Application<br>Security Platform</strong></h1>
+  <p class="hero-sub">Enterprise-grade SAST · SCA · Secret scanning · IaC analysis · AI-enriched findings · Multi-provider AI chat · Task management · Full observability — unified in a single event-driven pipeline. Raw source code never leaves the customer environment.</p>
+  <div class="hero-meta">
+    <div class="meta-item"><label>Version</label><value>2.17.0</value></div>
+    <div class="meta-item"><label>Date</label><value>2026-05-10</value></div>
+    <div class="meta-item"><label>Status</label><value>Active Development</value></div>
+    <div class="meta-item"><label>Stack</label><value>Next.js 15 · Prisma · PostgreSQL</value></div>
+    <div class="meta-item"><label>UI</label><value>IBM Carbon Design System g100</value></div>
+    <div class="meta-item"><label>AI providers</label><value>7 (4 live, 3 stub)</value></div>
+    <div class="meta-item"><label>Pipeline nodes</label><value>6 (+ 9 proposed)</value></div>
+    <div class="meta-item"><label>API endpoints</label><value>40+</value></div>
+  </div>
+</div>
+
+<!-- ══ SECTION 01: OVERVIEW ══════════════════════════════ -->
+<section class="section" id="s01">
+  <div class="sec-hdr"><span class="sec-num">01</span><h2>Overview</h2></div>
+
+  <div class="notif notif-info">
+    <div class="notif-label">Core design principle</div>
+    Raw source code <strong>never leaves the customer environment</strong>. Only structured <code>UnifiedFinding[]</code> JSON is transmitted to the control plane. All AI inference runs inside the data plane container or in customer-controlled infrastructure (Ollama, Bedrock). This is architecturally enforced — not a policy promise.
+  </div>
+
+  <p>Astra is a closed-source, enterprise-grade application security platform that combines static analysis (SAST), software composition analysis (SCA), secret scanning, IaC scanning, sensitive data flow analysis, and AI-assisted business logic extraction into a single unified workflow. It is designed for three personas:</p>
+
+  <div class="g3" style="margin-bottom:var(--s06)">
+    <div class="card card-info">
+      <div class="card-lbl">Persona 1</div>
+      <div class="card-val">Security engineers</div>
+      <div class="card-desc">Run deep audits, configure policies, manage findings, triage alerts, and build custom rules. Full access to AI enrichment and per-finding chat.</div>
+    </div>
+    <div class="card card-info">
+      <div class="card-lbl">Persona 2</div>
+      <div class="card-val">DevOps / platform teams</div>
+      <div class="card-desc">Embed Astra into existing CI pipelines with a single command. No new infrastructure required. GitHub Actions, GitLab CI, Jenkins, or any Docker-capable CI.</div>
+    </div>
+    <div class="card card-info">
+      <div class="card-lbl">Persona 3</div>
+      <div class="card-val">CISO / security leadership</div>
+      <div class="card-desc">Track risk posture, compliance velocity, remediation trends, and team performance. Export executive summary reports in SARIF, HTML, Markdown, CSV.</div>
+    </div>
+  </div>
+
+  <h3>What ships today (v1.0 → v2.17)</h3>
+  <div class="g4" style="margin-bottom:var(--s06)">
+    <div class="card"><div class="card-num">6</div><div class="card-lbl">Pipeline nodes</div><div class="card-desc">Clone → Discover → Deep Scan → Cross-File → Aggregate → Persist</div></div>
+    <div class="card"><div class="card-num">6+</div><div class="card-lbl">Bundled scanners</div><div class="card-desc">Trivy (SCA/IaC/Secrets), Semgrep (SAST), Gitleaks (Secrets), Bearer (Data Flow), AI deep-scan, AI cross-file</div></div>
+    <div class="card"><div class="card-num">7</div><div class="card-lbl">AI providers</div><div class="card-desc">Cloud Ollama, Hosted Ollama, OpenAI, Anthropic (4 live) + Bedrock, Azure AI Foundry, LangGraph (3 stub)</div></div>
+    <div class="card"><div class="card-num">40+</div><div class="card-lbl">API endpoints</div><div class="card-desc">Auth, scans, findings, tasks, AI calls, chat, config, prompts, rules, export, reports</div></div>
+  </div>
+  <div class="g4" style="margin-bottom:var(--s06)">
+    <div class="card"><div class="card-num">3</div><div class="card-lbl">RBAC roles</div><div class="card-desc">ADMIN / ANALYST / VIEWER — all mutations role-gated, non-admin users scoped to their own scans</div></div>
+    <div class="card"><div class="card-num">6</div><div class="card-lbl">Alert states</div><div class="card-desc">OPEN → CONFIRMED → IN_PROGRESS → REMEDIATED / FALSE_POSITIVE / ACCEPTED_RISK</div></div>
+    <div class="card"><div class="card-num">5</div><div class="card-lbl">Task types</div><div class="card-desc">FINDING_TRIAGE, REMEDIATION, MANUAL_REVIEW, MANUAL, AI_GENERATED</div></div>
+    <div class="card"><div class="card-num">5</div><div class="card-lbl">Export formats</div><div class="card-desc">JSON, CSV, SARIF, HTML, Markdown — with executive summary report page</div></div>
+  </div>
+
+  <h3>Platform capabilities at a glance</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Capability</th><th>What it does</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="td-strong">Full scan pipeline</td><td>Event-driven 6-node pipeline with async I/O, per-node AI config, fingerprint deduplication, temp cleanup</td><td><span class="tag tag-green">✓ Complete</span></td></tr>
+        <tr><td class="td-strong">AI enrichment per finding</td><td>Plain-English explanation, code fix, exploit score 0–10, exploitation scenario, CWE, OWASP, remediation guidance</td><td><span class="tag tag-green">✓ Complete</span></td></tr>
+        <tr><td class="td-strong">Multi-level AI chat</td><td>Global security assistant, per-scan context, per-finding deep dive — multi-turn memory, DB-backed prompts</td><td><span class="tag tag-green">✓ Complete</span></td></tr>
+        <tr><td class="td-strong">Alert triage workflow</td><td>Full status workflow, assignment, comments, history timeline, per-file rescan, AI assist per alert</td><td><span class="tag tag-green">✓ Complete</span></td></tr>
+        <tr><td class="td-strong">Task management</td><td>Full lifecycle: 5 types, priorities, statuses, batch ops, bidirectional finding links, AI task suggestions</td><td><span class="tag tag-green">✓ Complete</span></td></tr>
+        <tr><td class="td-strong">AI observability</td><td>Every AI call logged — provider, model, tokens, latency, prompt, response — with per-call retry</td><td><span class="tag tag-green">✓ Complete</span></td></tr>
+        <tr><td class="td-strong">Security &amp; RBAC</td><td>JWT sessions, AES-256-GCM encryption, rate limiting, scan ownership, audit history on every mutation</td><td><span class="tag tag-green">✓ Complete</span></td></tr>
+        <tr><td class="td-strong">GitHub integration</td><td>PAT linking, repo/branch selectors, encrypted token storage, branches API</td><td><span class="tag tag-green">✓ Complete</span></td></tr>
+        <tr><td class="td-strong">IBM Carbon UI</td><td>IBM Plex Sans, 0px border-radius, full dark/light theme with persistence, responsive layout</td><td><span class="tag tag-green">✓ Complete</span></td></tr>
+        <tr><td class="td-strong">Branding system</td><td>All product identity strings env-driven via src/lib/branding.ts — rebrand by changing .env only</td><td><span class="tag tag-green">✓ v2.17</span></td></tr>
+        <tr><td class="td-strong">Browser data store</td><td>localStorage TTL cache with stale-while-revalidate — zero redundant fetches across navigation</td><td><span class="tag tag-green">✓ v2.14</span></td></tr>
+        <tr><td class="td-strong">DB-backed prompts</td><td>System prompts editable per node via UI, stored in Config table, fallback to hardcoded defaults</td><td><span class="tag tag-cyan">⚠ Partial</span></td></tr>
+        <tr><td class="td-strong">Streaming findings</td><td>Real-time findings display as deep_scan progresses — spec written, not implemented</td><td><span class="tag tag-yellow">⚪ Planned</span></td></tr>
+        <tr><td class="td-strong">SSO (SAML/OIDC)</td><td>Enterprise requirement — email/password only today</td><td><span class="tag tag-red">✗ Missing</span></td></tr>
+        <tr><td class="td-strong">GitHub PR integration</td><td>Inline PR comments and merge blocking — table stakes for developer-first adoption</td><td><span class="tag tag-red">✗ Missing</span></td></tr>
+        <tr><td class="td-strong">Jira / Slack integration</td><td>Native bidirectional Jira sync and Slack alerting — required for enterprise pilots</td><td><span class="tag tag-red">✗ Missing</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 02: GOALS ══════════════════════════════════ -->
+<section class="section" id="s02">
+  <div class="sec-hdr"><span class="sec-num">02</span><h2>Goals &amp; Non-Goals</h2></div>
+  <div class="two-col">
+    <div>
+      <h3>Goals (v1–v2)</h3>
+      <ul class="sl">
+        <li>Single scan command running multiple security scanners in parallel with unified findings</li>
+        <li>Pluggable scanner architecture — add proprietary or third-party tools</li>
+        <li>AI enrichment runs inside the data plane — raw code never sent externally unless org opts in</li>
+        <li>AI-inferred business logic rules from source code, presented for human confirmation</li>
+        <li>Three role-specific workspaces: Executive, Engineering, Sec Ops</li>
+        <li>Integrate with Slack, Jira, PagerDuty, GitHub, GitLab, and generic webhooks</li>
+        <li>Support three deployment models: SaaS, self-hosted, hybrid</li>
+        <li>Be fully closed-source — the compiled binary is the product</li>
+        <li>Gate features by license tier: Free, Pro, Enterprise</li>
+        <li>IBM Carbon Design System UI — consistent, accessible, enterprise-grade</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Non-Goals (v1–v2)</h3>
+      <ul class="sl">
+        <li>Runtime application security (RASP, IAST) — static analysis only</li>
+        <li>Mobile application scanning (iOS/Android) — not in scope</li>
+        <li>Fuzzing or dynamic analysis (DAST) — future roadmap item</li>
+        <li>Multi-tenant SaaS — single-tenant per deployment in v1/v2</li>
+        <li>CI platforms beyond GitHub Actions, GitLab CI, Jenkins, Docker</li>
+        <li>Real-time collaboration (shared editing) on findings/tasks</li>
+        <li>SIEM integration — export only via CSV/JSON, no push to Splunk/Datadog yet</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SECTION 03: ARCHITECTURE ══════════════════════════ -->
+<section class="section" id="s03">
+  <div class="sec-hdr"><span class="sec-num">03</span><h2>Architecture</h2></div>
+
+  <h3>3.1 Deployment topology</h3>
+  <div class="arch-wrap">
+    <div class="arch-layer">
+      <div class="arch-label">CI TRIGGER LAYER — Customer CI environment (public wrappers only) <span class="tag tag-gray">External</span></div>
+      <div class="arch-content">
+        <div class="arch-box"><strong>GitHub Actions</strong><span>uses: astra-security/scan-action@v1</span></div>
+        <div class="arch-box"><strong>GitLab CI</strong><span>image: ghcr.io/astra/agent:latest</span></div>
+        <div class="arch-box"><strong>Jenkins</strong><span>Dockerfile agent step</span></div>
+        <div class="arch-box"><strong>Any CI</strong><span>docker run astra/agent scan</span></div>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <div class="arch-label">DATA PLANE — astra/agent Docker container (closed-source binary, stateless) <span class="tag tag-teal">Code stays here</span></div>
+      <div class="arch-content">
+        <div class="arch-box"><strong>Scan Execution Pipeline</strong><span>Clone → Discover → Deep Scan → Cross-File → Aggregate → Persist</span></div>
+        <div class="arch-box"><strong>Bundled Scanners</strong><span>Trivy · Semgrep · Bearer · Gitleaks · Checkov · Bandit · Plugin Interface</span></div>
+        <div class="arch-box"><strong>AI Engine (in-process)</strong><span>Ollama (air-gapped) · Bedrock (customer AWS) · Cloud AI (opt-in only)</span></div>
+        <div class="arch-box"><strong>Unified Finding Schema</strong><span>id · scanner · severity · file · line · snippet · cwe · exploit_score · fingerprint</span></div>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <div class="arch-label">CONTROL PLANE — Next.js 15 monolith (Astra-hosted / self-hosted / hybrid) <span class="tag tag-blue">Current implementation</span></div>
+      <div class="arch-content">
+        <div class="arch-box"><strong>Auth module</strong><span>NextAuth v5, JWT sessions, RBAC (ADMIN/ANALYST/VIEWER)</span></div>
+        <div class="arch-box"><strong>Findings module</strong><span>Ingest, deduplicate (SHA-256 fingerprint), triage workflow, alert history</span></div>
+        <div class="arch-box"><strong>Task module</strong><span>5 task types, priorities, statuses, batch ops, AI-generated suggestions</span></div>
+        <div class="arch-box"><strong>AI Orchestration</strong><span>7 providers, per-node config, chat at 3 levels, DB-backed prompts, observability logging</span></div>
+        <div class="arch-box"><strong>Pipeline Worker</strong><span>Event-driven job queue, async I/O, retry with backoff, temp cleanup</span></div>
+        <div class="arch-box"><strong>Config &amp; Rules</strong><span>DB-backed config, preset management, custom scan rules, prompt editor</span></div>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <div class="arch-label">STORAGE LAYER <span class="tag tag-gray">Persistent</span></div>
+      <div class="arch-content">
+        <div class="arch-box"><strong>PostgreSQL</strong><span>Primary store: all entities via Prisma ORM. Schema-routed via PrismaPg.</span></div>
+        <div class="arch-box"><strong>Redis</strong><span>Planned: job queue, session cache, rate limit counters (currently in-memory)</span></div>
+        <div class="arch-box"><strong>S3 / MinIO</strong><span>Planned: large finding payloads, SBOM files, report artifacts (currently in DB)</span></div>
+        <div class="arch-box"><strong>localStorage</strong><span>Browser-side TTL cache — users, preferences, chat config. Stale-while-revalidate.</span></div>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <div class="arch-label">DASHBOARD — IBM Carbon Design System UI <span class="tag tag-blue">React / Next.js</span></div>
+      <div class="arch-content">
+        <div class="arch-box"><strong>Scans &amp; Pipeline</strong><span>Scan creation, live progress, pipeline graph, node config editor, scan detail tabs</span></div>
+        <div class="arch-box"><strong>Alerts (Findings)</strong><span>DataTable with severity filters, AlertDetail slide-out, triage workflow, per-finding chat</span></div>
+        <div class="arch-box"><strong>Tasks</strong><span>Cross-scan task management, batch ops, AI assist, bidirectional finding links</span></div>
+        <div class="arch-box"><strong>Observability</strong><span>AI call log table, summary cards, per-call retry, filter by provider/model/node</span></div>
+        <div class="arch-box"><strong>Configuration</strong><span>Provider config, pipeline editor, prompt editor, preset management, glossary</span></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>3.2 Current vs planned implementation gap</h3>
+  <div class="notif notif-warn">
+    <div class="notif-label">Important</div>
+    The current implementation is a <strong>Next.js 15 monolith</strong> — not a Go modular monolith as originally designed. The data plane is also currently embedded inside the Next.js app (API routes execute scanner binaries via child_process). The original design intended a separate Docker agent container. This gap should be closed before enterprise customers.
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>Originally designed as</th><th>Current implementation</th><th>Gap</th></tr></thead>
+      <tbody>
+        <tr><td class="td-strong">Control plane</td><td>Go modular monolith</td><td>Next.js 15 (TypeScript)</td><td class="td-warn">Different language — TypeScript OK for current scale, Go needed for high throughput</td></tr>
+        <tr><td class="td-strong">Data plane</td><td>Separate Docker agent container</td><td>API routes in Next.js app calling child_process.exec</td><td class="td-err">Security boundary: scanners run in same process as API server</td></tr>
+        <tr><td class="td-strong">Job queue</td><td>Redis-backed durable queue</td><td>In-memory event-driven worker</td><td class="td-warn">Jobs lost on server restart; single-instance only</td></tr>
+        <tr><td class="td-strong">CI integration</td><td>GitHub Actions, GitLab CI wrappers</td><td>Not implemented</td><td class="td-err">Manual scan creation via UI only</td></tr>
+        <tr><td class="td-strong">Database</td><td>PostgreSQL + Redis + S3</td><td>PostgreSQL only (Prisma)</td><td class="td-warn">Large payloads in DB, no caching layer, no blob storage</td></tr>
+        <tr><td class="td-strong">SSO</td><td>SAML, OIDC, API keys</td><td>Email/password only (NextAuth v5)</td><td class="td-err">Enterprise blocker</td></tr>
+        <tr><td class="td-strong">Multi-tenancy</td><td>Single-tenant per deployment</td><td>Single-tenant (userId scoping)</td><td class="td-ok">On spec</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 04: DATA FLOWS ════════════════════════════ -->
+<section class="section" id="s04">
+  <div class="sec-hdr"><span class="sec-num">04</span><h2>Data Flows (DFDs)</h2></div>
+
+  <h3>DFD 1 — Scan initiation and pipeline execution</h3>
+  <div class="dfd-section">
+    <div class="flow-row">
+      <div class="flow-node">User (ANALYST/ADMIN)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-label">POST /api/v1/scans</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">Scan record created</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Job enqueued</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node">Worker (event loop)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Claims job</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">NODE 01: Clone</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">NODE 02: Discover</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-ai">NODE 03: Deep Scan + AI</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node flow-ai">NODE 03 (cont.)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-ai">NODE 04: Cross-File AI</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">NODE 05: Aggregate</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">NODE 06: Persist</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">Findings + Tasks in DB</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node">Scan status SSE stream</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-ext">UI live progress</div>
+    </div>
+  </div>
+
+  <h3>DFD 2 — AI enrichment flow (per finding)</h3>
+  <div class="dfd-section">
+    <div class="flow-row">
+      <div class="flow-node">File content (in-memory)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Build deep-scan prompt</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">Load prompts from DB (Config table)</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node">Provider factory</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-ai">AI provider (Cloud Ollama / OpenAI / Anthropic)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Response parsed</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node">UnifiedFinding[]</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">Finding record (DB)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">AiCallLog record (DB)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Auto-create Task (CRITICAL/HIGH/MEDIUM)</div>
+    </div>
+  </div>
+
+  <h3>DFD 3 — AI chat request flow</h3>
+  <div class="dfd-section">
+    <div class="flow-row">
+      <div class="flow-node">User sends chat message</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">POST /api/v1/chat, /scans/[id]/chat, /findings/[id]/chat</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node flow-db">Load conversation history (AiConversation)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">Load chat config (Config table)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">Load DB-backed system prompt</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node flow-ai">sendChatMessage(messages[], modelOverride?)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-ai">AI provider (with full history)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">Save response to AiConversation</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node flow-db">Save AiCallLog</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-ext">Response to UI</div>
+    </div>
+  </div>
+
+  <h3>DFD 4 — Security data flow (source code boundary)</h3>
+  <div class="dfd-section">
+    <div class="notif notif-ok">
+      <div class="notif-label">Privacy boundary enforced</div>
+      The dashed line below represents the data plane boundary. Source code (file contents, code snippets) never crosses it. Only normalized finding JSON moves to the control plane. When Ollama or Bedrock is used, even the AI inference happens inside the customer environment.
+    </div>
+    <div class="flow-row">
+      <div class="flow-node flow-ext" style="border:2px dashed var(--ok)">Git repo (source code)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Clone to temp dir</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Scanner processes</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-ai">AI enrichment (local Ollama / Bedrock)</div>
+    </div>
+    <div class="flow-row">
+      <div style="flex:1;text-align:center;padding:8px;font-size:.75rem;color:var(--ok);border-top:1px dashed var(--ok)">⬆ Source code STAYS here — temp dir deleted after scan ⬆</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node">UnifiedFinding[] (metadata only)</div>
+      <div class="flow-arrow" style="color:var(--ok)">→ HTTPS POST →</div>
+      <div class="flow-node flow-db">Control plane PostgreSQL</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-label" style="color:var(--tag-red)">EXCEPTION: If Cloud AI opted in (OpenAI/Anthropic), file content sent to AI provider servers</div>
+    </div>
+  </div>
+
+  <h3>DFD 5 — Alert triage workflow</h3>
+  <div class="dfd-section">
+    <div class="flow-row">
+      <div class="flow-node">Finding created (OPEN)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Analyst reviews in AlertDetail</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-ai">AI Assist chat</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node">CONFIRMED</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">Assign + create Task</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">IN_PROGRESS</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node" style="border-color:var(--ok)">REMEDIATED</div>
+    </div>
+    <div class="flow-row">
+      <div class="flow-node" style="border-color:var(--warn)">FALSE_POSITIVE</div>
+      <div class="flow-arrow" style="color:var(--text-ph)">or</div>
+      <div class="flow-node" style="border-color:var(--caution)">ACCEPTED_RISK</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">FindingHistory entry</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node flow-db">Audit trail</div>
+    </div>
+  </div>
+
+  <h3>DFD 6 — Config resolution (4-layer stack)</h3>
+  <div class="dfd-section">
+    <div class="flow-row">
+      <div class="flow-node">1. User Credentials<br><span style="font-size:.6875rem;color:var(--text-ph)">per-user API keys (encrypted)</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">2. Org Defaults<br><span style="font-size:.6875rem;color:var(--text-ph)">scan.config (DB)</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">3. User Presets<br><span style="font-size:.6875rem;color:var(--text-ph)">"Quick Scan", "Deep Audit"</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">4. Per-Scan Override<br><span style="font-size:.6875rem;color:var(--text-ph)">scan.configJson</span></div>
+    </div>
+    <div class="notif notif-warn" style="margin-top:var(--s04)">
+      <div class="notif-label">Not yet implemented</div>
+      Layers 1–3 exist as design, but provider factory still reads API keys from env vars (process.env). User-scoped credential isolation (Task #12) is pending. This is a P1 gap — team members sharing an instance all use the same API keys.
+    </div>
+  </div>
+</section>
+
+<!-- ══ SECTION 05: SCAN PIPELINE ════════════════════════ -->
+<section class="section" id="s05">
+  <div class="sec-hdr"><span class="sec-num">05</span><h2>Scan Pipeline</h2></div>
+
+  <div class="notif notif-info">
+    <div class="notif-label">Pipeline design</div>
+    6-node event-driven pipeline. Each node is a separate async function. The worker claims a job, executes nodes sequentially (nodes 3 and 4 have internal parallelism), and marks the scan complete when all nodes succeed. Retry with exponential backoff on AI calls. Temp dirs cleaned on both success and failure.
+  </div>
+
+  <div class="pipe-flow">
+    <div class="pipe-node pipe-ok">
+      <div class="pipe-num">NODE 01 · CLONE</div>
+      <div class="pipe-name">Clone</div>
+      <div class="pipe-desc">git clone the repo. Authenticated via GitHub PAT (decrypted from DB). Shallow clone (depth=1) for speed. Creates temp dir: astra-scan-{scanId}.</div>
+      <span class="tag tag-green">✓ Complete</span>
+    </div>
+    <div class="pipe-node pipe-ok">
+      <div class="pipe-num">NODE 02 · DISCOVER</div>
+      <div class="pipe-name">Discover</div>
+      <div class="pipe-desc">Walk the cloned repo. Detect languages, build PrioritizedFile[] sorted by security relevance (auth > payments > API > config > data). Builds SystemIntelReport for AI context.</div>
+      <span class="tag tag-green">✓ Complete</span>
+    </div>
+    <div class="pipe-node pipe-ok">
+      <div class="pipe-num">NODE 03 · DEEP SCAN</div>
+      <div class="pipe-name">Deep Scan</div>
+      <div class="pipe-desc">Per-file AI analysis + bundled scanners in parallel batches (concurrency=5). AI enrichment per finding. FileSummary[] generated per file for cross-file node.</div>
+      <span class="tag tag-green">✓ Complete</span>
+    </div>
+    <div class="pipe-node pipe-warn">
+      <div class="pipe-num">NODE 04 · CROSS-FILE</div>
+      <div class="pipe-name">Cross-File</div>
+      <div class="pipe-desc">Business logic, auth chains, PII flows across files. KNOWN ISSUE: concatenates ALL file summaries into one prompt — context window bomb on large repos.</div>
+      <span class="tag tag-yellow">⚠ Context bomb</span>
+    </div>
+    <div class="pipe-node pipe-ok">
+      <div class="pipe-num">NODE 05 · AGGREGATE</div>
+      <div class="pipe-name">Aggregate</div>
+      <div class="pipe-desc">Deduplicate by SHA-256 fingerprint, merge scanner results, compute risk scores, rank findings.</div>
+      <span class="tag tag-green">✓ Complete</span>
+    </div>
+    <div class="pipe-node pipe-ok">
+      <div class="pipe-num">NODE 06 · PERSIST</div>
+      <div class="pipe-name">Persist</div>
+      <div class="pipe-desc">Write findings to DB. Auto-create FINDING_TRIAGE tasks for CRITICAL/HIGH/MEDIUM findings. Mark scan COMPLETED. Clean temp dir.</div>
+      <span class="tag tag-green">✓ Complete</span>
+    </div>
+  </div>
+
+  <h3>Pipeline node configuration schema</h3>
+  <div class="code-block">
+    <div class="code-label">scan.config.json — DB-backed configuration</div>
+    <pre>{
+  "pipeline": {
+    "clone":     { "enabled": true },
+    "discover":  { "enabled": true, "maxFiles": 500, "skipPatterns": ["node_modules", ".git"] },
+    "deep_scan": {
+      "enabled": true, "concurrency": 5,
+      "provider": "cloud-ollama", "model": "kimi-k2.6:cloud",
+      "temperature": 0.1, "thinkingDepth": "none",
+      "maxRetries": 3, "retryBackoffMs": 1000
+    },
+    "cross_file": {
+      "enabled": true,
+      "provider": "cloud-ollama", "model": "kimi-k2.6:cloud",
+      "temperature": 0.1
+    },
+    "aggregate":  { "enabled": true },
+    "persist":    { "enabled": true, "autoCreateTasks": true }
+  },
+  "chat": {
+    "provider": "cloud-ollama", "model": "glm-5.1:cloud",
+    "temperature": 0.3, "systemPrompt": "..."
+  }
+}</pre>
+  </div>
+
+  <h3>Proposed pipeline extensions (9 new nodes)</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Node</th><th>Purpose</th><th>Tools</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="td-mono td-strong">sbom</td><td>Software Bill of Materials from package.json, requirements.txt, Cargo.toml</td><td>Syft, CycloneDX</td><td><span class="tag tag-blue">P1</span></td></tr>
+        <tr><td class="td-mono td-strong">dependency_vuln</td><td>Check SBOM against OSV, GitHub Advisory, Snyk vulnerability databases</td><td>Grype, OSV-Scanner</td><td><span class="tag tag-blue">P1</span></td></tr>
+        <tr><td class="td-mono td-strong">secret_scan</td><td>Entropy analysis, git history scanning, custom patterns beyond basic regex</td><td>Gitleaks + custom</td><td><span class="tag tag-blue">P1</span></td></tr>
+        <tr><td class="td-mono td-strong">iac_scan</td><td>Terraform, CloudFormation, K8s YAML misconfigurations</td><td>Checkov, KICS, Trivy</td><td><span class="tag tag-blue">P1</span></td></tr>
+        <tr><td class="td-mono td-strong">compliance</td><td>Policy enforcement: SOC2, PCI-DSS, GDPR custom rule patterns</td><td>Custom rule engine</td><td><span class="tag tag-cyan">P2</span></td></tr>
+        <tr><td class="td-mono td-strong">correlation</td><td>Merge findings from different nodes pointing to same issue</td><td>Internal dedup logic</td><td><span class="tag tag-cyan">P2</span></td></tr>
+        <tr><td class="td-mono td-strong">risk_score</td><td>Compute risk scores based on severity, exploitability, asset exposure</td><td>CVSS + custom</td><td><span class="tag tag-cyan">P2</span></td></tr>
+        <tr><td class="td-mono td-strong">report</td><td>Generate SARIF, PDF, HTML reports with findings, remediation, metrics</td><td>Puppeteer / wkhtmltopdf</td><td><span class="tag tag-cyan">P2</span></td></tr>
+        <tr><td class="td-mono td-strong">notify</td><td>Slack, email, PagerDuty, webhook dispatch for critical findings</td><td>Webhooks</td><td><span class="tag tag-cyan">P2</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 06: SCAN GRAPH ════════════════════════════ -->
+<section class="section" id="s06">
+  <div class="sec-hdr"><span class="sec-num">06</span><h2>Scan Graph — Detailed Node Breakdown</h2></div>
+
+  <div class="notif notif-info">
+    <div class="notif-label">Reference</div>
+    The interactive scan graph is available at <code>astra-scan-graph.html</code> in this project. This section captures the node definitions in a readable format. The proposed graph extends the current 6-node pipeline to 14 phases for enterprise-grade coverage.
+  </div>
+
+  <div class="graph-nodes" style="margin-bottom:var(--s06)">
+    <div class="gn gn-io">
+      <div class="gn-phase">PHASE 1 · I/O</div>
+      <div class="gn-name">Clone</div>
+      <div class="gn-desc">git clone with shallow depth. GitHub PAT decrypted from DB. Temp dir created: astra-scan-{id}. Sets up for all downstream nodes.</div>
+      <div><span class="gn-output">tempDir: string</span><span class="gn-output">commitSha: string</span></div>
+      <div class="gn-timing">~5–30s</div>
+    </div>
+    <div class="gn gn-data">
+      <div class="gn-phase">PHASE 2 · ANALYSIS</div>
+      <div class="gn-name">Discover</div>
+      <div class="gn-desc">Language detection, file walk, build PrioritizedFile[] by security relevance. Auth &gt; payments &gt; API &gt; config &gt; data. SystemIntelReport generated: what this system IS.</div>
+      <div><span class="gn-output">PrioritizedFile[]</span><span class="gn-output">SystemIntelReport</span></div>
+      <div class="gn-timing">~2–10s</div>
+    </div>
+    <div class="gn gn-ai">
+      <div class="gn-phase">PHASE 3 · SCANNERS</div>
+      <div class="gn-name">Bundled Scanners</div>
+      <div class="gn-desc">Trivy, Semgrep, Gitleaks, Bearer run in parallel. Fast, deterministic, rule-based. Results normalized to UnifiedFinding[] before AI enrichment.</div>
+      <div><span class="gn-output">UnifiedFinding[] (raw)</span></div>
+      <div class="gn-timing">~30–120s</div>
+    </div>
+    <div class="gn gn-ai">
+      <div class="gn-phase">PHASE 4 · NORMALIZE</div>
+      <div class="gn-name">Normalize</div>
+      <div class="gn-desc">Map scanner-specific outputs to unified schema. SHA-256 fingerprint generation. Severity normalization. CWE/OWASP mapping from scanner metadata.</div>
+      <div><span class="gn-output">UnifiedFinding[] (normalized)</span></div>
+      <div class="gn-timing">&lt;1s</div>
+    </div>
+    <div class="gn gn-ai">
+      <div class="gn-phase">PHASE 5 · AI</div>
+      <div class="gn-name">AI Enrichment</div>
+      <div class="gn-desc">Per-finding AI: severity re-assessment, plain-English explanation, code fix, exploit score 0–10, exploitation scenario, CWE/OWASP. Runs on scanner findings before deep scan.</div>
+      <div><span class="gn-output">aiExplanation</span><span class="gn-output">aiFix</span><span class="gn-output">exploitScore</span></div>
+      <div class="gn-timing">~1–2min</div>
+    </div>
+    <div class="gn gn-ai">
+      <div class="gn-phase">PHASE 6 · AI DEEP SCAN</div>
+      <div class="gn-name">Deep Scan</div>
+      <div class="gn-desc">Per-file AI analysis with full SystemIntelReport context. AI acts as a senior security engineer who knows what this system does. Concurrency 5, streaming persist per batch. FileSummary[] output for cross-file.</div>
+      <div><span class="gn-output">UnifiedFinding[] (ai-deep-scan)</span><span class="gn-output">FileSummary[]</span></div>
+      <div class="gn-timing">2–10min</div>
+    </div>
+    <div class="gn gn-data">
+      <div class="gn-phase">PHASE 7 · PRE-AGGREGATION</div>
+      <div class="gn-name">Cluster Summaries</div>
+      <div class="gn-desc">Groups FileSummary[] into domain clusters (auth, payments, API, config, data, remaining) for bounded cross-file context. Fixes the context window bomb. Pure heuristic, no AI call.</div>
+      <div><span class="gn-output">ClusterMap</span></div>
+      <div class="gn-timing">&lt;5s</div>
+      <div class="notif notif-warn" style="margin-top:var(--s03);font-size:.75rem;padding:var(--s03)">Not yet implemented — cross-file currently runs without clustering</div>
+    </div>
+    <div class="gn gn-ai">
+      <div class="gn-phase">PHASE 8 · AI CROSS-FILE</div>
+      <div class="gn-name">Cross-File (per cluster)</div>
+      <div class="gn-desc">AI reasons about security invariants within one domain cluster. Finds IDOR, missing auth middleware, broken access control, trust boundary violations. Runs once per cluster in parallel.</div>
+      <div><span class="gn-output">UnifiedFinding[] (business-logic)</span><span class="gn-output">BusinessLogicRule[] CANDIDATES</span></div>
+      <div class="gn-timing">30–60s per cluster</div>
+    </div>
+    <div class="gn gn-ai">
+      <div class="gn-phase">PHASE 9 · AI CROSS-FILE GLOBAL</div>
+      <div class="gn-name">Cross-File Global</div>
+      <div class="gn-desc">System-wide architectural analysis across cluster summaries. Finds patterns crossing domain boundaries — data flows between services, system-wide invariant violations. Not yet implemented.</div>
+      <div><span class="gn-output">UnifiedFinding[] (arch-level)</span></div>
+      <div class="gn-timing">1–2min</div>
+      <div class="notif notif-warn" style="margin-top:var(--s03);font-size:.75rem;padding:var(--s03)">Proposed — not yet implemented</div>
+    </div>
+    <div class="gn gn-ai">
+      <div class="gn-phase">PHASE 10 · HUMAN LOOP</div>
+      <div class="gn-name">Business Logic Confirmation</div>
+      <div class="gn-desc">AI-inferred BusinessLogicRule[] candidates presented to security engineers for CONFIRMED/REJECTED. Confirmed rules stored and enforced in future scans. Human-in-the-loop for AI confidence.</div>
+      <div><span class="gn-output">BusinessLogicRule[] (confirmed)</span></div>
+      <div class="gn-timing">Human async</div>
+    </div>
+    <div class="gn gn-data">
+      <div class="gn-phase">PHASE 11 · AGGREGATION</div>
+      <div class="gn-name">Aggregate &amp; Deduplicate</div>
+      <div class="gn-desc">SHA-256 fingerprint deduplication across all scanner outputs. Merge overlapping findings. Compute composite risk scores. Rank by exploit score + severity + confidence.</div>
+      <div><span class="gn-output">UnifiedFinding[] (deduped)</span></div>
+      <div class="gn-timing">&lt;5s</div>
+    </div>
+    <div class="gn gn-io">
+      <div class="gn-phase">PHASE 12 · PERSIST</div>
+      <div class="gn-name">Persist to DB</div>
+      <div class="gn-desc">Write all findings to PostgreSQL. Auto-create FINDING_TRIAGE tasks for CRITICAL/HIGH/MEDIUM. Mark scan COMPLETED. Clean temp dir. Emit scan-complete event.</div>
+      <div><span class="gn-output">Finding[] (in DB)</span><span class="gn-output">Task[] (auto-created)</span></div>
+      <div class="gn-timing">~5–30s</div>
+    </div>
+    <div class="gn gn-io">
+      <div class="gn-phase">PHASE 13 · DISPATCH</div>
+      <div class="gn-name">Notify</div>
+      <div class="gn-desc">Dispatch findings to integrations: Slack (critical alerts), Jira (auto-ticket), PagerDuty (critical+), webhook (generic). Not yet implemented.</div>
+      <div><span class="gn-output">Notifications sent</span></div>
+      <div class="gn-timing">&lt;10s</div>
+      <div class="notif notif-warn" style="margin-top:var(--s03);font-size:.75rem;padding:var(--s03)">Proposed — not yet implemented</div>
+    </div>
+    <div class="gn gn-data">
+      <div class="gn-phase">PHASE 14 · REPORT</div>
+      <div class="gn-name">Report Generation</div>
+      <div class="gn-desc">Generate SARIF, HTML report, PDF executive summary. Persist as download artifacts. Currently export is on-demand via UI; this proposes automated post-scan generation.</div>
+      <div><span class="gn-output">SARIF</span><span class="gn-output">HTML report</span><span class="gn-output">PDF</span></div>
+      <div class="gn-timing">~30s</div>
+    </div>
+  </div>
+
+  <h3>Known scan graph issues</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Issue</th><th>Where</th><th>Impact</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td class="td-strong td-err">Context window bomb</td><td>cross_file node</td><td>All file summaries concatenated into one prompt — fails on repos with 50+ files</td><td>Implement cluster_summaries node (Phase 7) before cross_file</td></tr>
+        <tr><td class="td-strong td-warn">Empty AI responses</td><td>deep_scan, cross_file</td><td>Some models return empty text with non-zero output tokens → silent zero findings. FIXED in v2.7</td><td>✓ Empty response detection + retry in providers</td></tr>
+        <tr><td class="td-strong td-warn">Token estimation inaccurate</td><td>deep_scan</td><td>Math.ceil(text.length / 4) — off by factor of 2× for code with many symbols</td><td>Use tiktoken (OpenAI) or Anthropic counting API per model family</td></tr>
+        <tr><td class="td-strong td-warn">Sequential nodes</td><td>entire pipeline</td><td>No parallelism between independent nodes — deep_scan and bundled scanners could run concurrently with discover still finishing</td><td>DAG-based execution with dependency declarations</td></tr>
+        <tr><td class="td-strong td-warn">No resumability</td><td>entire pipeline</td><td>Scan fails at cross_file → must re-run everything from clone. 10-minute deep_scan lost.</td><td>Per-node checkpoint persistence with resume-from capability</td></tr>
+        <tr><td class="td-strong">No streaming findings</td><td>persist node</td><td>Findings only visible after full persist completes — no real-time feedback during deep_scan</td><td>WebSocket/SSE emit per batch (spec written in Task 34)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 07: SCANNERS & AI ════════════════════════ -->
+<section class="section" id="s07">
+  <div class="sec-hdr"><span class="sec-num">07</span><h2>Scanners &amp; AI Engine</h2></div>
+
+  <h3>7.1 Bundled scanner matrix</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Scanner</th><th>Category</th><th>What it finds</th><th>Output format</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="td-mono td-strong">Trivy</td><td>SCA · IaC · Secrets</td><td>CVEs in deps, misconfigs in Terraform/Helm/K8s, hardcoded secrets</td><td>JSON via CLI</td><td><span class="tag tag-green">✓ Active</span></td></tr>
+        <tr><td class="td-mono td-strong">Semgrep</td><td>SAST</td><td>Code vulnerabilities: SQLi, XSS, path traversal, insecure deserialization (500+ rules)</td><td>JSON via CLI</td><td><span class="tag tag-green">✓ Active</span></td></tr>
+        <tr><td class="td-mono td-strong">Gitleaks</td><td>Secrets</td><td>API keys, tokens, passwords in code and git history</td><td>JSON via CLI</td><td><span class="tag tag-green">✓ Active</span></td></tr>
+        <tr><td class="td-mono td-strong">Bearer CI</td><td>Data Flow</td><td>PII exposure, GDPR violations, sensitive data in logs/responses</td><td>JSON via CLI</td><td><span class="tag tag-green">✓ Active</span></td></tr>
+        <tr><td class="td-mono td-strong">AI deep-scan</td><td>SAST · Business Logic</td><td>Context-aware security issues: auth flaws, business logic bugs, data validation gaps</td><td>Structured JSON via LLM</td><td><span class="tag tag-green">✓ Active</span></td></tr>
+        <tr><td class="td-mono td-strong">AI cross-file</td><td>Business Logic · IDOR</td><td>Cross-boundary issues: missing middleware, IDOR, broken access control chains</td><td>Structured JSON via LLM</td><td><span class="tag tag-cyan">⚠ Context bomb</span></td></tr>
+        <tr><td class="td-mono td-strong">Checkov</td><td>IaC</td><td>Terraform, Helm, K8s YAML misconfigurations (planned)</td><td>JSON via CLI</td><td><span class="tag tag-yellow">⚪ Planned</span></td></tr>
+        <tr><td class="td-mono td-strong">Bandit</td><td>SAST (Python)</td><td>Python-specific security issues (planned)</td><td>JSON via CLI</td><td><span class="tag tag-yellow">⚪ Planned</span></td></tr>
+        <tr><td class="td-mono td-strong">CodeQL</td><td>SAST</td><td>Semantic code analysis — higher accuracy than pattern matching (future)</td><td>SARIF</td><td><span class="tag tag-gray">Future</span></td></tr>
+        <tr><td class="td-mono td-strong">Grype / Syft</td><td>SCA · SBOM</td><td>SBOM generation + vulnerability matching (future sbom node)</td><td>JSON / CycloneDX</td><td><span class="tag tag-gray">Future</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>7.2 AI provider matrix</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Provider</th><th>ID</th><th>Models</th><th>Auth</th><th>Code privacy</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="td-strong">Cloud Ollama</td><td class="td-mono">cloud-ollama</td><td>kimi-k2.6:cloud, glm-5.1:cloud, others</td><td>API key</td><td><span class="td-warn">Sends to cloud</span></td><td><span class="tag tag-green">✓ Live</span></td></tr>
+        <tr><td class="td-strong">Hosted Ollama</td><td class="td-mono">hosted-ollama</td><td>Any self-hosted Ollama model</td><td>URL + optional key</td><td><span class="td-ok">Local / private</span></td><td><span class="tag tag-green">✓ Live</span></td></tr>
+        <tr><td class="td-strong">OpenAI</td><td class="td-mono">openai</td><td>gpt-4o, gpt-4o-mini, o3</td><td>API key</td><td><span class="td-warn">Sends to OpenAI</span></td><td><span class="tag tag-green">✓ Live</span></td></tr>
+        <tr><td class="td-strong">Anthropic</td><td class="td-mono">anthropic</td><td>claude-opus-4-6, claude-sonnet-4-6</td><td>API key</td><td><span class="td-warn">Sends to Anthropic</span></td><td><span class="tag tag-green">✓ Live</span></td></tr>
+        <tr><td class="td-strong">AWS Bedrock</td><td class="td-mono">bedrock</td><td>Llama 3, Mistral, Claude via Bedrock</td><td>AWS credentials</td><td><span class="td-ok">Customer AWS</span></td><td><span class="tag tag-yellow">Stub</span></td></tr>
+        <tr><td class="td-strong">Azure AI Foundry</td><td class="td-mono">azure-ai-foundry</td><td>GPT-4 series via Azure</td><td>Azure credentials</td><td><span class="td-warn">Azure region</span></td><td><span class="tag tag-yellow">Stub</span></td></tr>
+        <tr><td class="td-strong">LangGraph</td><td class="td-mono">langgraph</td><td>Multi-agent orchestration</td><td>N/A</td><td>Depends on backend</td><td><span class="tag tag-red">Dead code</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="notif notif-warn">
+    <div class="notif-label">Provider issues to fix</div>
+    1. Provider API keys read from env vars — all team members share the same keys. No per-user credential isolation (Task #12). 2. Provider caching hash only includes provider:model:temperature — changes to other fields create stale cached instances (Task #21). 3. LangGraph is dead code — should be removed or documented (Task #31). 4. Bedrock and Azure stubs throw "not yet implemented" — should be hidden or removed from provider selector (Task #19).
+  </div>
+
+  <h3>7.3 AI enrichment fields per finding</h3>
+  <div class="g4" style="margin-bottom:var(--s06)">
+    <div class="card"><div class="card-mono">aiExplanation</div><div class="card-desc">Plain-English security explanation for non-expert developers. What the issue is, why it matters.</div></div>
+    <div class="card"><div class="card-mono">aiFix</div><div class="card-desc">Concrete code fix with before/after snippets. Language-aware, context-specific.</div></div>
+    <div class="card"><div class="card-mono">exploitScore</div><div class="card-desc">0–10 exploit difficulty score. 0=theoretical, 10=trivially exploitable. AI-assessed based on code context.</div></div>
+    <div class="card"><div class="card-mono">exploitationScenario</div><div class="card-desc">Step-by-step attack scenario an adversary would follow. Used for red team context.</div></div>
+    <div class="card"><div class="card-mono">cwe[]</div><div class="card-desc">CWE identifiers (e.g. CWE-89 SQLi, CWE-79 XSS). AI-mapped plus scanner metadata.</div></div>
+    <div class="card"><div class="card-mono">owasp[]</div><div class="card-desc">OWASP Top 10 mappings (e.g. A03 Injection, A01 Broken Access Control).</div></div>
+    <div class="card"><div class="card-mono">severity</div><div class="card-desc">AI re-assessed severity: CRITICAL / HIGH / MEDIUM / LOW / INFO. May differ from scanner's original severity.</div></div>
+    <div class="card"><div class="card-mono">category</div><div class="card-desc">SAST / SCA / SECRETS / IAC / DATA_FLOW / BUSINESS_LOGIC — normalized across all scanners.</div></div>
+  </div>
+</section>
+
+<!-- ══ SECTION 08: CURRENT STATE ════════════════════════ -->
+<section class="section" id="s08">
+  <div class="sec-hdr"><span class="sec-num">08</span><h2>Current State — What Was Built &amp; How</h2></div>
+
+  <h3>From the PoC (2026-04-20) to v2.17 (2026-05-09)</h3>
+  <p>The platform began as a Next.js 15 PoC with SQLite, single Ollama model, and no auth. In 7 weeks it evolved into a full enterprise security platform with PostgreSQL, RBAC, 7 AI providers, a 6-node pipeline, full task management, AI observability, and an IBM Carbon UI. This section documents what exists today and how it was built.</p>
+
+  <h3>8.1 PoC baseline (v1.0.0 — 2026-04-20)</h3>
+  <div class="g4" style="margin-bottom:var(--s06)">
+    <div class="card"><div class="card-lbl">Stack</div><div class="card-val">Next.js 15 + SQLite + Ollama</div><div class="card-desc">Single-file database (better-sqlite3), one AI model (Ollama local), no auth</div></div>
+    <div class="card"><div class="card-lbl">Scanners</div><div class="card-val">4 scanners via child_process</div><div class="card-desc">Trivy, Semgrep, Bearer, Gitleaks executed as shell commands from API routes</div></div>
+    <div class="card"><div class="card-lbl">UI</div><div class="card-val">IBM Carbon components</div><div class="card-desc">RepoInput, FindingsTable, SeverityBadge, ScannerBreakdown, BusinessLogicPanel from @carbon/react</div></div>
+    <div class="card"><div class="card-lbl">APIs</div><div class="card-val">3 endpoints</div><div class="card-desc">POST /api/scan, GET /api/findings, GET /api/findings/[id]</div></div>
+  </div>
+
+  <h3>8.2 Architecture evolution: PoC → Production</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Milestone</th><th>Version</th><th>Date</th><th>Key additions</th></tr></thead>
+      <tbody>
+        <tr><td class="td-strong">PoC</td><td class="td-mono">1.0.0</td><td class="td-mono">2026-04-20</td><td>Next.js 15 scaffold, SQLite, Ollama, Trivy/Semgrep/Bearer/Gitleaks, Docker Compose</td></tr>
+        <tr><td class="td-strong">Findings dashboard</td><td class="td-mono">1.1.0</td><td class="td-mono">2026-04-25</td><td>Findings table with severity filtering, expandable rows, code snippets, file explorer</td></tr>
+        <tr><td class="td-strong">AI provider architecture</td><td class="td-mono">1.2.0</td><td class="td-mono">2026-04-28</td><td>7 AI providers, per-node configuration, ConfigEditor, provider factory pattern</td></tr>
+        <tr><td class="td-strong">Job queue</td><td class="td-mono">1.3.0</td><td class="td-mono">2026-05-01</td><td>Job and ScanLog models, enqueue/claim/complete/fail, retries, scan control APIs</td></tr>
+        <tr><td class="td-strong">Export pipeline</td><td class="td-mono">1.4.0</td><td class="td-mono">2026-05-03</td><td>Security report page, JSON/CSV/SARIF/HTML/Markdown export, rescan button</td></tr>
+        <tr><td class="td-strong">AI chat + rules</td><td class="td-mono">1.5.0</td><td class="td-mono">2026-05-05</td><td>ScanChat, UserRules CRUD, ThemeToggle, UserPreference, per-scan AI conversations</td></tr>
+        <tr><td class="td-strong">Platform redesign</td><td class="td-mono">2.0.0</td><td class="td-mono">2026-05-07</td><td>Full IBM Carbon UI, NextAuth v5, RBAC, alert triage, GitHub integration, dark theme</td></tr>
+        <tr><td class="td-strong">Security + RBAC</td><td class="td-mono">2.1.0</td><td class="td-mono">2026-05-07</td><td>requireAuth(), canWrite(), canAdmin() helpers, per-finding chat, HTML/Markdown export</td></tr>
+        <tr><td class="td-strong">Real AI chat</td><td class="td-mono">2.2.0</td><td class="td-mono">2026-05-07</td><td>Real AI-powered chat, chat AI config tab, org-level chat API, context-aware per-finding chat</td></tr>
+        <tr><td class="td-strong">Observability + Tasks</td><td class="td-mono">2.3.0</td><td class="td-mono">2026-05-07</td><td>AiCallLog, Pino logger, Task model, Tasks page, AI task suggestions, auto-task from findings</td></tr>
+        <tr><td class="td-strong">Scan lifecycle fixes</td><td class="td-mono">2.4.0</td><td class="td-mono">2026-05-07</td><td>Worker mutex bug fixed, cancel scan, elapsed time, manual task creation, refresh buttons</td></tr>
+        <tr><td class="td-strong">Security hardening</td><td class="td-mono">2.5.0</td><td class="td-mono">2026-05-08</td><td>All routes auth-required, middleware bypass fixed, rate limiting, GitHub tokens AES-256-GCM</td></tr>
+        <tr><td class="td-strong">AI debuggability</td><td class="td-mono">2.7.0</td><td class="td-mono">2026-05-08</td><td>Alert-Task linking, per-file rescan, AI observability retry, empty response detection, pipeline UI</td></tr>
+        <tr><td class="td-strong">Auth fixes + seed</td><td class="td-mono">2.8–2.15</td><td class="td-mono">2026-05-08</td><td>Auth coverage, DB-backed prompts, multi-turn chat, browser data store, glossary, seed script, PrismaPg schema fix</td></tr>
+        <tr><td class="td-strong">Homepage v2</td><td class="td-mono">2.16.0</td><td class="td-mono">2026-05-08</td><td>Full IBM Carbon landing page rewrite, geometric SVG hero, 4-up grid, mobile fixes</td></tr>
+        <tr><td class="td-strong">Branding refactor</td><td class="td-mono">2.17.0</td><td class="td-mono">2026-05-09</td><td>src/lib/branding.ts, all product strings env-driven, type renames (AstraConfig→ScanConfig)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>8.3 What's live and solid</h3>
+  <div class="status-grid">
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>Full scan pipeline</strong><br><small style="color:var(--text-ph)">6 nodes, async, event-driven</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>AI enrichment</strong><br><small style="color:var(--text-ph)">7 fields per finding</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>Multi-turn AI chat</strong><br><small style="color:var(--text-ph)">3 levels, DB-backed history</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>Alert triage</strong><br><small style="color:var(--text-ph)">6-state workflow, full audit</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>Task management</strong><br><small style="color:var(--text-ph)">5 types, bidirectional links</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>AI observability</strong><br><small style="color:var(--text-ph)">Full call log, retry</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>RBAC</strong><br><small style="color:var(--text-ph)">3 roles, all routes gated</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>AES-256-GCM</strong><br><small style="color:var(--text-ph)">GitHub tokens encrypted</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>Rate limiting</strong><br><small style="color:var(--text-ph)">Auth endpoints, IP-based</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>IBM Carbon UI</strong><br><small style="color:var(--text-ph)">Dark/light, responsive</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>Seed script</strong><br><small style="color:var(--text-ph)">Idempotent, 3 users</small></div>
+    <div class="status-card"><span class="status-dot dot-ok"></span><strong>Branding system</strong><br><small style="color:var(--text-ph)">Env-driven, v2.17</small></div>
+    <div class="status-card"><span class="status-dot dot-warn"></span><strong>DB-backed prompts</strong><br><small style="color:var(--text-ph)">Partial — fallback only</small></div>
+    <div class="status-card"><span class="status-dot dot-warn"></span><strong>Cross-file AI</strong><br><small style="color:var(--text-ph)">Works but context bomb</small></div>
+    <div class="status-card"><span class="status-dot dot-err"></span><strong>SSO / SAML</strong><br><small style="color:var(--text-ph)">Not implemented</small></div>
+    <div class="status-card"><span class="status-dot dot-err"></span><strong>Jira / Slack</strong><br><small style="color:var(--text-ph)">Not implemented</small></div>
+    <div class="status-card"><span class="status-dot dot-err"></span><strong>PR integration</strong><br><small style="color:var(--text-ph)">Not implemented</small></div>
+    <div class="status-card"><span class="status-dot dot-err"></span><strong>Redis job queue</strong><br><small style="color:var(--text-ph)">In-memory only</small></div>
+  </div>
+</section>
+
+<!-- ══ SECTION 09: IMPROVEMENTS ════════════════════════ -->
+<section class="section" id="s09">
+  <div class="sec-hdr"><span class="sec-num">09</span><h2>Improvements Needed</h2></div>
+
+  <h3>Pipeline improvements</h3>
+
+  <h4>1 — Fix the cross-file context window bomb (P0)</h4>
+  <p><strong>Current:</strong> cross_file node concatenates ALL FileSummary[] entries into a single prompt. A repo with 100 files at ~500 tokens per summary = 50,000 tokens in one prompt. This exceeds most model context windows and produces degraded or empty output.</p>
+  <p><strong>Fix:</strong> Implement cluster_summaries node (Phase 7) before cross_file. Groups FileSummary[] by domain (auth, payments, API, config, data) using heuristic matching. Each cross_file call gets a focused, bounded context — typically 3–8 file summaries per cluster. This pattern is the fix established in the scan graph design.</p>
+
+  <h4>2 — User-scoped config architecture (P1)</h4>
+  <p><strong>Current:</strong> Provider API keys read from env vars. All team members using the same deployment share the same API keys. No per-user key isolation. Provider factory: <code>process.env[config.apiKeyEnv]</code>.</p>
+  <p><strong>Fix:</strong> Implement 4-layer config stack: Credentials (per-user, encrypted in DB) → Org Defaults → User Presets → Per-Scan Override. <code>UserProviderCredential</code> table (Task #12), <code>UserConfig</code> table (Task #13). Provider factory reads from DB, not env vars.</p>
+
+  <h4>3 — Pipeline parallelism and DAG execution (P2)</h4>
+  <p><strong>Current:</strong> All pipeline nodes run sequentially: clone finishes → discover starts → deep_scan starts. No intra-pipeline parallelism between independent stages.</p>
+  <p><strong>Fix:</strong> DAG-based execution where nodes declare dependencies. Independent nodes run concurrently. Deep-scan files run in parallel batches with auto-scaled concurrency based on provider rate limits. Incremental checkpointing allows resuming from the failure node (Tasks #46–#49).</p>
+
+  <h4>4 — Accurate token counting (P2)</h4>
+  <p><strong>Current:</strong> <code>Math.ceil(text.length / 4)</code> — simple character division. Off by 2× for code with many symbols, whitespace, Unicode.</p>
+  <p><strong>Fix:</strong> Use <code>tiktoken</code> for OpenAI models, Anthropic's token counting API for Claude, character-based heuristics calibrated per model family for Ollama.</p>
+
+  <h4>5 — Streaming findings to UI (P2)</h4>
+  <p><strong>Current:</strong> Findings only visible after the persist node completes. A 10-minute scan shows nothing until the last second.</p>
+  <p><strong>Fix:</strong> WebSocket or SSE emit per batch in deep_scan. UI displays findings in real-time as each file completes. Spec written in Task 34 — implementation pending.</p>
+
+  <h3>Security improvements</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Gap</th><th>Current state</th><th>Suggested fix</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="td-strong">SSO (SAML/OIDC)</td><td>Email/password only via NextAuth</td><td>Add NextAuth SAML/OIDC provider. Okta, Azure AD, Google Workspace. Enterprise blocker.</td><td><span class="tag tag-red">P0 enterprise blocker</span></td></tr>
+        <tr><td class="td-strong">User-scoped API keys</td><td>Provider keys in env vars — shared globally</td><td>UserProviderCredential table, AES-256-GCM encrypted, per-user isolation</td><td><span class="tag tag-red">P1</span></td></tr>
+        <tr><td class="td-strong">Durable job queue</td><td>In-memory worker — jobs lost on restart</td><td>Redis-backed BullMQ or PostgreSQL advisory locks for persistence</td><td><span class="tag tag-red">P1</span></td></tr>
+        <tr><td class="td-strong">mTLS</td><td>HTTPS to control plane, no cert pinning</td><td>Mutual TLS for data plane → control plane in self-hosted deployments</td><td><span class="tag tag-yellow">P2</span></td></tr>
+        <tr><td class="td-strong">API key auth</td><td>Session JWT only — no programmatic access</td><td>API key system for CI/CD and scripted access without browser session</td><td><span class="tag tag-yellow">P2</span></td></tr>
+        <tr><td class="td-strong">Audit log export</td><td>History in DB, no export or SIEM integration</td><td>CSV/JSON export of audit trail. Webhook push to Splunk/Datadog.</td><td><span class="tag tag-yellow">P2</span></td></tr>
+        <tr><td class="td-strong">Session invalidation</td><td>No logout-all-devices or token revocation</td><td>JWT token revocation list (Redis). Invalidate on password change.</td><td><span class="tag tag-yellow">P2</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>UI/UX improvements needed</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Task #</th><th>Feature</th><th>Current state</th><th>Suggested</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="td-mono">63</td><td class="td-strong">Dashboard KPI cards</td><td>No metrics tiles on homepage after login</td><td>Carbon tile grid: findings by severity sparkline, scan duration trend, token usage, remediation velocity</td><td><span class="tag tag-yellow">P2</span></td></tr>
+        <tr><td class="td-mono">60</td><td class="td-strong">Live pipeline graph</td><td>Static node graph in /pipeline — no live state</td><td>Nodes light up in real-time during scan, show timing, current status, error details</td><td><span class="tag tag-yellow">P2</span></td></tr>
+        <tr><td class="td-mono">61</td><td class="td-strong">Scan Gantt timeline</td><td>Duration shown as single number in scan detail</td><td>Gantt-style bar chart per node: clone → discover → deepScan → crossFile → aggregate → persist with per-node durations</td><td><span class="tag tag-cyan">P3</span></td></tr>
+        <tr><td class="td-mono">62</td><td class="td-strong">Finding dependency graph</td><td>Flat list of findings only</td><td>Graph view showing cross-file vulnerabilities, shared files, cascading issues</td><td><span class="tag tag-cyan">P3</span></td></tr>
+        <tr><td class="td-mono">65</td><td class="td-strong">Command palette</td><td>No global search or action launcher</td><td>Cmd+K palette: search scans/findings, navigate pages, trigger actions — Carbon style</td><td><span class="tag tag-cyan">P3</span></td></tr>
+        <tr><td class="td-mono">67</td><td class="td-strong">Toast notifications</td><td>No real-time feedback for async actions</td><td>Carbon InlineNotification: scan started, config saved, provider connected, error alerts</td><td><span class="tag tag-yellow">P2</span></td></tr>
+        <tr><td class="td-mono">70</td><td class="td-strong">Onboarding wizard</td><td>No guided first-use flow</td><td>Step-by-step: add provider credentials → set preferences → run first scan</td><td><span class="tag tag-cyan">P3</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 10: INTEGRATIONS ════════════════════════ -->
+<section class="section" id="s10">
+  <div class="sec-hdr"><span class="sec-num">10</span><h2>Integrations</h2></div>
+
+  <h3>10.1 Currently implemented</h3>
+  <div class="g3" style="margin-bottom:var(--s06)">
+    <div class="card card-ok">
+      <div class="card-lbl">Live · v2.0</div>
+      <div class="card-val">GitHub</div>
+      <div class="card-desc">PAT linking, repo/branch selectors, encrypted token storage (AES-256-GCM), branches API with decryption fix (v2.10).</div>
+    </div>
+    <div class="card card-ok">
+      <div class="card-lbl">Live · v2.0</div>
+      <div class="card-val">Pino logging</div>
+      <div class="card-desc">Structured JSON logs to ./logs/astra.log. Edge-safe stub for Next.js middleware. All AI calls, scan events, errors captured.</div>
+    </div>
+    <div class="card card-ok">
+      <div class="card-lbl">Live · v1.4</div>
+      <div class="card-val">SARIF export</div>
+      <div class="card-desc">Standard SARIF 2.1.0 output. Compatible with GitHub Security tab, VS Code SARIF viewer, Checkmarx integrations.</div>
+    </div>
+  </div>
+
+  <h3>10.2 Missing integrations (prioritized by competitive impact)</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Integration</th><th>Why it matters</th><th>Technical approach</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="td-strong">GitHub PR integration</td>
+          <td>Inline PR comments showing findings on changed lines. Merge blocking for CRITICAL findings. Required for developer-first adoption — GitHub Advanced Security, Snyk, Semgrep all have this.</td>
+          <td>GitHub Checks API + Pull Request Review API. POST /repos/{owner}/{repo}/check-runs. Use SARIF upload to GitHub Code Scanning API.</td>
+          <td><span class="tag tag-red">P0 — table stakes</span></td>
+        </tr>
+        <tr>
+          <td class="td-strong">Jira bidirectional sync</td>
+          <td>Auto-create Jira tickets from findings. Sync status changes bidirectionally — finding REMEDIATED ↔ Jira ticket DONE. Required by enterprise security teams.</td>
+          <td>Jira REST API v3. POST /rest/api/3/issue. Webhook for reverse sync. Store jiraIssueKey on Finding model.</td>
+          <td><span class="tag tag-red">P0 — enterprise blocker</span></td>
+        </tr>
+        <tr>
+          <td class="td-strong">Slack alerting</td>
+          <td>Real-time Slack notifications for CRITICAL/HIGH findings. Digest summaries after scan completes. Team-level channels per repo or severity band.</td>
+          <td>Slack Incoming Webhooks + Block Kit for rich formatting. Store webhook URL encrypted in Config. Integrate with notify pipeline node.</td>
+          <td><span class="tag tag-red">P1</span></td>
+        </tr>
+        <tr>
+          <td class="td-strong">GitLab integration</td>
+          <td>Same as GitHub: repo selector, branch selector, PAT auth, MR comments, Security dashboard integration.</td>
+          <td>GitLab REST API v4. /projects/{id}/merge_requests/{mr_iid}/notes. GitLab DAST/SAST artifact upload for built-in Security tab.</td>
+          <td><span class="tag tag-blue">P1</span></td>
+        </tr>
+        <tr>
+          <td class="td-strong">PagerDuty</td>
+          <td>Auto-create incidents for CRITICAL findings that remain OPEN past SLA threshold. Escalation routing.</td>
+          <td>PagerDuty Events API v2. POST /v2/enqueue. Store Integration Key in Config.</td>
+          <td><span class="tag tag-cyan">P2</span></td>
+        </tr>
+        <tr>
+          <td class="td-strong">Linear / Asana</td>
+          <td>Developer-centric teams often use Linear instead of Jira. Same sync pattern: auto-create issues, bidirectional status sync.</td>
+          <td>Linear GraphQL API. Asana REST API. Similar webhook-based reverse sync.</td>
+          <td><span class="tag tag-cyan">P2</span></td>
+        </tr>
+        <tr>
+          <td class="td-strong">GitHub Actions wrapper</td>
+          <td>One-line scan integration in any GitHub workflow. Required for CI-native adoption. Competitor Snyk has 50k+ GH Actions installs.</td>
+          <td>Public GitHub Action in astra-security/scan-action repo. Wraps astra/agent Docker container. Outputs scan-id, finding-count, sarif-path.</td>
+          <td><span class="tag tag-red">P0 — adoption critical</span></td>
+        </tr>
+        <tr>
+          <td class="td-strong">VS Code extension</td>
+          <td>Show findings inline in the editor. Developer-centric workflow: fix issues without leaving VS Code.</td>
+          <td>VS Code extension reading SARIF output. Uses VS Code Diagnostic API to show inline underlines and hover details.</td>
+          <td><span class="tag tag-cyan">P3</span></td>
+        </tr>
+        <tr>
+          <td class="td-strong">Webhook (generic)</td>
+          <td>Custom integrations: send finding JSON to any endpoint. Enables integration with internal tooling without first-party support.</td>
+          <td>POST to configured URL with UnifiedFinding[] payload. HMAC-SHA256 signature header. Retry with backoff on failure.</td>
+          <td><span class="tag tag-yellow">P2</span></td>
+        </tr>
+        <tr>
+          <td class="td-strong">Splunk / Datadog SIEM</td>
+          <td>Enterprise security teams pipe all findings to SIEM for correlation with other security events.</td>
+          <td>HTTP Event Collector for Splunk. Datadog Logs API. Push AiCallLog + Finding events on scan complete.</td>
+          <td><span class="tag tag-cyan">P3</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>10.3 Integration architecture</h3>
+  <div class="notif notif-info">
+    <div class="notif-label">Design recommendation</div>
+    All integrations should route through the <strong>notify pipeline node</strong> (Phase 13 of the proposed graph). This keeps integration logic out of the core scan pipeline and makes it easy to add/remove integrations without touching pipeline code. Each integration is a pluggable handler registered in the IntegrationRegistry. Credentials stored encrypted in Config table.
+  </div>
+  <div class="code-block">
+    <div class="code-label">Proposed integration registry pattern</div>
+    <pre>interface IntegrationHandler {
+  id: string;                           // 'jira', 'slack', 'pagerduty', 'webhook'
+  name: string;
+  triggerOn: ('CRITICAL' | 'HIGH' | 'scan_complete')[];
+  send(findings: UnifiedFinding[], scanMeta: ScanMeta): Promise&lt;void&gt;;
+}
+
+// Config table: integrations.jira = { url, apiKey, projectKey, issueType }
+// Config table: integrations.slack = { webhookUrl, channel, severity_threshold }</pre>
+  </div>
+</section>
+
+<!-- ══ SECTION 11: SECURITY MODEL ══════════════════════ -->
+<section class="section" id="s11">
+  <div class="sec-hdr"><span class="sec-num">11</span><h2>Security Model</h2></div>
+
+  <div class="notif notif-ok">
+    <div class="notif-label">Solid foundation</div>
+    Every API route requires authentication. Rate limiting, encryption, and RBAC are fully implemented. The source code boundary (code never leaves customer environment) is architecturally enforced.
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3>What's implemented</h3>
+      <ul class="sl">
+        <li><strong>All API routes require auth</strong> — only /api/auth/* and /api/v1/health are public</li>
+        <li>Three roles: <strong>ADMIN</strong> (full), <strong>ANALYST</strong> (read/write scans+findings), <strong>VIEWER</strong> (read-only)</li>
+        <li>ADMIN-only: config GET/PUT, user management, DELETE operations</li>
+        <li><code>canWrite()</code> enforced on all state-changing routes</li>
+        <li><code>requireScanOwnership()</code> — non-admins see only their own scans</li>
+        <li>Non-admin findings filtered by scan.userId</li>
+        <li><strong>GitHub tokens</strong> encrypted at rest with AES-256-GCM</li>
+        <li>Rate limiting: 10/min login, 5/min signup (IP-based, sliding window)</li>
+        <li>JWT sessions via NextAuth v5 with trustHost for reverse proxy</li>
+        <li>Audit history on every finding mutation (userId, timestamp, action)</li>
+        <li>Temp dirs cleaned on completion and failure (cleanupScanTmpDir)</li>
+        <li>Raw source code boundary: code never transmitted to control plane</li>
+      </ul>
+    </div>
+    <div>
+      <h3>What's missing</h3>
+      <ul class="sl">
+        <li><strong>SSO (SAML/OIDC)</strong> — email/password only; enterprise deployments need Okta/Azure AD</li>
+        <li><strong>User-scoped API key encryption</strong> — provider API keys in shared env vars</li>
+        <li><strong>mTLS</strong> — data plane → control plane HTTPS but no mutual TLS</li>
+        <li><strong>API key auth</strong> — no API key system for CI programmatic access</li>
+        <li><strong>Audit log export</strong> — history in DB but no SIEM/export</li>
+        <li><strong>Session invalidation</strong> — no logout-all-sessions or token revocation</li>
+        <li><strong>Content Security Policy</strong> — CSP headers not verified</li>
+        <li><strong>Dependency audit</strong> — no automated npm audit in CI</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>RBAC matrix</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Action</th><th>ADMIN</th><th>ANALYST</th><th>VIEWER</th></tr></thead>
+      <tbody>
+        <tr><td>View scans (own)</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td></tr>
+        <tr><td>View scans (all)</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-no">—</td></tr>
+        <tr><td>Create scan</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-no">—</td></tr>
+        <tr><td>Cancel / control scan</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-no">—</td></tr>
+        <tr><td>Triage findings (status change)</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-no">—</td></tr>
+        <tr><td>Assign findings</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-no">—</td></tr>
+        <tr><td>Create / manage tasks</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-no">—</td></tr>
+        <tr><td>Read config</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-no">—</td></tr>
+        <tr><td>Write config</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-no">—</td></tr>
+        <tr><td>User management</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-no">—</td></tr>
+        <tr><td>Delete global rules</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-no">—</td></tr>
+        <tr><td>Create user rules</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-no">—</td></tr>
+        <tr><td>View AI observability</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td></tr>
+        <tr><td>Export findings</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 12: COMPETITIVE ANALYSIS ════════════════ -->
+<section class="section" id="s12">
+  <div class="sec-hdr"><span class="sec-num">12</span><h2>Competitive Analysis</h2></div>
+
+  <div class="notif notif-info">
+    <div class="notif-label">Market positioning</div>
+    Positioned between developer-first tools (Snyk, Semgrep) and heavyweight enterprise platforms (Veracode, Fortify). The core differentiator is <strong>AI-native enrichment with a code-privacy guarantee</strong> — AI reasoning runs inside the customer's environment. No competitor combines all-scanner coverage + local AI + per-finding chat + full AI observability in one self-hostable platform.
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="min-width:130px">Platform</th>
+          <th>SAST</th><th>SCA</th><th>Secrets</th><th>IaC</th>
+          <th>AI Enrich</th><th>AI Chat</th><th>Code Privacy</th>
+          <th>Self-hosted</th><th>Task Mgmt</th><th>AI Observ.</th>
+          <th>PR inline</th><th>Jira sync</th><th>Pricing</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="comp-us">
+          <td class="td-strong" style="color:#fff">This Platform</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td>
+          <td class="td-ok">✓ Local</td><td class="td-ok">✓ 3 levels</td><td class="td-ok">✓ Guaranteed</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓ Full</td><td class="td-ok">✓ Full</td>
+          <td class="td-no">—</td><td class="td-no">—</td><td>TBD</td>
+        </tr>
+        <tr>
+          <td class="td-strong">Snyk</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td>
+          <td class="td-part">Partial</td><td class="td-no">—</td><td class="td-part">Partial</td>
+          <td class="td-ok">✓ Enterprise</td><td class="td-no">—</td><td class="td-no">—</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td>$$$/dev</td>
+        </tr>
+        <tr>
+          <td class="td-strong">Semgrep</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-part">Partial</td>
+          <td class="td-ok">✓ Assistant</td><td class="td-no">—</td><td class="td-part">Partial</td>
+          <td class="td-ok">✓</td><td class="td-no">—</td><td class="td-no">—</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td>Free/$$</td>
+        </tr>
+        <tr>
+          <td class="td-strong">Checkmarx</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td>
+          <td class="td-part">Partial</td><td class="td-no">—</td><td class="td-ok">✓ On-prem</td>
+          <td class="td-ok">✓</td><td class="td-part">Limited</td><td class="td-no">—</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td>$$$$</td>
+        </tr>
+        <tr>
+          <td class="td-strong">Veracode</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-part">Partial</td>
+          <td class="td-part">Partial</td><td class="td-no">—</td><td class="td-ok">✓</td>
+          <td class="td-ok">✓</td><td class="td-part">Limited</td><td class="td-no">—</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td>$$$$</td>
+        </tr>
+        <tr>
+          <td class="td-strong">GitHub Advanced Security</td>
+          <td class="td-ok">✓ CodeQL</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-part">Partial</td>
+          <td class="td-part">Copilot fix</td><td class="td-no">—</td><td class="td-part">GitHub only</td>
+          <td class="td-no">—</td><td class="td-no">—</td><td class="td-no">—</td>
+          <td class="td-ok">✓</td><td class="td-part">Via app</td><td>$/seat</td>
+        </tr>
+        <tr>
+          <td class="td-strong">SonarQube</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-part">Partial</td>
+          <td class="td-part">AI Review</td><td class="td-no">—</td><td class="td-ok">✓ Community</td>
+          <td class="td-ok">✓</td><td class="td-no">—</td><td class="td-no">—</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td>Free/$$</td>
+        </tr>
+        <tr>
+          <td class="td-strong">Wiz Code</td>
+          <td class="td-part">Partial</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td>
+          <td class="td-part">Partial</td><td class="td-no">—</td><td class="td-part">Partial</td>
+          <td class="td-no">—</td><td class="td-no">—</td><td class="td-no">—</td>
+          <td class="td-ok">✓</td><td class="td-ok">✓</td><td>$$$</td>
+        </tr>
+        <tr>
+          <td class="td-strong">Bearer CI (OSS)</td>
+          <td class="td-ok">✓</td><td class="td-no">—</td><td class="td-part">Partial</td><td class="td-no">—</td>
+          <td class="td-no">—</td><td class="td-no">—</td><td class="td-ok">✓ OSS</td>
+          <td class="td-ok">✓</td><td class="td-no">—</td><td class="td-no">—</td>
+          <td class="td-no">—</td><td class="td-no">—</td><td>Free/$$</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Unique advantages</h3>
+  <div class="g3" style="margin-bottom:var(--s06)">
+    <div class="card card-ok">
+      <div class="card-lbl">White space — no competitor does this</div>
+      <div class="card-val">Per-finding AI chat (3 context levels)</div>
+      <div class="card-desc">No competitor offers per-finding AI chat with full context (code snippet, history, prior AI calls, analyst comments). Global + per-scan + per-finding = genuine white space in the market.</div>
+    </div>
+    <div class="card card-ok">
+      <div class="card-lbl">White space — no competitor does this</div>
+      <div class="card-val">Full AI call observability</div>
+      <div class="card-desc">Complete logging of every AI call — tokens, latency, prompts, responses — with per-call retry from the UI. No competitor exposes this level of AI transparency to end users.</div>
+    </div>
+    <div class="card card-ok">
+      <div class="card-lbl">Architectural advantage</div>
+      <div class="card-val">Code privacy guarantee</div>
+      <div class="card-desc">With Ollama or Bedrock, source code never leaves the customer environment. Architecturally enforced, not a policy promise. Verifiable by security teams. No competitor can say the same with AI enrichment active.</div>
+    </div>
+  </div>
+
+  <h3>Critical competitive gaps</h3>
+  <div class="g3" style="margin-bottom:var(--s06)">
+    <div class="card card-err">
+      <div class="card-lbl">Enterprise deal blocker</div>
+      <div class="card-val">No SSO (SAML/OIDC)</div>
+      <div class="card-desc">Checkmarx, Veracode, Fortify, Snyk all support Okta/Azure AD/Google Workspace SSO. This is required in every enterprise RFP. Must ship before first enterprise pilot.</div>
+    </div>
+    <div class="card card-err">
+      <div class="card-lbl">Developer adoption blocker</div>
+      <div class="card-val">No GitHub PR integration</div>
+      <div class="card-desc">GitHub Advanced Security, Snyk, Semgrep all offer inline PR comments and merge blocking. This is table stakes for developer-first adoption. Snyk has 50k+ GitHub Actions installs.</div>
+    </div>
+    <div class="card card-err">
+      <div class="card-lbl">Security team workflow gap</div>
+      <div class="card-val">No Jira / Slack integration</div>
+      <div class="card-desc">Snyk, Checkmarx, Veracode all have native Jira bidirectional sync and Slack alerting. Security teams expect these to be out-of-the-box, not custom webhooks.</div>
+    </div>
+  </div>
+
+  <h3>Win conditions against each competitor</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Competitor</th><th>Their strength</th><th>Astra's win condition</th></tr></thead>
+      <tbody>
+        <tr><td class="td-strong">Snyk</td><td>Huge vulnerability DB, developer ecosystem, 50k+ GH Actions installs</td><td>Code privacy guarantee + local AI + lower price + full AI chat vs Snyk's none</td></tr>
+        <tr><td class="td-strong">Semgrep</td><td>Fast SAST, community rules, free tier, developer-loved</td><td>AI enrichment quality + cross-file business logic + multi-scanner vs SAST-only</td></tr>
+        <tr><td class="td-strong">Checkmarx</td><td>Enterprise relationships, compliance features, on-prem</td><td>AI-native vs bolt-on AI, developer UX, AI chat, observability, faster scan times</td></tr>
+        <tr><td class="td-strong">GitHub Advanced Security</td><td>Built-in GitHub, no additional tooling, cheap for existing GH Enterprise customers</td><td>Cross-platform (not GH-only), local AI, multi-scanner depth, task management</td></tr>
+        <tr><td class="td-strong">SonarQube</td><td>Strong open-source community, developer adoption, CI integration</td><td>AI enrichment vs rule-based only, business logic detection, chat interface</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 13: DATA MODELS ═════════════════════════ -->
+<section class="section" id="s13">
+  <div class="sec-hdr"><span class="sec-num">13</span><h2>Data Models</h2></div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>Key fields</th><th>Relations</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="td-mono td-strong">User</td>
+          <td>id, email, password (bcrypt), name, role (ADMIN/ANALYST/VIEWER), createdAt</td>
+          <td>→ Scans, Findings, Tasks, GithubProfile, UserPreference, AiConversation, Preset</td>
+          <td>Seeded with 3 default users (admin/analyst/viewer). Password changed via settings.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">Scan</td>
+          <td>id, userId, repoUrl, branch, commitSha, status (PENDING/RUNNING/COMPLETED/FAILED/CANCELLED), configJson, durationSeconds, startedAt, completedAt</td>
+          <td>→ Jobs, Findings, ScanLogs, AiConversation, AiCallLog</td>
+          <td>configJson stores per-scan pipeline overrides. Status transitions tracked via ScanLog events.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">Finding</td>
+          <td>id, scanId, userId, fingerprint (SHA-256), title, description, severity, category, file, lineStart, lineEnd, codeSnippet, language, cwe[], owasp[], aiExplanation, aiFix, exploitScore, exploitationScenario, status, assignedToId, taskId</td>
+          <td>→ Scan, Task, FindingHistory, FindingComment, AiCallLog, AiConversation</td>
+          <td>fingerprint deduplicates across scans. status workflow: OPEN→CONFIRMED→IN_PROGRESS→REMEDIATED/FALSE_POSITIVE/ACCEPTED_RISK.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">Task</td>
+          <td>id, title, description, type (FINDING_TRIAGE/REMEDIATION/MANUAL_REVIEW/MANUAL/AI_GENERATED), priority (CRITICAL/HIGH/MEDIUM/LOW/INFO), status, assignedToId, findingId, dueDate</td>
+          <td>→ Finding, User, TaskHistory, TaskComment</td>
+          <td>Bidirectional sync with Finding: assignedToId change propagates to linked finding. Auto-created for CRITICAL/HIGH/MEDIUM findings on scan persist.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">AiCallLog</td>
+          <td>id, scanId, findingId, provider, model, pipeline, inputTokens, outputTokens, latencyMs, systemPrompt, userPrompt, responseText, temperature, thinkingDepth, endpoint, sdkVersion, retryCount</td>
+          <td>→ Scan, Finding</td>
+          <td>Full observability: no truncation on prompts/responses. Per-call retry via POST /api/v1/ai-calls/[id]/retry.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">AiConversation</td>
+          <td>id, userId, scanId, findingId, messages (JSON array of {role, content}), createdAt, updatedAt</td>
+          <td>→ User, Scan, Finding</td>
+          <td>Multi-turn chat history. Paginated (limit 50, newest-first). Loaded and sent with every AI chat request for true multi-turn memory.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">Config</td>
+          <td>key (unique), value (JSON), updatedAt</td>
+          <td>—</td>
+          <td>Key-value store for: scan.config, prompts.discover, prompts.deepScan, prompts.crossFile, prompts.chat, integrations.*, chatConfig.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">Job</td>
+          <td>id, scanId, node, status (PENDING/RUNNING/COMPLETED/FAILED), attempts, maxAttempts, createdAt, startedAt, completedAt, error</td>
+          <td>→ Scan</td>
+          <td>Persistent job queue. Worker claims via status=PENDING, marks RUNNING, then COMPLETED/FAILED. Retry up to maxAttempts with backoff.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">Preset</td>
+          <td>id, userId, name, description, configJson, isBuiltin</td>
+          <td>→ User</td>
+          <td>Named scan configurations. Builtin presets (Quick Scan, Deep Audit, Secrets Only) seeded. Non-admin sees own + builtin only.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">UserRule</td>
+          <td>id, userId, name, description, ruleText, language, severity, category, isBuiltin</td>
+          <td>→ User</td>
+          <td>Custom scan rules. Builtin rules seeded. Rules passed to AI deep-scan prompt as additional context. Users manage own rules; ADMIN manages global.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">GithubProfile</td>
+          <td>id, userId, githubId, login, accessToken (AES-256-GCM encrypted), avatarUrl</td>
+          <td>→ User</td>
+          <td>Encrypted PAT. Decrypted only when making GitHub API calls. Backward-compatible with legacy plaintext tokens.</td>
+        </tr>
+        <tr>
+          <td class="td-mono td-strong">UserPreference</td>
+          <td>id, userId, key, value (JSON)</td>
+          <td>→ User</td>
+          <td>Per-user preferences: theme (light/dark), display settings. Seeded with theme=dark for admin on first run.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Proposed new models</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>Purpose</th><th>Key fields</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td class="td-mono td-strong">UserProviderCredential</td><td>Per-user AI provider API keys, encrypted at rest</td><td>userId, provider, apiKey (encrypted), baseUrl, region</td><td><span class="tag tag-red">P1</span></td></tr>
+        <tr><td class="td-mono td-strong">BusinessLogicRule</td><td>AI-inferred rules confirmed by security engineers, enforced in future scans</td><td>id, scanId, ruleText, confidence, evidenceFiles[], status (CANDIDATE/CONFIRMED/REJECTED)</td><td><span class="tag tag-blue">P1</span></td></tr>
+        <tr><td class="td-mono td-strong">Integration</td><td>Configured external integrations (Jira, Slack, PagerDuty, webhooks)</td><td>id, type, config (encrypted JSON), enabled, triggerSeverities[]</td><td><span class="tag tag-red">P1</span></td></tr>
+        <tr><td class="td-mono td-strong">IntegrationEvent</td><td>Log of integration dispatches for debugging and retry</td><td>id, integrationId, findingId, payload, status, sentAt, error</td><td><span class="tag tag-blue">P2</span></td></tr>
+        <tr><td class="td-mono td-strong">ScanSbom</td><td>Software Bill of Materials generated per scan</td><td>id, scanId, format (CycloneDX/SPDX), content (JSON), generatedAt</td><td><span class="tag tag-cyan">P2</span></td></tr>
+        <tr><td class="td-mono td-strong">ApiKey</td><td>API keys for programmatic/CI access without browser session</td><td>id, userId, keyHash (bcrypt), label, lastUsedAt, expiresAt, scopes[]</td><td><span class="tag tag-yellow">P2</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 14: ARCHITECTURE REVIEWS ════════════════ -->
+<section class="section" id="s14">
+  <div class="sec-hdr"><span class="sec-num">14</span><h2>Architecture Reviews</h2></div>
+
+  <div class="notif notif-info">
+    <div class="notif-label">Review methodology</div>
+    Scores are 1–5 based on production-readiness criteria: 5 = enterprise-ready, 1 = PoC only. Reviews cover the current codebase state as of v2.17.0.
+  </div>
+
+  <div class="review-grid">
+    <div class="review-card">
+      <div class="review-category">Scan Pipeline</div>
+      <div class="review-score score-4">4.0 / 5</div>
+      <div class="review-text">Event-driven worker, async I/O, retry with backoff, temp cleanup — solid foundation. The cross-file context bomb is the only critical flaw. Fingerprint deduplication is excellent. Missing: resumability, streaming, and DAG parallelism.</div>
+      <div class="review-verdict" style="color:var(--tag-cyan)">SHIP with cross-file fix before enterprise pilots</div>
+    </div>
+    <div class="review-card">
+      <div class="review-category">AI Integration</div>
+      <div class="review-score score-4">3.8 / 5</div>
+      <div class="review-text">Multi-provider factory pattern is well-designed. DB-backed prompts and multi-turn memory work correctly. Weaknesses: API keys in env vars (no per-user isolation), token counting inaccurate, 3 stubs that throw errors in production, caching hash incomplete.</div>
+      <div class="review-verdict" style="color:var(--warn)">NEEDS WORK before enterprise: per-user credentials + remove stubs</div>
+    </div>
+    <div class="review-card">
+      <div class="review-category">Security Posture</div>
+      <div class="review-score score-3">3.5 / 5</div>
+      <div class="review-text">RBAC, rate limiting, AES-256-GCM, auth on all routes — strong for v2. Missing SSO, API key auth, mTLS, session revocation, audit export — all enterprise requirements that will appear in first RFP.</div>
+      <div class="review-verdict" style="color:var(--err)">BLOCKING: SSO required for any enterprise deal</div>
+    </div>
+    <div class="review-card">
+      <div class="review-category">Data Architecture</div>
+      <div class="review-score score-3">3.2 / 5</div>
+      <div class="review-text">PostgreSQL with Prisma is correct. Schema is well-normalized. Gaps: in-memory job queue (jobs lost on restart), large payloads in DB (no S3 offload), no Redis caching layer, schema routing via PrismaPg (brittle).</div>
+      <div class="review-verdict" style="color:var(--warn)">Add Redis job queue + S3 blob storage before scale</div>
+    </div>
+    <div class="review-card">
+      <div class="review-category">UI / Carbon compliance</div>
+      <div class="review-score score-4">4.5 / 5</div>
+      <div class="review-text">IBM Carbon g100 dark theme executed faithfully. IBM Plex Sans, 0px border-radius, correct token usage throughout. Sentence-case eyebrows, 4-up grid, 48px touch targets. Missing: loading skeletons, empty states, command palette, toast notifications.</div>
+      <div class="review-verdict" style="color:var(--ok)">EXCELLENT — best-in-class Carbon implementation</div>
+    </div>
+    <div class="review-card">
+      <div class="review-category">API Design</div>
+      <div class="review-score score-4">4.0 / 5</div>
+      <div class="review-text">Consistent /api/v1/* prefix. RESTful resource naming. Auth middleware correctly applied. Pagination with parsePagination() helper. Gaps: no API versioning strategy for breaking changes, no OpenAPI spec, no rate limits on non-auth endpoints.</div>
+      <div class="review-verdict" style="color:var(--tag-cyan)">ADD OpenAPI spec and non-auth rate limits</div>
+    </div>
+    <div class="review-card">
+      <div class="review-category">Observability</div>
+      <div class="review-score score-5">4.8 / 5</div>
+      <div class="review-text">Best-in-class AI observability: full prompt/response logging, token counts, latency, per-call retry. Pino structured logging for all app events. Scan progress via SSE stream. Missing: Prometheus metrics endpoint, distributed tracing, alert on AI cost thresholds.</div>
+      <div class="review-verdict" style="color:var(--ok)">EXCELLENT — unique competitive advantage</div>
+    </div>
+    <div class="review-card">
+      <div class="review-category">Scalability</div>
+      <div class="review-score score-2">2.5 / 5</div>
+      <div class="review-text">Single-instance only (in-memory job queue, no Redis). Scan worker tied to Next.js process. Large prompts and responses stored directly in PostgreSQL (no S3 offload). All AI calls sequential within a scan (no external parallelism). Not ready for high scan volume.</div>
+      <div class="review-verdict" style="color:var(--err)">CRITICAL: Redis queue + worker process separation required for scale</div>
+    </div>
+    <div class="review-card">
+      <div class="review-category">Code quality</div>
+      <div class="review-score score-4">4.0 / 5</div>
+      <div class="review-text">TypeScript throughout, Prisma schema, consistent error handling patterns, shared utilities (parsePagination, requireAuth, canWrite). Gaps: dead LangGraph code, some duplicated chat UI logic (ScanChat + AiChatProvider), no automated testing setup.</div>
+      <div class="review-verdict" style="color:var(--tag-cyan)">ADD tests + remove dead code before team grows</div>
+    </div>
+  </div>
+
+  <h3>Architectural decision record (ADR) highlights</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Decision</th><th>What was chosen</th><th>Rationale</th><th>Trade-off accepted</th></tr></thead>
+      <tbody>
+        <tr><td class="td-strong">Control plane language</td><td>TypeScript (Next.js 15)</td><td>Speed of iteration, single language with frontend, strong Prisma ecosystem</td><td>Lower throughput than Go at scale; OK for current team size and scan volume</td></tr>
+        <tr><td class="td-strong">ORM</td><td>Prisma 7 with PrismaPg adapter</td><td>Type-safe queries, schema-first development, excellent DX</td><td>PrismaPg schema routing is brittle — schema must be in DATABASE_URL and passed as 2nd arg</td></tr>
+        <tr><td class="td-strong">Auth</td><td>NextAuth v5 with JWT</td><td>First-class Next.js integration, credential + OAuth provider support</td><td>No SSO yet — NextAuth SAML is non-trivial to add; session invalidation difficult with JWT</td></tr>
+        <tr><td class="td-strong">UI framework</td><td>IBM Carbon Design System g100</td><td>Enterprise aesthetic, comprehensive component library, accessibility built-in</td><td>Heavier bundle than Tailwind; 0px border-radius enforced — no design system drift allowed</td></tr>
+        <tr><td class="td-strong">AI provider abstraction</td><td>Custom factory pattern</td><td>Swap providers without changing call sites; per-node configuration; observability logging</td><td>Manual maintenance of provider adapters; no automatic new provider support</td></tr>
+        <tr><td class="td-strong">Job queue</td><td>In-memory event-driven worker</td><td>Zero infrastructure for PoC/early stages; no Redis dependency</td><td>Jobs lost on restart; single-instance only; must migrate to BullMQ/Redis for production</td></tr>
+        <tr><td class="td-strong">Branding</td><td>Single branding.ts source of truth</td><td>Rebrand by changing .env only; no code changes needed for white-label deployments</td><td>All brand strings must be imported from branding.ts — requires discipline across team</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 15: ROADMAP & TASKS ══════════════════════ -->
+<section class="section" id="s15">
+  <div class="sec-hdr"><span class="sec-num">15</span><h2>Roadmap &amp; Task Tracker</h2></div>
+
+  <h3>P0 — Critical (must ship before enterprise pilots)</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Task</th><th>Status</th><th>Blocker</th></tr></thead>
+      <tbody>
+        <tr><td class="task-id">—</td><td class="td-strong">SSO (SAML/OIDC) via NextAuth</td><td><span class="tag tag-red">⚪ PENDING</span></td><td>Enterprise deal blocker — all security teams require Okta/Azure AD</td></tr>
+        <tr><td class="task-id">—</td><td class="td-strong">GitHub Actions CI wrapper</td><td><span class="tag tag-red">⚪ PENDING</span></td><td>Required for developer-first adoption — scan without manual UI</td></tr>
+        <tr><td class="task-id">—</td><td class="td-strong">GitHub PR integration (inline comments + merge block)</td><td><span class="tag tag-red">⚪ PENDING</span></td><td>Table stakes for any developer security tool</td></tr>
+        <tr><td class="task-id">—</td><td class="td-strong">Jira bidirectional sync</td><td><span class="tag tag-red">⚪ PENDING</span></td><td>Security teams won't adopt without Jira integration</td></tr>
+        <tr><td class="task-id">—</td><td class="td-strong">Redis-backed durable job queue</td><td><span class="tag tag-red">⚪ PENDING</span></td><td>In-memory queue loses jobs on restart — not production-safe</td></tr>
+        <tr><td class="task-id">—</td><td class="td-strong">Fix cross-file context window bomb</td><td><span class="tag tag-yellow">⚪ PENDING</span></td><td>Cross-file AI broken on repos with 50+ files</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>P1 — Architecture (must ship in next sprint)</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Task</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="task-id">11</td><td>ProviderDefinition + ProviderModel tables (system registry)</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">12</td><td>UserProviderCredential table (per-user API keys, encrypted)</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">13</td><td>UserConfig table (per-user defaults: chat + scan nodes)</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">15</td><td>Wire Scan.configJson to UI (per-scan override)</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">18</td><td>Fix provider factory to use user credentials instead of env vars</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">19</td><td>Remove or hide 3 stub providers (Bedrock, Azure, LangGraph)</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">21</td><td>Fix provider caching hash to include all config fields</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">22</td><td>Fix cross-file node context window bomb (cluster_summaries)</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">23</td><td>Fix deep-scan token estimation (tiktoken / accurate heuristic)</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">31</td><td>Remove dead LangGraph code (src/scan/graph.ts, langgraph-connector.ts)</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+        <tr><td class="task-id">80</td><td>DB-first context loading for all AI calls (no in-memory shortcuts)</td><td><span class="tag tag-gray">⚪ Pending</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Completed ✅</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Task</th><th>Completed</th></tr></thead>
+      <tbody>
+        <tr><td class="task-id">1–9</td><td class="task-done">Security hardening — all routes auth-required, rate limiting, AES-256-GCM</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">17</td><td class="task-done">Fix chat conversation memory — multi-turn with full history</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">25</td><td class="task-done">Replace setInterval worker with event-driven queue</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">26</td><td class="task-done">Replace sync I/O in scan nodes with async (fs/promises)</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">27</td><td class="task-done">Temp directory cleanup on all failure paths</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">29</td><td class="task-done">Chat history pagination (limit 50, newest-first)</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">33</td><td class="task-done">Shared parsePagination() helper for API routes</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">34</td><td class="task-done">Streaming chat design spec written</td><td class="td-mono">2026-05-07</td></tr>
+        <tr><td class="task-id">71</td><td class="task-done">Fix empty AI responses — detection + retry in providers</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">72</td><td class="task-done">Ensure AI receives full context — enum constraints in prompts</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">73</td><td class="task-done">AI call debug dashboard — observability page with retry</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">74</td><td class="task-done">Alert ↔ Task full bidirectional linking</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">75</td><td class="task-done">AI Graph workflow management UI (/pipeline)</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">76</td><td class="task-done">Per-alert / per-task rescan (POST /api/v1/findings/[id]/rescan)</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">77</td><td class="task-done">AI Assist per alert and per task with full context</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">79</td><td class="task-done">Astra file system glossary (searchable page + docs/glossary/)</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">83</td><td class="task-done">Browser-side data store — AppDataProvider + browser-store.ts</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">85</td><td class="task-done">Landing page full rewrite (IBM Carbon, animations, IntersectionObserver)</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">87–92</td><td class="task-done">Prisma seed script, PrismaPg schema routing fix, NextAuth UntrustedHost fix</td><td class="td-mono">2026-05-08</td></tr>
+        <tr><td class="task-id">93</td><td class="task-done">Homepage v2 redesign — strict IBM Carbon compliance, geometric SVG hero</td><td class="td-mono">2026-05-08</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 16: LANGUAGE MATRIX ══════════════════════ -->
+<section class="section" id="s16">
+  <div class="sec-hdr"><span class="sec-num">16</span><h2>Language &amp; Framework Support Matrix</h2></div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Language / Framework</th>
+          <th>Trivy SCA</th><th>Semgrep SAST</th><th>Gitleaks Secrets</th><th>Bearer Data Flow</th>
+          <th>AI deep-scan</th><th>AI cross-file</th><th>Overall support</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="td-strong">JavaScript / TypeScript</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td><span class="tag tag-green">First-class</span></td></tr>
+        <tr><td class="td-strong">Python</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td><span class="tag tag-green">First-class</span></td></tr>
+        <tr><td class="td-strong">Java</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-part">Partial</td><td><span class="tag tag-cyan">Strong</span></td></tr>
+        <tr><td class="td-strong">Go</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-part">Partial</td><td class="td-ok">✓</td><td class="td-part">Partial</td><td><span class="tag tag-cyan">Strong</span></td></tr>
+        <tr><td class="td-strong">Rust</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-ok">✓</td><td class="td-part">Partial</td><td><span class="tag tag-cyan">Good</span></td></tr>
+        <tr><td class="td-strong">Ruby</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-part">Partial</td><td><span class="tag tag-cyan">Good</span></td></tr>
+        <tr><td class="td-strong">PHP</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-part">Partial</td><td><span class="tag tag-cyan">Good</span></td></tr>
+        <tr><td class="td-strong">C / C++</td><td class="td-part">Partial</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-ok">✓</td><td class="td-part">Partial</td><td><span class="tag tag-yellow">Basic</span></td></tr>
+        <tr><td class="td-strong">Terraform / HCL</td><td class="td-ok">✓ IaC</td><td class="td-ok">✓</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-ok">✓</td><td class="td-no">—</td><td><span class="tag tag-cyan">Good</span></td></tr>
+        <tr><td class="td-strong">Kubernetes YAML</td><td class="td-ok">✓ IaC</td><td class="td-part">Partial</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-ok">✓</td><td class="td-no">—</td><td><span class="tag tag-cyan">Good</span></td></tr>
+        <tr><td class="td-strong">Dockerfile</td><td class="td-ok">✓ Container</td><td class="td-part">Partial</td><td class="td-ok">✓</td><td class="td-no">—</td><td class="td-ok">✓</td><td class="td-no">—</td><td><span class="tag tag-cyan">Good</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══ SECTION 17: LICENSE & DEPLOYMENT ════════════════ -->
+<section class="section" id="s17">
+  <div class="sec-hdr"><span class="sec-num">17</span><h2>License Tiers &amp; Deployment</h2></div>
+
+  <h3>Proposed license tiers</h3>
+  <div class="g3" style="margin-bottom:var(--s06)">
+    <div class="card">
+      <div class="card-lbl">Tier 1</div>
+      <div class="card-val">Free</div>
+      <div class="card-desc">Self-hosted only. 3 users max. Bundled scanners (Trivy, Semgrep, Gitleaks). No AI enrichment. Community rules only. Basic export (JSON, CSV). No support SLA.</div>
+    </div>
+    <div class="card card-info">
+      <div class="card-lbl">Tier 2</div>
+      <div class="card-val">Pro</div>
+      <div class="card-desc">Self-hosted or cloud. Unlimited users. All bundled scanners. Local AI enrichment (Ollama). Custom rules. All export formats. GitHub integration. 8-hour SLA.</div>
+    </div>
+    <div class="card card-ok">
+      <div class="card-lbl">Tier 3</div>
+      <div class="card-val">Enterprise</div>
+      <div class="card-desc">Everything in Pro + SSO (SAML/OIDC), Jira/Slack/PagerDuty integrations, GitHub PR blocking, custom AI providers, compliance report templates (SOC2, PCI-DSS), Bedrock/Azure AI, dedicated support, SLA 1-hour.</div>
+    </div>
+  </div>
+
+  <h3>Deployment models</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>Infrastructure</th><th>Code privacy</th><th>Suitable for</th></tr></thead>
+      <tbody>
+        <tr><td class="td-strong">SaaS (cloud)</td><td>Astra-hosted on cloud (GCP/AWS). PostgreSQL managed DB.</td><td>AI inference opt-in (Cloud Ollama / OpenAI / Anthropic)</td><td>Startups, small teams, no compliance requirements</td></tr>
+        <tr><td class="td-strong">Self-hosted</td><td>Docker Compose or Kubernetes in customer's infrastructure. Customer manages DB/Redis/S3.</td><td>Full — Ollama runs locally, no data leaves customer network</td><td>Enterprises with data sovereignty requirements (GDPR, FedRAMP)</td></tr>
+        <tr><td class="td-strong">Hybrid</td><td>Control plane SaaS-hosted, data plane runs in customer CI. Findings transmitted over HTTPS.</td><td>Source code stays in customer CI. Only normalized finding JSON sent to control plane.</td><td>Teams wanting cloud dashboard without giving up source code</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Docker Compose setup (current)</h3>
+  <div class="code-block">
+    <div class="code-label">docker-compose.yml</div>
+    <pre>services:
+  app:
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      DATABASE_URL: "postgresql://astra:astra@postgres:5432/astra?schema=public"
+      NEXTAUTH_SECRET: "..."
+      NEXTAUTH_URL: "http://localhost:3000"
+      CLOUD_OLLAMA_API_KEY: "..."
+      ENCRYPTION_KEY: "..."  # 32 bytes hex for AES-256-GCM
+    depends_on: [postgres]
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: astra
+      POSTGRES_PASSWORD: astra
+      POSTGRES_DB: astra
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U astra"]
+
+volumes:
+  pgdata:</pre>
+  </div>
+</section>
+
+<!-- ══ SECTION 18: CHANGELOG ════════════════════════════ -->
+<section class="section" id="s18">
+  <div class="sec-hdr"><span class="sec-num">18</span><h2>Full Changelog</h2></div>
+
+  <div class="notif notif-info">
+    <div class="notif-label">Complete history</div>
+    Every version from v1.0.0 (2026-04-20) to v2.17.0 (2026-05-09). Ordered newest-first.
+  </div>
+
+  <!-- v2.17 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.17.0</span>
+      <span class="cl-date">2026-05-09</span>
+      <span class="tag tag-blue">Branding</span>
+    </div>
+    <div class="cl-title">Branding refactor — env-driven product identity</div>
+    <div class="cl-desc">All product identity strings now configurable via environment variables through a single source of truth (src/lib/branding.ts). Rebranding requires changing only .env values, not code. Supports white-label deployments.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>src/lib/branding.ts — central product identity module with 6 env-driven constants: APP_NAME, APP_TITLE, APP_ID, APP_DOMAIN, SARIF_INFO_URI, DEFAULT_SYSTEM_PROMPT</li>
+      <li>6 derived constants: STORAGE_PREFIX, LOG_FILE, LOG_SERVICE, TEMP_DIR_PREFIX, DOWNLOAD_PREFIX, SARIF_TOOL_NAME</li>
+    </ul>
+    <span class="cl-cat cl-changed">Changed</span>
+    <ul class="cl-items">
+      <li>AstraConfig type renamed to ScanConfig across all files</li>
+      <li>astra.config.json renamed to scan.config.json on disk</li>
+      <li>parseAstraRule renamed to parseScanRule, .astra extension → .rule</li>
+      <li>DB config key "astra.config" → SCAN_CONFIG_DB_KEY constant</li>
+      <li>All hardcoded brand strings (nav, footer, auth pages, reports, exports, SARIF, AI prompts) now import from branding.ts</li>
+      <li>Seed emails now use APP_DOMAIN constant instead of hardcoded @astra.dev</li>
+      <li>localStorage prefix, log filenames, temp directories, download filenames all derived from APP_ID</li>
+    </ul>
+  </div>
+
+  <!-- v2.16 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.16.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-purple">UI</span>
+    </div>
+    <div class="cl-title">Homepage v2 redesign — strict IBM Carbon compliance</div>
+    <div class="cl-desc">Replaced public landing page with a v2 strictly following IBM Carbon Design System. Fixed utility bar display, nav link visibility, mobile menu positioning, section spacing. Hero uses abstract geometric SVG mesh with soft blue gradient backdrop.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>Abstract geometric hero illustration — SVG grid + nodes + floating cards with soft blue gradient backdrop</li>
+      <li>Strict IBM Carbon eyebrow style — sentence case 14px, not all-caps tracked mono</li>
+      <li>Capabilities grid is 4-up at desktop (Carbon standard) instead of 3-up</li>
+      <li>v2 alternate landing page at /v2 for A/B comparison</li>
+    </ul>
+    <span class="cl-cat cl-fixed">Fixed</span>
+    <ul class="cl-items">
+      <li>Utility bar hidden on mobile via display class instead of breaking layout</li>
+      <li>Nav links use proper conditional display class for tablet/desktop</li>
+      <li>Mobile menu overlay positioned correctly at top: 48px (nav height)</li>
+      <li>Section padding follows Carbon spec: 48px/16px mobile, 64px/32px tablet, 80px/32px desktop</li>
+    </ul>
+  </div>
+
+  <!-- v2.15 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.15.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-red">Bug Fix</span>
+    </div>
+    <div class="cl-title">DB schema routing, seed script, and auth fixes</div>
+    <div class="cl-desc">Fixed PrismaPg schema routing. Added comprehensive idempotent seed script. Fixed NextAuth UntrustedHost error for custom domain deployments.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>prisma/seed.ts — idempotent: 3 users (admin/analyst/viewer), scan.config, theme preference, 3 presets, 5 builtin rules</li>
+      <li>prisma.config.ts — Prisma 7 migrations.seed entry wires npx tsx prisma/seed.ts</li>
+    </ul>
+    <span class="cl-cat cl-fixed">Fixed</span>
+    <ul class="cl-items">
+      <li>PrismaPg schema routing — schema parsed from ?schema= in DATABASE_URL, passed as second arg to PrismaPg(config, { schema })</li>
+      <li>NextAuth trustHost: true — resolves UntrustedHost errors behind reverse proxy</li>
+      <li>Seed dotenv loading — import dotenv/config ensures DATABASE_URL available when running npx prisma db seed</li>
+    </ul>
+  </div>
+
+  <!-- v2.14 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.14.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-cyan">Performance</span>
+    </div>
+    <div class="cl-title">Browser-side data store with localStorage caching</div>
+    <div class="cl-desc">AppDataProvider and browser-store utility cache shared API data (users list, preferences, chat config, current user) in localStorage with TTL-based expiry. Zero redundant fetches across navigation.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>lib/browser-store.ts — localStorage utility with namespaced keys and TTL (bsGet/bsSet/bsDel/bsClear)</li>
+      <li>AppDataProvider — single React context serving users, preferences, chatConfig, currentUser</li>
+    </ul>
+    <span class="cl-cat cl-changed">Improved</span>
+    <ul class="cl-items">
+      <li>ThemeProvider reads/writes theme preference through AppDataProvider</li>
+      <li>TaskDataTable and AlertDetail use shared users list from context — no redundant /api/v1/users calls</li>
+      <li>AiChatProvider reads chat config from context — no redundant /api/v1/chat/config calls</li>
+      <li>Stale-while-revalidate: cached data served immediately, fresh data fetched in background</li>
+    </ul>
+  </div>
+
+  <!-- v2.13 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.13.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-purple">UI</span>
+    </div>
+    <div class="cl-title">Glossary page redesign with IBM Carbon styling</div>
+    <div class="cl-desc">Full-width file glossary with prominent folder-level descriptions, nested accordion tree, IBM Carbon Design System compliance.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>Full-width glossary layout — removed maxWidth constraint for spacious tree browsing</li>
+      <li>Folder-level descriptions in blue-accented panels (ibm-blue-10 background + 3px primary left border)</li>
+      <li>Nested accordion-in-accordion tree with depth-based indentation (24px per level)</li>
+      <li>File detail panels with labeled tag groups for exports, database tables, API endpoints</li>
+      <li>File and directory count summary in header</li>
+    </ul>
+  </div>
+
+  <!-- v2.12 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.12.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-teal">AI</span>
+    </div>
+    <div class="cl-title">Model selector in AI chat</div>
+    <div class="cl-desc">All chat panels show the active model and allow switching mid-conversation without leaving the chat.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>Model selector chip in chat header — provider · model, click to open searchable dropdown</li>
+      <li>Models grouped by provider in dropdown, filterable by name</li>
+      <li>Active model highlighted with "Active" badge</li>
+      <li>GET /api/v1/chat/config — new endpoint returning current chat model and all available models</li>
+    </ul>
+    <span class="cl-cat cl-changed">Improved</span>
+    <ul class="cl-items">
+      <li>All 3 chat endpoints accept optional provider/model in POST body for per-request model override</li>
+      <li>sendChatMessage accepts modelOverride — bypasses cache, creates fresh provider instance</li>
+      <li>Scan-level chat correctly routed through scanId endpoint</li>
+    </ul>
+  </div>
+
+  <!-- v2.11 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.11.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-red">Bug Fix</span>
+    </div>
+    <div class="cl-title">Tasks ↔ Alerts integration overhaul</div>
+    <div class="cl-desc">Fixed all data, linking, and interaction issues between Tasks and Alerts (findings) subsystems.</div>
+    <span class="cl-cat cl-fixed">Bug Fixes</span>
+    <ul class="cl-items">
+      <li>Tasks sort now works — fixed sort param names sent to API (sortField/sortDir → sort/order)</li>
+      <li>Scan detail findings now include assignedTo user — was always null due to missing join</li>
+      <li>AlertDetail comments and history now show user display name instead of raw UUID</li>
+      <li>Rescan state in TaskDataTable is now per-task — shared boolean caused all rows to show loading</li>
+      <li>PATCH /api/v1/tasks/[id] now supports findingId — needed for Link Finding feature</li>
+    </ul>
+    <span class="cl-cat cl-changed">Improved</span>
+    <ul class="cl-items">
+      <li>Alert → Task deep link: task badge links to /tasks?expand=&lt;taskId&gt;, auto-opening that task row</li>
+      <li>Task → Alert deep link: clicking linked finding title opens AlertDetail slide-out panel inline</li>
+      <li>Scan/repo context in task list rows: repo URL, branch, commit SHA</li>
+      <li>Overflow menu Edit, Duplicate, Link Finding now all functional (were stubs)</li>
+    </ul>
+  </div>
+
+  <!-- v2.10 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.10.0</span>
+      <span class="cl-date">2026-05-08</span>
+    </div>
+    <div class="cl-title">File glossary page, GitHub branches fix</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>File Glossary page (/glossary) — interactive file tree with accordion details</li>
+    </ul>
+    <span class="cl-cat cl-fixed">Fixed</span>
+    <ul class="cl-items">
+      <li>GitHub branches API now decrypts access token before calling GitHub API (was passing encrypted ciphertext)</li>
+    </ul>
+  </div>
+
+  <!-- v2.9 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.9.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-teal">AI</span>
+    </div>
+    <div class="cl-title">Chat memory, DB-backed prompts, multi-turn AI conversations</div>
+    <div class="cl-desc">Chat sends full conversation history to AI (fixes #17). System prompts from DB with fallback to defaults. Multi-turn messages across all providers.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>Chat conversation memory — all 3 chat endpoints load and send history to AI</li>
+      <li>DB-backed prompt management — system prompts in Config table with hardcoded fallback</li>
+      <li>Multi-turn messages — AIRequest supports messages[] for conversation history</li>
+      <li>Prompts API — GET/PUT/DELETE /api/v1/prompts</li>
+      <li>Prompts tab in Configuration — view, edit, reset per-node prompts</li>
+    </ul>
+  </div>
+
+  <!-- v2.8 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.8.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-red">Security</span>
+    </div>
+    <div class="cl-title">Auth coverage, file glossary, middleware fix</div>
+    <span class="cl-cat cl-security">Security Fixes</span>
+    <ul class="cl-items">
+      <li>PATCH /api/v1/rules/[id] now requires auth + canWrite (was completely open)</li>
+      <li>GET /api/v1/rules, /scans/[id]/stream, /findings/[id]/history, /tasks/[id]/history — all now require auth</li>
+      <li>Fixed AuthJS ClientFetchError — middleware now allows /api/auth/* (NextAuth internal routes)</li>
+    </ul>
+  </div>
+
+  <!-- v2.7 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.7.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-teal">AI</span>
+    </div>
+    <div class="cl-title">Alert-Task linking, per-file rescan, AI observability</div>
+    <div class="cl-desc">Bidirectional Alert-Task links. Per-file rescan re-runs AI deep-scan on a single file. AI call retry from observability. Empty AI response detection and retry fixed.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>Alert-Task linking — each Finding shows linked Task in AlertDetail with "+ Create Task" button</li>
+      <li>Per-file rescan — POST /api/v1/findings/[id]/rescan re-runs deep_scan on just that file</li>
+      <li>AI call retry — POST /api/v1/ai-calls/[id]/retry re-executes a logged AI call</li>
+      <li>Create Task from Finding — POST /api/v1/findings/[id]/task</li>
+      <li>Explicit enum constraints in deep-scan and cross-file prompts (severity, category, confidence, exploitScore)</li>
+      <li>AI Graph workflow management UI at /pipeline — visual node config, save to DB</li>
+    </ul>
+    <span class="cl-cat cl-fixed">Fixed</span>
+    <ul class="cl-items">
+      <li>Empty AI response detection — cloud-ollama detects text: "" with non-zero outputTokens and retries</li>
+      <li>Finding chat sends full context: aiExplanation, aiFix, exploitScore, codeSnippet</li>
+    </ul>
+  </div>
+
+  <!-- v2.5 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.5.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-red">Security</span>
+    </div>
+    <div class="cl-title">Security hardening and performance improvements</div>
+    <div class="cl-desc">Comprehensive security audit — all API routes require authentication, middleware bypass fixed, rate limiting on auth endpoints, GitHub tokens encrypted. Performance: event-driven worker, async I/O, temp cleanup, pagination.</div>
+    <span class="cl-cat cl-security">Security</span>
+    <ul class="cl-items">
+      <li>Middleware bypass fixed — removed blanket /api/* public bypass</li>
+      <li>All API routes require authentication via requireAuth()</li>
+      <li>ADMIN-only for config GET/PUT and user-rules DELETE</li>
+      <li>requireScanOwnership() — non-admin users see only their own scans</li>
+      <li>Rate limiting: 10/min login, 5/min signup (IP-based sliding window)</li>
+      <li>GitHub access tokens encrypted at rest with AES-256-GCM</li>
+    </ul>
+    <span class="cl-cat cl-changed">Performance</span>
+    <ul class="cl-items">
+      <li>Event-driven worker loop replaces 3-second setInterval polling</li>
+      <li>Async I/O — clone, discover, deep-scan use fs/promises and promisified child_process.exec</li>
+      <li>Temp directory cleanup on scan failure</li>
+      <li>Chat history pagination — limit/offset, default 50 messages</li>
+      <li>Shared parsePagination() helper across all paginated API routes</li>
+    </ul>
+  </div>
+
+  <!-- v2.4 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.4.0</span>
+      <span class="cl-date">2026-05-07</span>
+    </div>
+    <div class="cl-title">Scan lifecycle fixes, manual task creation, table refresh</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>Manual task creation — "+ New task" button with full form (title, description, type, priority, assignee, due date)</li>
+      <li>Refresh buttons (⟳) on all data tables — Tasks, AI Calls, Alerts, Findings</li>
+      <li>Cancel scan button for PENDING/RUNNING scans</li>
+      <li>Live elapsed time display on scan detail</li>
+    </ul>
+    <span class="cl-cat cl-fixed">Fixed</span>
+    <ul class="cl-items">
+      <li>Scan stuck at PENDING/RUNNING — worker processing mutex never reset when no jobs available</li>
+      <li>Worker processes jobs for already-FAILED/COMPLETED scans — now skips stale jobs</li>
+      <li>Resume endpoint blocked by stale RUNNING jobs — calls cleanupStuckJobs() before checking</li>
+    </ul>
+  </div>
+
+  <!-- v2.3 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.3.0</span>
+      <span class="cl-date">2026-05-07</span>
+      <span class="tag tag-teal">Observability</span>
+    </div>
+    <div class="cl-title">Observability and Tasks</div>
+    <div class="cl-desc">Complete AI observability with per-call logging, Pino structured logging, and cross-scan Tasks screen.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>AI observability layer — every AI provider call captured with full request/response, tokens, latency, temperature</li>
+      <li>AiCallLog model — stores raw requests, raw responses, system/user prompts, response text (no truncation)</li>
+      <li>Observability page (/observability) with summary cards and filterable/sortable AI call table</li>
+      <li>AI Calls tab in scan detail showing per-scan AI call logs grouped by node</li>
+      <li>Pino structured JSON logger replacing console.log — writes to ./logs/astra.log</li>
+      <li>Task model — 5 types: FINDING_TRIAGE, REMEDIATION, MANUAL_REVIEW, MANUAL, AI_GENERATED</li>
+      <li>Tasks page (/tasks) — Carbon DataTable with batch actions, expandable accordion detail</li>
+      <li>AI task suggestion endpoint — analyzes open findings and suggests task groupings</li>
+      <li>Auto-task creation from HIGH/CRITICAL/MEDIUM findings during scan persist</li>
+    </ul>
+  </div>
+
+  <!-- v2.2 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.2.0</span>
+      <span class="cl-date">2026-05-07</span>
+    </div>
+    <div class="cl-title">Real AI chat and configurable chat AI</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>Real AI-powered chat responses using configured AI provider</li>
+      <li>AI Chat FAB button in bottom-right corner with slide-out sidebar</li>
+      <li>Chat AI configuration tab in Configuration page</li>
+      <li>Org-level chat API at /api/v1/chat for general security questions</li>
+    </ul>
+  </div>
+
+  <!-- v2.1 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.1.0</span>
+      <span class="cl-date">2026-05-07</span>
+    </div>
+    <div class="cl-title">Security, chat, and export enhancements</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>RBAC — requireAuth, canWrite/canAdmin checks, VIEWER blocked from mutations</li>
+      <li>Per-finding AI chat API at /api/v1/findings/[id]/chat</li>
+      <li>rbac.ts utility module — requireAuth(), requireRole(), canWrite(), canAdmin()</li>
+      <li>HTML and Markdown export buttons in ExportPanel</li>
+    </ul>
+  </div>
+
+  <!-- v2.0 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v2.0.0</span>
+      <span class="cl-date">2026-05-07</span>
+      <span class="tag tag-purple">Major</span>
+    </div>
+    <div class="cl-title">Platform redesign — IBM Carbon, authentication, alert triage</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>Authentication system with NextAuth v5 — email/password, JWT, ADMIN/ANALYST/VIEWER roles</li>
+      <li>AppShell layout with utility bar, navigation, theme toggle, user menu</li>
+      <li>Alert triage workflow — OPEN/CONFIRMED/FALSE_POSITIVE/REMEDIATED/ACCEPTED_RISK/IN_PROGRESS</li>
+      <li>AlertDetail slide-out panel with status actions and history timeline</li>
+      <li>GitHub integration — PAT linking, repo/branch selectors, connected account display</li>
+      <li>Per-finding AI chat and scan-level chat with AiConversation model</li>
+      <li>Dark theme with Carbon g10 tokens, persisted via UserPreference</li>
+    </ul>
+    <span class="cl-cat cl-changed">Changed</span>
+    <ul class="cl-items">
+      <li>UI fully redesigned to IBM Carbon Design System — Plex Sans, 0px border-radius, IBM Blue accent</li>
+      <li>Findings renamed to "Alerts" in UI with status badges and severity filters</li>
+    </ul>
+  </div>
+
+  <!-- v1.0 -->
+  <div class="cl-entry">
+    <div class="cl-hdr">
+      <span class="cl-ver">v1.0</span>
+      <span class="cl-date">2026-05-08</span>
+      <span class="tag tag-green">Initial Release</span>
+    </div>
+    <div class="cl-title">Astra 1.0 — complete AI-native application security platform</div>
+    <div class="cl-desc">SAST, SCA, secret scanning, IaC analysis, AI-enriched findings, multi-provider AI chat, task management, observability, and IBM Carbon UI. Production-ready.</div>
+    <span class="cl-cat cl-new">New</span>
+    <ul class="cl-items">
+      <li>Scan pipeline — 6-node: Clone → Discover → Deep Scan → Cross-File → Aggregate → Persist</li>
+      <li>Scanner integrations — Trivy, Semgrep, Gitleaks, Bearer, AI deep-scan, AI cross-file</li>
+      <li>AI enrichment — every finding: severity, exploitation scenario, remediation, exploit score 0–10, CWE/OWASP</li>
+      <li>Multi-provider AI — 7 providers with per-node provider/model overrides</li>
+      <li>AI Chat — 3 levels: global, scan, per-finding; multi-turn memory; DB-backed prompts; model selector</li>
+      <li>Alert triage — full status workflow, assignment, comments, history timeline</li>
+      <li>Tasks — full lifecycle: 5 types, priorities, statuses, batch operations, bidirectional finding links</li>
+      <li>Observability — every AI call logged: provider, model, tokens, latency, prompt, response</li>
+      <li>Security — RBAC, JWT, rate limiting, AES-256-GCM, scan ownership, audit history on every mutation</li>
+      <li>GitHub integration — PAT, repo/branch selectors, encrypted token storage</li>
+      <li>Export — JSON, CSV, SARIF, HTML, Markdown; executive summary report page</li>
+      <li>IBM Carbon UI — IBM Plex Sans, 0px border-radius, full dark/light theme</li>
+    </ul>
+    <span class="cl-cat cl-security">Security</span>
+    <ul class="cl-items">
+      <li>All API routes require authentication — only /api/auth/* and /api/v1/health are public</li>
+      <li>Role-gated mutations — canWrite() on all state-changing routes</li>
+      <li>GitHub tokens encrypted at rest with AES-256-GCM</li>
+      <li>Raw source code never leaves the customer environment</li>
+    </ul>
+  </div>
+
+  <!-- early versions -->
+  <div class="cl-entry">
+    <div class="cl-hdr"><span class="cl-ver">v1.0.0 – v1.5.0</span><span class="cl-date">2026-04-20 → 2026-05-05</span></div>
+    <div class="cl-title">PoC to AI Chat + Rules engine</div>
+    <div class="cl-desc">v1.0.0 (2026-04-20): Next.js 15 scaffold, Prisma ORM, PostgreSQL, LangGraph pipeline, Docker Compose. v1.1.0 (2026-04-25): Findings table, severity filtering, file explorer, SeverityBadge. v1.2.0 (2026-04-28): 7 AI providers, per-node config, ConfigEditor. v1.3.0 (2026-05-01): Job queue, ScanLog, scan control APIs. v1.4.0 (2026-05-03): Security report page, JSON/CSV/SARIF/HTML/Markdown export, rescan button. v1.5.0 (2026-05-05): ScanChat, UserRules CRUD, ThemeToggle, UserPreference, exploitationScenario field.</div>
+  </div>
+
+</section>
+
+<!-- ══ FOOTER ═════════════════════════════════════════════ -->
+<div class="doc-footer">
+  <span>Astra Platform Specification v3.0</span>
+  <span>Generated 2026-05-10</span>
+  <span>IBM Carbon g100 Design System</span>
+  <span>Covers v1.0.0 → v2.17.0</span>
+  <span>Next.js 15 · Prisma 7 · PostgreSQL · TypeScript</span>
+</div>
+
+</main>
+</div>
+
+<script>
+// ── Scroll spy ──────────────────────────────────────────
+const sidebarLinks = document.querySelectorAll('.sidebar a');
+const sections = document.querySelectorAll('.section');
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      sidebarLinks.forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`.sidebar a[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

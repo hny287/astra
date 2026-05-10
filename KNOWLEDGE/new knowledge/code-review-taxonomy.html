@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Code Review Taxonomy — Astra Security</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue: #0f62fe; --blue-80: #002d9c; --blue-hover: #0050e6;
+  --ink: #161616; --ink-muted: #525252; --ink-subtle: #8c8c8c;
+  --canvas: #ffffff; --surface-1: #f4f4f4; --surface-2: #e0e0e0;
+  --inverse: #161616; --inverse-ink: #ffffff; --inverse-muted: #c6c6c6;
+  --hairline: #e0e0e0;
+  --p0: #da1e28; --p1: #ee5396; --p2: #ff832b;
+  --p3: #f1c21b; --p4: #24a148; --p5: #0f62fe;
+  --p6: #8a3ffc; --p7: #009d9a; --p8: #8c8c8c; --p9: #c6c6c6;
+}
+body { font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; font-weight: 400; letter-spacing: 0.16px; color: var(--ink); background: var(--canvas); line-height: 1.5; }
+
+/* NAV */
+nav { position: sticky; top: 0; z-index: 100; background: var(--canvas); border-bottom: 1px solid var(--hairline); height: 48px; display: flex; align-items: center; padding: 0 32px; gap: 0; }
+.nav-brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+.nav-icon { width: 22px; height: 22px; background: var(--blue); display: flex; align-items: center; justify-content: center; }
+.nav-icon svg { width: 13px; height: 13px; fill: #fff; }
+.nav-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.nav-sep { width: 1px; height: 16px; background: var(--hairline); margin: 0 12px; }
+.nav-sub { font-size: 14px; color: var(--ink-muted); }
+.nav-tags { display: flex; gap: 8px; }
+.nav-tag { font-size: 11px; font-weight: 600; padding: 2px 8px; background: var(--p0); color: #fff; letter-spacing: 0.32px; }
+.nav-tag.green { background: var(--p4); }
+
+/* HERO */
+.hero { background: var(--inverse); padding: 56px 32px 48px; border-bottom: 3px solid var(--blue); }
+.hero-eye { font-size: 12px; font-weight: 600; color: var(--blue); letter-spacing: 0.32px; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.hero-eye::before { content: ''; display: inline-block; width: 16px; height: 1px; background: var(--blue); }
+.hero h1 { font-size: 52px; font-weight: 300; color: var(--inverse-ink); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 16px; }
+.hero h1 em { font-style: normal; color: var(--blue); }
+.hero-sub { font-size: 16px; color: var(--inverse-muted); max-width: 680px; line-height: 1.6; margin-bottom: 32px; }
+.hero-stats { display: flex; gap: 0; }
+.hero-stat { padding: 16px 32px; border-right: 1px solid #333; }
+.hero-stat:first-child { padding-left: 0; }
+.hero-stat:last-child { border-right: none; }
+.stat-num { font-size: 36px; font-weight: 300; color: var(--inverse-ink); line-height: 1; margin-bottom: 4px; }
+.stat-num em { color: var(--blue); font-style: normal; }
+.stat-label { font-size: 12px; color: var(--inverse-muted); letter-spacing: 0.16px; }
+
+/* PRIORITY BAND */
+.priority-band { display: flex; height: 6px; }
+.pb { flex: 1; }
+.pb-p0 { background: var(--p0); }
+.pb-p1 { background: var(--p1); }
+.pb-p2 { background: var(--p2); }
+.pb-p3 { background: var(--p3); }
+.pb-p4 { background: var(--p4); }
+.pb-p5 { background: var(--p5); }
+.pb-p6 { background: var(--p6); }
+.pb-p7 { background: var(--p7); }
+.pb-p8 { background: var(--p8); }
+.pb-p9 { background: var(--p9); }
+
+/* SECTION */
+.section { padding: 0 32px; border-bottom: 1px solid var(--hairline); }
+.section.alt { background: var(--surface-1); }
+
+/* PRIORITY ITEM */
+.priority-item { border-bottom: 1px solid var(--hairline); }
+.priority-item:last-child { border-bottom: none; }
+.priority-header { display: grid; grid-template-columns: 120px 1fr auto; align-items: center; gap: 24px; padding: 32px 32px 0; cursor: pointer; user-select: none; }
+.priority-header:hover .ph-title { color: var(--blue); }
+.ph-badge { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.ph-num { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; padding: 3px 10px; color: #fff; letter-spacing: 0.32px; }
+.ph-severity { font-size: 11px; font-weight: 600; color: var(--ink-subtle); letter-spacing: 0.32px; text-transform: uppercase; }
+.ph-title { font-size: 24px; font-weight: 300; color: var(--ink); line-height: 1.3; transition: color 0.15s; }
+.ph-title strong { font-weight: 600; }
+.ph-meta { text-align: right; }
+.ph-count { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--ink-muted); margin-bottom: 4px; }
+.ph-impact { font-size: 12px; font-weight: 600; color: var(--ink-subtle); letter-spacing: 0.32px; text-transform: uppercase; }
+.ph-chevron { font-size: 16px; color: var(--ink-subtle); transition: transform 0.2s; }
+.ph-chevron.open { transform: rotate(180deg); }
+
+.priority-body { display: none; padding: 24px 32px 32px; }
+.priority-body.open { display: block; }
+
+.priority-desc { font-size: 16px; color: var(--ink-muted); line-height: 1.6; max-width: 800px; margin-bottom: 24px; border-left: 3px solid var(--hairline); padding-left: 16px; }
+
+/* SUBCATEGORY GRID */
+.subcat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--hairline); margin-bottom: 24px; }
+.subcat-card { background: var(--canvas); padding: 20px; }
+.subcat-card.alt { background: var(--surface-1); }
+.sc-tag { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: var(--blue); margin-bottom: 8px; display: block; letter-spacing: 0.16px; }
+.sc-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.sc-desc { font-size: 13px; color: var(--ink-muted); line-height: 1.5; margin-bottom: 10px; }
+.sc-examples { display: flex; flex-direction: column; gap: 4px; }
+.sc-example { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-muted); padding: 3px 8px; background: var(--surface-1); border-left: 2px solid var(--hairline); }
+
+/* WHAT AI LOOKS FOR */
+.ai-focus { background: var(--inverse); padding: 20px 24px; margin-top: 16px; }
+.ai-focus-title { font-size: 12px; font-weight: 600; color: var(--blue); letter-spacing: 0.32px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.ai-focus-title::before { content: '◈'; font-size: 14px; }
+.ai-checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ai-check { font-size: 13px; color: var(--inverse-muted); display: flex; gap: 8px; align-items: flex-start; line-height: 1.4; }
+.ai-check::before { content: '→'; color: var(--blue); flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; margin-top: 1px; }
+
+/* SCAN MAPPING */
+.scan-map { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.scan-tag { font-size: 11px; font-weight: 600; padding: 4px 10px; border: 1px solid var(--surface-2); background: var(--surface-1); color: var(--ink-muted); font-family: 'IBM Plex Mono', monospace; }
+.scan-tag.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* OVERVIEW TABLE */
+.overview-section { padding: 48px 32px; border-bottom: 1px solid var(--hairline); }
+.overview-title { font-size: 32px; font-weight: 300; margin-bottom: 8px; }
+.overview-sub { font-size: 14px; color: var(--ink-muted); margin-bottom: 32px; }
+.overview-table { width: 100%; border-collapse: collapse; }
+.overview-table th { text-align: left; font-size: 12px; font-weight: 600; color: var(--ink-subtle); letter-spacing: 0.32px; text-transform: uppercase; padding: 10px 16px; background: var(--surface-1); border-bottom: 1px solid var(--hairline); border-right: 1px solid var(--hairline); }
+.overview-table th:last-child { border-right: none; }
+.overview-table td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--surface-1); border-right: 1px solid var(--hairline); vertical-align: top; }
+.overview-table td:last-child { border-right: none; }
+.overview-table tr:last-child td { border-bottom: none; }
+.p-badge { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; padding: 2px 8px; color: #fff; }
+.sev-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; display: inline-block; }
+.sev-critical { background: #ffd7d9; color: var(--p0); }
+.sev-high { background: #ffe0cc; color: #ad4700; }
+.sev-medium { background: #fef1c0; color: #7a4800; }
+.sev-low { background: #d9fbfb; color: #005d5d; }
+
+/* ASTRA MAPPING SECTION */
+.astra-section { padding: 48px 32px; background: var(--surface-1); border-bottom: 1px solid var(--hairline); }
+.node-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--hairline); margin-top: 24px; }
+.node-card { background: var(--canvas); padding: 20px; }
+.node-name { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 8px; }
+.node-desc { font-size: 13px; color: var(--ink-muted); margin-bottom: 12px; line-height: 1.5; }
+.node-covers { display: flex; flex-direction: column; gap: 4px; }
+.node-cover { font-size: 11px; color: var(--ink-muted); display: flex; gap: 6px; align-items: center; }
+.node-cover::before { content: ''; width: 6px; height: 6px; border-radius: 0; flex-shrink: 0; }
+
+/* FOOTER */
+footer { background: var(--inverse); padding: 32px; display: flex; justify-content: space-between; align-items: center; }
+.footer-left { font-size: 14px; color: var(--inverse-muted); display: flex; align-items: center; gap: 10px; }
+.footer-icon { width: 18px; height: 18px; background: var(--blue); display: inline-flex; align-items: center; justify-content: center; }
+.footer-icon svg { width: 11px; height: 11px; fill: #fff; }
+.footer-right { font-size: 12px; color: var(--inverse-muted); font-family: 'IBM Plex Mono', monospace; text-align: right; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-icon"><svg viewBox="0 0 16 16"><path d="M8 1L1 4v8l7 3 7-3V4L8 1zm0 2.2l4.5 1.9L8 7 3.5 5.1 8 3.2zM3 6.6l4 1.7V13L3 11.3V6.6zm10 4.7l-4 1.7V8.3l4-1.7v4.7z"/></svg></div>
+    <span class="nav-name">Astra Security</span>
+    <div class="nav-sep"></div>
+    <span class="nav-sub">Code Review Taxonomy</span>
+  </div>
+  <div class="nav-tags">
+    <span class="nav-tag">10 Priority Levels</span>
+    <span class="nav-tag green">Scan Reference</span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eye">Security Code Review — Complete Priority Reference</div>
+  <h1>What to look for,<br/>in <em>exact order</em>.</h1>
+  <p class="hero-sub">A complete taxonomy of security code review concerns ordered from highest to lowest priority. This is the knowledge base that drives Astra's scan nodes — from authentication failures that hand over the kingdom, to dead code that clutters the attack surface.</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="stat-num">10</div><div class="stat-label">Priority levels (P0–P9)</div></div>
+    <div class="hero-stat"><div class="stat-num"><em>47</em></div><div class="stat-label">Distinct vulnerability categories</div></div>
+    <div class="hero-stat"><div class="stat-num">6</div><div class="stat-label">Scan node mappings</div></div>
+    <div class="hero-stat"><div class="stat-num"><em>∞</em></div><div class="stat-label">Business logic variants</div></div>
+  </div>
+</div>
+<div class="priority-band">
+  <div class="pb pb-p0"></div><div class="pb pb-p1"></div><div class="pb pb-p2"></div>
+  <div class="pb pb-p3"></div><div class="pb pb-p4"></div><div class="pb pb-p5"></div>
+  <div class="pb pb-p6"></div><div class="pb pb-p7"></div><div class="pb pb-p8"></div><div class="pb pb-p9"></div>
+</div>
+
+<!-- OVERVIEW TABLE -->
+<div class="overview-section">
+  <div class="overview-title">Priority Overview</div>
+  <div class="overview-sub">Click any row in the sections below to expand full detail, subcategories, and what the AI specifically looks for.</div>
+  <table class="overview-table">
+    <thead>
+      <tr>
+        <th>Priority</th>
+        <th>Category</th>
+        <th>Severity</th>
+        <th>Why it matters</th>
+        <th>Scan node</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="p-badge" style="background:var(--p0)">P0</span></td><td><strong>Authentication & Authorization</strong></td><td><span class="sev-badge sev-critical">CRITICAL</span></td><td style="color:var(--ink-muted);font-size:13px;">Missing auth = anyone can do anything. The highest-impact single flaw class.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">deep_scan · cross_file</td></tr>
+      <tr style="background:var(--surface-1)"><td><span class="p-badge" style="background:var(--p1)">P1</span></td><td><strong>Injection Vulnerabilities</strong></td><td><span class="sev-badge sev-critical">CRITICAL</span></td><td style="color:var(--ink-muted);font-size:13px;">SQL/NoSQL/Command/LDAP injection — attacker controls execution or data.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">deep_scan · secrets_scan</td></tr>
+      <tr><td><span class="p-badge" style="background:var(--p2)">P2</span></td><td><strong>Secrets & Credential Exposure</strong></td><td><span class="sev-badge sev-critical">CRITICAL</span></td><td style="color:var(--ink-muted);font-size:13px;">Hardcoded keys/tokens/passwords. One leak = full compromise of connected systems.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">secrets_scan · deep_scan</td></tr>
+      <tr style="background:var(--surface-1)"><td><span class="p-badge" style="background:var(--p3)">P3</span></td><td><strong>Business Logic Flaws</strong></td><td><span class="sev-badge sev-critical">CRITICAL</span></td><td style="color:var(--ink-muted);font-size:13px;">No scanner catches these. Require understanding what the system is supposed to do.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">cross_file · enrich_critical</td></tr>
+      <tr><td><span class="p-badge" style="background:var(--p4)">P4</span></td><td><strong>Cryptography & Data Protection</strong></td><td><span class="sev-badge sev-high">HIGH</span></td><td style="color:var(--ink-muted);font-size:13px;">Weak/broken crypto, insecure key storage, missing encryption at rest/transit.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">deep_scan</td></tr>
+      <tr style="background:var(--surface-1)"><td><span class="p-badge" style="background:var(--p5)">P5</span></td><td><strong>Input Validation & Sanitization</strong></td><td><span class="sev-badge sev-high">HIGH</span></td><td style="color:var(--ink-muted);font-size:13px;">XSS, path traversal, SSRF, open redirect — all stem from trusting user input.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">deep_scan</td></tr>
+      <tr><td><span class="p-badge" style="background:var(--p6)">P6</span></td><td><strong>Dependency & Supply Chain</strong></td><td><span class="sev-badge sev-high">HIGH</span></td><td style="color:var(--ink-muted);font-size:13px;">CVE-laden packages, unpinned deps, malicious packages, lockfile tampering.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">iac_scan · deep_scan</td></tr>
+      <tr style="background:var(--surface-1)"><td><span class="p-badge" style="background:var(--p7)">P7</span></td><td><strong>Infrastructure & Configuration</strong></td><td><span class="sev-badge sev-medium">MEDIUM</span></td><td style="color:var(--ink-muted);font-size:13px;">IaC misconfigs, insecure defaults, overprivileged IAM, exposed ports/services.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">iac_scan</td></tr>
+      <tr><td><span class="p-badge" style="background:var(--p8)">P8</span></td><td><strong>Error Handling & Logging</strong></td><td><span class="sev-badge sev-medium">MEDIUM</span></td><td style="color:var(--ink-muted);font-size:13px;">Leaking stack traces, logging PII/secrets, missing audit trails, silent failures.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">deep_scan</td></tr>
+      <tr style="background:var(--surface-1)"><td><span class="p-badge" style="background:var(--p9)">P9</span></td><td><strong>Code Quality & Attack Surface</strong></td><td><span class="sev-badge sev-low">LOW</span></td><td style="color:var(--ink-muted);font-size:13px;">Dead code, debug endpoints, commented-out code, overly complex functions that hide bugs.</td><td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--blue)">deep_scan</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PRIORITY ITEMS — EXPANDED -->
+<div class="section">
+
+<!-- P0 -->
+<div class="priority-item" id="p0">
+  <div class="priority-header" onclick="toggle('p0')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p0)">P0 · CRITICAL</span>
+      <span class="ph-severity">Stop everything</span>
+    </div>
+    <div class="ph-title"><strong>Authentication</strong> &amp; Authorization</div>
+    <div class="ph-meta">
+      <div class="ph-count">8 subcategories</div>
+      <div class="ph-impact">INSTANT FULL COMPROMISE</div>
+      <div class="ph-chevron" id="chev-p0">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p0">
+    <div class="priority-desc">Authentication and authorization are the gateway to everything. A single flaw here means an attacker doesn't need to exploit anything else — they just walk in. No other category has a higher blast radius. Review every auth check, every permission gate, every session mechanism.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">AUTH-01</span>
+        <div class="sc-title">Missing Authentication</div>
+        <div class="sc-desc">Endpoints that perform sensitive operations with zero auth check. The route exists, it works, and anyone can call it.</div>
+        <div class="sc-examples">
+          <div class="sc-example">POST /admin/users — no auth middleware</div>
+          <div class="sc-example">DELETE /api/data — accessible without token</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">AUTH-02</span>
+        <div class="sc-title">Broken Access Control</div>
+        <div class="sc-desc">Authenticated user can access another user's data or perform actions above their role. IDOR, horizontal privilege escalation, forced browsing.</div>
+        <div class="sc-examples">
+          <div class="sc-example">GET /api/invoices/:id — no ownership check</div>
+          <div class="sc-example">PUT /users/:id — any user can edit any user</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">AUTH-03</span>
+        <div class="sc-title">Privilege Escalation</div>
+        <div class="sc-desc">User can elevate their own privileges — self-promoting to admin, role stored in JWT payload not verified against DB, mass assignment vulnerabilities.</div>
+        <div class="sc-examples">
+          <div class="sc-example">isAdmin stored in JWT, never verified in DB</div>
+          <div class="sc-example">role: admin in POST body accepted as-is</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">AUTH-04</span>
+        <div class="sc-title">Insecure JWT / Token Handling</div>
+        <div class="sc-desc">Weak signing secrets, algorithm confusion (HS256 vs RS256), missing expiry, tokens not invalidated on logout, sensitive data in payload.</div>
+        <div class="sc-examples">
+          <div class="sc-example">secret: "secret" or short/guessable key</div>
+          <div class="sc-example">alg: "none" accepted by verifier</div>
+          <div class="sc-example">No token blacklist on logout</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">AUTH-05</span>
+        <div class="sc-title">Session Management</div>
+        <div class="sc-desc">Session fixation, sessions not invalidated on logout, predictable session IDs, no idle timeout, sessions valid across password reset.</div>
+        <div class="sc-examples">
+          <div class="sc-example">Session ID not regenerated after login</div>
+          <div class="sc-example">Session persists after password change</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">AUTH-06</span>
+        <div class="sc-title">Weak Password Policies</div>
+        <div class="sc-desc">No minimum length, no complexity, passwords stored in plain text or MD5/SHA1, no bcrypt/argon2, passwords logged in error messages.</div>
+        <div class="sc-examples">
+          <div class="sc-example">crypto.createHash('md5').update(pass)</div>
+          <div class="sc-example">No rate limit on /login endpoint</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">AUTH-07</span>
+        <div class="sc-title">OAuth / SSO Misconfigurations</div>
+        <div class="sc-desc">Missing state parameter (CSRF), open redirect in callback, token leakage in URL, accepting tokens from wrong audience/issuer.</div>
+        <div class="sc-examples">
+          <div class="sc-example">No state param in OAuth flow</div>
+          <div class="sc-example">redirect_uri not validated server-side</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">AUTH-08</span>
+        <div class="sc-title">API Key / Token Management</div>
+        <div class="sc-desc">API keys with no expiry, no scope, no rotation, logged in plaintext, returned in responses after creation, no revocation mechanism.</div>
+        <div class="sc-examples">
+          <div class="sc-example">API key returned on every GET /me</div>
+          <div class="sc-example">Token logged: console.log('Token:', token)</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">Every route definition — is auth middleware applied?</div>
+        <div class="ai-check">Ownership checks on resource reads/writes/deletes</div>
+        <div class="ai-check">Role/permission checks — server-side, not client-side</div>
+        <div class="ai-check">JWT secret strength and algorithm validation</div>
+        <div class="ai-check">Cross-file: auth defined in A, missing from B</div>
+        <div class="ai-check">Role stored in token vs verified against DB</div>
+        <div class="ai-check">Session lifecycle — creation, rotation, invalidation</div>
+        <div class="ai-check">Admin operations — are they truly gated?</div>
+      </div>
+    </div>
+    <div class="scan-map">
+      <span>Scan nodes:</span>
+      <span class="scan-tag active">deep_scan</span>
+      <span class="scan-tag active">cross_file</span>
+      <span class="scan-tag active">enrich_critical</span>
+      <span class="scan-tag">secrets_scan</span>
+    </div>
+  </div>
+</div>
+
+<!-- P1 -->
+<div class="priority-item" id="p1">
+  <div class="priority-header" onclick="toggle('p1')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p1)">P1 · CRITICAL</span>
+      <span class="ph-severity">Attacker controls execution</span>
+    </div>
+    <div class="ph-title"><strong>Injection</strong> Vulnerabilities</div>
+    <div class="ph-meta">
+      <div class="ph-count">7 subcategories</div>
+      <div class="ph-impact">DATA BREACH / RCE</div>
+      <div class="ph-chevron" id="chev-p1">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p1">
+    <div class="priority-desc">Injection is when attacker-controlled input reaches an interpreter — SQL engine, OS shell, HTML renderer, LDAP server — and is executed as code or commands. Every place where user input flows into a query, command, or template is a potential injection point.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">INJ-01</span>
+        <div class="sc-title">SQL / NoSQL Injection</div>
+        <div class="sc-desc">String concatenation into SQL queries or NoSQL filter objects. Attacker can dump, modify, or delete the entire database, or bypass auth entirely.</div>
+        <div class="sc-examples">
+          <div class="sc-example">`SELECT * FROM users WHERE id = ${userId}`</div>
+          <div class="sc-example">db.find({ name: req.body.name }) — NoSQL injection</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">INJ-02</span>
+        <div class="sc-title">Command Injection</div>
+        <div class="sc-desc">User input passed to exec(), spawn(), system() without sanitization. Attacker runs arbitrary OS commands as the application user.</div>
+        <div class="sc-examples">
+          <div class="sc-example">exec(`convert ${filename} output.png`)</div>
+          <div class="sc-example">subprocess.call(f"ping {host}", shell=True)</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">INJ-03</span>
+        <div class="sc-title">XSS (Cross-Site Scripting)</div>
+        <div class="sc-desc">User input rendered in HTML without escaping. Attacker executes JS in victim's browser — steals cookies, tokens, performs actions as victim.</div>
+        <div class="sc-examples">
+          <div class="sc-example">innerHTML = userInput</div>
+          <div class="sc-example">dangerouslySetInnerHTML={{ __html: data }}</div>
+          <div class="sc-example">res.send(`Hello ${req.query.name}`)</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">INJ-04</span>
+        <div class="sc-title">LDAP Injection</div>
+        <div class="sc-desc">Unsanitized user input in LDAP filter strings. Attacker can bypass authentication or extract directory data.</div>
+        <div class="sc-examples">
+          <div class="sc-example">filter: `(uid=${username})` — unescaped</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">INJ-05</span>
+        <div class="sc-title">Template Injection (SSTI)</div>
+        <div class="sc-desc">User input rendered through a template engine (Jinja2, Handlebars, Twig). Can lead to RCE — attacker executes server-side code.</div>
+        <div class="sc-examples">
+          <div class="sc-example">render_template_string(user_input) — Jinja2</div>
+          <div class="sc-example">Handlebars.compile(req.body.template)</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">INJ-06</span>
+        <div class="sc-title">GraphQL Injection / Abuse</div>
+        <div class="sc-desc">No query depth/complexity limits (DoS), introspection enabled in production (exposes schema), batching attacks, field-level authorization missing.</div>
+        <div class="sc-examples">
+          <div class="sc-example">No depth limit — recursive query bombs</div>
+          <div class="sc-example">introspection: true in production config</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">INJ-07</span>
+        <div class="sc-title">Prototype Pollution</div>
+        <div class="sc-desc">JavaScript-specific. Attacker pollutes Object.prototype via merge/clone functions. Can escalate to RCE or auth bypass depending on how polluted properties are used downstream.</div>
+        <div class="sc-examples">
+          <div class="sc-example">merge(target, userObject) — recursive merge</div>
+          <div class="sc-example">req.body.__proto__.isAdmin = true</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">String concatenation into queries, commands, HTML</div>
+        <div class="ai-check">Use of parameterized queries / prepared statements</div>
+        <div class="ai-check">eval(), exec(), spawn() with user-controlled args</div>
+        <div class="ai-check">Template rendering with user-provided content</div>
+        <div class="ai-check">GraphQL schema — depth limits, complexity, introspection</div>
+        <div class="ai-check">Object spread/merge operations on user input</div>
+        <div class="ai-check">Data flow: req.body/params → dangerous sink</div>
+        <div class="ai-check">ORM usage — raw query escape hatches</div>
+      </div>
+    </div>
+    <div class="scan-map">
+      <span>Scan nodes:</span>
+      <span class="scan-tag active">deep_scan</span>
+      <span class="scan-tag active">secrets_scan</span>
+      <span class="scan-tag">cross_file</span>
+    </div>
+  </div>
+</div>
+
+<!-- P2 -->
+<div class="priority-item" id="p2">
+  <div class="priority-header" onclick="toggle('p2')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p2)">P2 · CRITICAL</span>
+      <span class="ph-severity">One leak = full breach</span>
+    </div>
+    <div class="ph-title"><strong>Secrets</strong> &amp; Credential Exposure</div>
+    <div class="ph-meta">
+      <div class="ph-count">5 subcategories</div>
+      <div class="ph-impact">LATERAL MOVEMENT</div>
+      <div class="ph-chevron" id="chev-p2">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p2">
+    <div class="priority-desc">Hardcoded secrets are instantly exploitable. They're often committed once and live in git history forever — even if "removed." A single leaked Stripe key, AWS credential, or JWT secret compromises the entire connected system, not just this codebase.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">SEC-01</span>
+        <div class="sc-title">Hardcoded API Keys</div>
+        <div class="sc-desc">API keys, tokens, OAuth client secrets embedded directly in source code. Stripe, Twilio, SendGrid, GitHub PATs, etc.</div>
+        <div class="sc-examples">
+          <div class="sc-example">const stripeKey = "sk_live_abc123..."</div>
+          <div class="sc-example">TWILIO_TOKEN = "AC7f8e9d..."</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">SEC-02</span>
+        <div class="sc-title">Hardcoded Passwords</div>
+        <div class="sc-desc">Database passwords, admin passwords, service account credentials in config files, source code, or scripts.</div>
+        <div class="sc-examples">
+          <div class="sc-example">password: "admin123" in config.js</div>
+          <div class="sc-example">DB_PASS = "prodpassword" in .env committed</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">SEC-03</span>
+        <div class="sc-title">Private Keys & Certificates</div>
+        <div class="sc-desc">RSA/EC private keys, TLS certificates, SSH keys committed to the repository. Often in .pem, .key, or .p12 files.</div>
+        <div class="sc-examples">
+          <div class="sc-example">-----BEGIN RSA PRIVATE KEY-----</div>
+          <div class="sc-example">id_rsa committed to /config</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">SEC-04</span>
+        <div class="sc-title">Secrets in Git History</div>
+        <div class="sc-desc">Secrets removed from current code but present in git history. Any clone of the repo exposes them. Requires full history scan, not just HEAD.</div>
+        <div class="sc-examples">
+          <div class="sc-example">git log -p | grep "sk_live"</div>
+          <div class="sc-example">Deleted .env still in history</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">SEC-05</span>
+        <div class="sc-title">Secrets in Logs / Error Responses</div>
+        <div class="sc-desc">Secrets that don't live in code but get logged at runtime — tokens in URL params logged by request logger, auth headers in error dumps, debug mode exposing env vars.</div>
+        <div class="sc-examples">
+          <div class="sc-example">logger.info(req.headers) — logs Authorization</div>
+          <div class="sc-example">console.error(process.env) on startup</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">String literals matching key/secret patterns</div>
+        <div class="ai-check">Env var assignments with sensitive names</div>
+        <div class="ai-check">Config files with plaintext credentials</div>
+        <div class="ai-check">Git history scan (Gitleaks integration)</div>
+        <div class="ai-check">Logging statements that include auth headers</div>
+        <div class="ai-check">process.env exposure in error handlers</div>
+        <div class="ai-check">Base64-encoded secrets (common obfuscation)</div>
+        <div class="ai-check">Service-specific patterns: sk_live_, ghp_, AKIA</div>
+      </div>
+    </div>
+    <div class="scan-map">
+      <span>Scan nodes:</span>
+      <span class="scan-tag active">secrets_scan</span>
+      <span class="scan-tag active">deep_scan</span>
+    </div>
+  </div>
+</div>
+
+<!-- P3 -->
+<div class="priority-item" id="p3">
+  <div class="priority-header" onclick="toggle('p3')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p3)">P3 · CRITICAL</span>
+      <span class="ph-severity">No tool catches these</span>
+    </div>
+    <div class="ph-title"><strong>Business Logic</strong> Flaws</div>
+    <div class="ph-meta">
+      <div class="ph-count">6 subcategories</div>
+      <div class="ph-impact">FINANCIAL / DATA LOSS</div>
+      <div class="ph-chevron" id="chev-p3">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p3">
+    <div class="priority-desc">Business logic flaws are the hardest category to find and the most valuable to attackers. They require understanding what the application is supposed to do — then finding cases where it doesn't enforce that correctly. No regex, no CVE database, no static pattern can find these. Only AI with system-level context can reason about them.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">BIZ-01</span>
+        <div class="sc-title">Price & Quantity Manipulation</div>
+        <div class="sc-desc">Client-controlled pricing, negative quantities, integer overflow in totals, discount stacking, coupon abuse, free trials that don't expire.</div>
+        <div class="sc-examples">
+          <div class="sc-example">price sent from client, not fetched from DB</div>
+          <div class="sc-example">quantity: -1 gives credit instead of charge</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">BIZ-02</span>
+        <div class="sc-title">Race Conditions</div>
+        <div class="sc-desc">TOCTOU (Time-of-Check Time-of-Use) bugs. Concurrent requests that exploit a non-atomic check-then-act. Classic: double-spend, double-withdrawal.</div>
+        <div class="sc-examples">
+          <div class="sc-example">Check balance → (race) → deduct balance</div>
+          <div class="sc-example">Verify OTP → (race) → use OTP twice</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">BIZ-03</span>
+        <div class="sc-title">Workflow Bypass</div>
+        <div class="sc-desc">Skipping required steps in a multi-step process. Going directly to step 5 of a 7-step checkout without completing steps 1-4.</div>
+        <div class="sc-examples">
+          <div class="sc-example">POST /confirm-order without POST /validate-payment</div>
+          <div class="sc-example">Email verified flag never checked before access</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">BIZ-04</span>
+        <div class="sc-title">State Machine Violations</div>
+        <div class="sc-desc">Forcing an entity into an invalid state — cancelling an already-shipped order, re-using a one-time token, approving an already-approved request.</div>
+        <div class="sc-examples">
+          <div class="sc-example">SHIPPED order can be CANCELLED via API</div>
+          <div class="sc-example">Expired invitation token still accepted</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">BIZ-05</span>
+        <div class="sc-title">Limit & Quota Bypass</div>
+        <div class="sc-desc">Rate limits only on one endpoint when the same action is available via multiple paths. API limits enforced client-side only. Free tier limits not enforced server-side.</div>
+        <div class="sc-examples">
+          <div class="sc-example">Rate limit on /register but not /invite</div>
+          <div class="sc-example">Storage limit checked on upload, not on copy</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">BIZ-06</span>
+        <div class="sc-title">Trust Boundary Violations</div>
+        <div class="sc-desc">Trusting data from untrusted sources — accepting webhook payloads without signature verification, trusting X-Forwarded-For for IP-based auth, using client-provided user IDs.</div>
+        <div class="sc-examples">
+          <div class="sc-example">Stripe webhook: no signature verification</div>
+          <div class="sc-example">userId from req.body instead of req.user</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">Prices/amounts: sourced from client or DB?</div>
+        <div class="ai-check">Multi-step flows: are all steps enforced server-side?</div>
+        <div class="ai-check">State transitions: what's the valid state machine?</div>
+        <div class="ai-check">Concurrent operations: are they atomic/transactional?</div>
+        <div class="ai-check">Webhook handlers: is signature verification present?</div>
+        <div class="ai-check">Rate limits: consistent across all paths to same action?</div>
+        <div class="ai-check">User IDs: from authenticated session, not request body?</div>
+        <div class="ai-check">Cross-file: does the intended flow match what's enforced?</div>
+      </div>
+    </div>
+    <div class="scan-map">
+      <span>Scan nodes:</span>
+      <span class="scan-tag active">cross_file</span>
+      <span class="scan-tag active">enrich_critical</span>
+      <span class="scan-tag">deep_scan</span>
+    </div>
+  </div>
+</div>
+
+<!-- P4 -->
+<div class="priority-item" id="p4">
+  <div class="priority-header" onclick="toggle('p4')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p4)">P4 · HIGH</span>
+      <span class="ph-severity">Broken protection</span>
+    </div>
+    <div class="ph-title"><strong>Cryptography</strong> &amp; Data Protection</div>
+    <div class="ph-meta">
+      <div class="ph-count">5 subcategories</div>
+      <div class="ph-impact">DATA EXPOSURE</div>
+      <div class="ph-chevron" id="chev-p4">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p4">
+    <div class="priority-desc">Using cryptography incorrectly is as dangerous as not using it at all. MD5 and SHA1 are broken for security purposes. ECB mode leaks patterns. Short keys are brute-forceable. These are easy to scan for because the bad choices are well-known.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">CRYPTO-01</span>
+        <div class="sc-title">Broken Hash Algorithms</div>
+        <div class="sc-desc">MD5, SHA1 used for password hashing or integrity verification. Both are cryptographically broken — collision-vulnerable and rainbow-table vulnerable.</div>
+        <div class="sc-examples">
+          <div class="sc-example">hashlib.md5(password.encode())</div>
+          <div class="sc-example">crypto.createHash('sha1').update(pass)</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">CRYPTO-02</span>
+        <div class="sc-title">Weak Encryption</div>
+        <div class="sc-desc">DES, 3DES, RC4, ECB mode, short key lengths (<128-bit AES). ECB mode is especially dangerous — it leaks data patterns in the ciphertext.</div>
+        <div class="sc-examples">
+          <div class="sc-example">createCipheriv('aes-128-ecb', key, '')</div>
+          <div class="sc-example">DES.encrypt(data, key)</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">CRYPTO-03</span>
+        <div class="sc-title">Insecure Randomness</div>
+        <div class="sc-desc">Math.random() for security tokens, session IDs, OTPs, or CSRF tokens. Math.random() is not cryptographically secure — it's predictable.</div>
+        <div class="sc-examples">
+          <div class="sc-example">token = Math.random().toString(36)</div>
+          <div class="sc-example">random.random() for OTP generation</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">CRYPTO-04</span>
+        <div class="sc-title">Missing Encryption at Rest/Transit</div>
+        <div class="sc-desc">PII, financial data, health data stored in plaintext in DB or files. HTTP endpoints for sensitive operations. TLS disabled or version too old (TLS 1.0/1.1).</div>
+        <div class="sc-examples">
+          <div class="sc-example">ssn TEXT NOT NULL — no encryption</div>
+          <div class="sc-example">rejectUnauthorized: false in TLS config</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">CRYPTO-05</span>
+        <div class="sc-title">Improper Key Management</div>
+        <div class="sc-desc">Encryption keys stored next to encrypted data, hardcoded IV/nonce, IV reuse, keys not rotated, master key accessible to application directly.</div>
+        <div class="sc-examples">
+          <div class="sc-example">iv = Buffer.alloc(16, 0) — zero IV</div>
+          <div class="sc-example">Key stored in same DB as encrypted data</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">Hash function names: MD5, SHA1, SHA-256 for passwords</div>
+        <div class="ai-check">Password hashing: bcrypt/argon2/scrypt only</div>
+        <div class="ai-check">Cipher mode: ECB = instant flag</div>
+        <div class="ai-check">Math.random() / random.random() for security uses</div>
+        <div class="ai-check">TLS configuration — version, cert validation</div>
+        <div class="ai-check">IV/nonce generation — must be random, not zero/static</div>
+        <div class="ai-check">Sensitive fields in DB schema — encrypted or not</div>
+        <div class="ai-check">Key storage location vs encrypted data location</div>
+      </div>
+    </div>
+    <div class="scan-map"><span>Scan nodes:</span><span class="scan-tag active">deep_scan</span><span class="scan-tag">cross_file</span></div>
+  </div>
+</div>
+
+<!-- P5 -->
+<div class="priority-item" id="p5">
+  <div class="priority-header" onclick="toggle('p5')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p5)">P5 · HIGH</span>
+      <span class="ph-severity">Trust no input</span>
+    </div>
+    <div class="ph-title"><strong>Input Validation</strong> &amp; Sanitization</div>
+    <div class="ph-meta">
+      <div class="ph-count">6 subcategories</div>
+      <div class="ph-impact">XSS / SSRF / TRAVERSAL</div>
+      <div class="ph-chevron" id="chev-p5">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p5">
+    <div class="priority-desc">Every piece of data that enters the system from outside — request body, query params, headers, file uploads, webhooks — must be treated as hostile. The attack surface is everything you accept. Failure to validate leads to the full spectrum from minor information disclosure to full server compromise.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">VAL-01</span>
+        <div class="sc-title">Path Traversal</div>
+        <div class="sc-desc">User-controlled file paths used in file operations without normalization. Attacker reads /etc/passwd, source code, or writes arbitrary files.</div>
+        <div class="sc-examples">
+          <div class="sc-example">readFile(`./uploads/${req.params.file}`)</div>
+          <div class="sc-example">../../../etc/passwd traversal</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">VAL-02</span>
+        <div class="sc-title">SSRF (Server-Side Request Forgery)</div>
+        <div class="sc-desc">Application fetches a URL provided by the user. Attacker can probe internal services, AWS metadata endpoint, or exfiltrate data via DNS.</div>
+        <div class="sc-examples">
+          <div class="sc-example">fetch(req.body.webhookUrl) — unvalidated</div>
+          <div class="sc-example">curl http://169.254.169.254/latest/meta-data/</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">VAL-03</span>
+        <div class="sc-title">Open Redirect</div>
+        <div class="sc-desc">Application redirects to user-controlled URL without validation. Used in phishing and to steal OAuth tokens by chaining with auth flows.</div>
+        <div class="sc-examples">
+          <div class="sc-example">res.redirect(req.query.next) — unvalidated</div>
+          <div class="sc-example">302 Location: https://attacker.com</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">VAL-04</span>
+        <div class="sc-title">Mass Assignment</div>
+        <div class="sc-desc">ORM/model accepts all fields from request body without allowlist. Attacker sets isAdmin, role, price, or other protected fields directly.</div>
+        <div class="sc-examples">
+          <div class="sc-example">User.create(req.body) — no field filter</div>
+          <div class="sc-example">Object.assign(user, req.body)</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">VAL-05</span>
+        <div class="sc-title">File Upload Vulnerabilities</div>
+        <div class="sc-desc">No file type validation, MIME type trusted from client, files stored in web-accessible directory, no size limits, executable files accepted.</div>
+        <div class="sc-examples">
+          <div class="sc-example">No mimetype check on file uploads</div>
+          <div class="sc-example">File stored in /public/uploads/ → RCE</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">VAL-06</span>
+        <div class="sc-title">XXE (XML External Entity)</div>
+        <div class="sc-desc">XML parser configured to process external entities. Attacker reads local files, performs SSRF, or causes DoS via billion laughs attack.</div>
+        <div class="sc-examples">
+          <div class="sc-example">xml2js with no entity expansion limit</div>
+          <div class="sc-example">DOCTYPE with SYSTEM entity in user XML</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">File path operations with user input — path.join safety</div>
+        <div class="ai-check">fetch/axios/http calls with user-provided URLs</div>
+        <div class="ai-check">Redirect destinations — validated allowlist or not</div>
+        <div class="ai-check">ORM .create() / .update() — explicit field selection</div>
+        <div class="ai-check">File upload handlers — type, size, storage location</div>
+        <div class="ai-check">XML parsers — entity expansion configuration</div>
+        <div class="ai-check">Schema validation — where does it happen, what's missing</div>
+        <div class="ai-check">Input validation: present at API boundary, not just UI</div>
+      </div>
+    </div>
+    <div class="scan-map"><span>Scan nodes:</span><span class="scan-tag active">deep_scan</span><span class="scan-tag">cross_file</span></div>
+  </div>
+</div>
+
+<!-- P6 -->
+<div class="priority-item" id="p6">
+  <div class="priority-header" onclick="toggle('p6')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p6)">P6 · HIGH</span>
+      <span class="ph-severity">Supply chain risk</span>
+    </div>
+    <div class="ph-title"><strong>Dependency</strong> &amp; Supply Chain</div>
+    <div class="ph-meta">
+      <div class="ph-count">4 subcategories</div>
+      <div class="ph-impact">BACKDOOR / CVE</div>
+      <div class="ph-chevron" id="chev-p6">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p6">
+    <div class="priority-desc">Modern applications are mostly dependencies. Your own code might be perfect; a vulnerable library you import is still your problem. Supply chain attacks are increasing in frequency and sophistication — a malicious package can be indistinguishable from a legitimate one.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">DEP-01</span>
+        <div class="sc-title">Known CVE in Dependencies</div>
+        <div class="sc-desc">Packages with published CVEs at HIGH or CRITICAL severity. npm audit, Snyk, Trivy all catch these. Age of the CVE matters — old unpatched = intentional negligence.</div>
+        <div class="sc-examples">
+          <div class="sc-example">lodash &lt;4.17.21 — prototype pollution</div>
+          <div class="sc-example">log4j 2.x — Log4Shell (CVE-2021-44228)</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">DEP-02</span>
+        <div class="sc-title">Unpinned / Floating Dependencies</div>
+        <div class="sc-desc">^1.2.3 or * in package.json allows automatic updates to potentially malicious versions. Lockfiles not committed means different builds get different packages.</div>
+        <div class="sc-examples">
+          <div class="sc-example">"axios": "*" — any version</div>
+          <div class="sc-example">package-lock.json in .gitignore</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">DEP-03</span>
+        <div class="sc-title">Typosquatting / Malicious Packages</div>
+        <div class="sc-desc">Packages with names similar to popular packages (lodahs, expres, cros). AI can flag suspicious package names that don't match known legitimate packages.</div>
+        <div class="sc-examples">
+          <div class="sc-example">import 'cros' instead of 'cors'</div>
+          <div class="sc-example">require('mongoos') instead of 'mongoose'</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">DEP-04</span>
+        <div class="sc-title">Outdated Runtime / Framework</div>
+        <div class="sc-desc">Node.js 14 (EOL), Python 2.7, Django 2.x, Rails 5.x — EOL runtimes get no security patches. Framework version determines which vulnerability classes are possible.</div>
+        <div class="sc-examples">
+          <div class="sc-example">engines: { node: "14.x" } — EOL</div>
+          <div class="sc-example">Django==2.2.28 in requirements.txt</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">Package names vs. known legitimate packages</div>
+        <div class="ai-check">Version constraints — pinned vs. floating</div>
+        <div class="ai-check">Lockfile presence and integrity</div>
+        <div class="ai-check">Runtime version in engines / .nvmrc / Dockerfile</div>
+        <div class="ai-check">Direct CVE database lookup via Trivy integration</div>
+        <div class="ai-check">Transitive dependencies for critical packages</div>
+        <div class="ai-check">Deprecated packages still in use</div>
+        <div class="ai-check">Dependency count — massive dep trees = large attack surface</div>
+      </div>
+    </div>
+    <div class="scan-map"><span>Scan nodes:</span><span class="scan-tag active">iac_scan</span><span class="scan-tag active">deep_scan</span></div>
+  </div>
+</div>
+
+<!-- P7 -->
+<div class="priority-item" id="p7">
+  <div class="priority-header" onclick="toggle('p7')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p7)">P7 · MEDIUM</span>
+      <span class="ph-severity">Hardening gaps</span>
+    </div>
+    <div class="ph-title"><strong>Infrastructure</strong> &amp; Configuration</div>
+    <div class="ph-meta">
+      <div class="ph-count">5 subcategories</div>
+      <div class="ph-impact">LATERAL MOVEMENT</div>
+      <div class="ph-chevron" id="chev-p7">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p7">
+    <div class="priority-desc">IaC misconfigurations are the modern equivalent of leaving the server room unlocked. Terraform files, Helm charts, Dockerfiles, and K8s manifests define the actual security posture of production — and they're code, which means they can be reviewed.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">INFRA-01</span>
+        <div class="sc-title">Overprivileged IAM</div>
+        <div class="sc-desc">S3 buckets with public ACLs, IAM roles with * actions or * resources, Lambda functions with AdministratorAccess. Violates principle of least privilege.</div>
+        <div class="sc-examples">
+          <div class="sc-example">Action: "*", Resource: "*" in IAM policy</div>
+          <div class="sc-example">aws_s3_bucket_acl { acl = "public-read" }</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">INFRA-02</span>
+        <div class="sc-title">Network Exposure</div>
+        <div class="sc-desc">Security groups open to 0.0.0.0/0, databases accessible from internet, SSH/RDP open to world, no VPC, services binding to 0.0.0.0 in containers.</div>
+        <div class="sc-examples">
+          <div class="sc-example">cidr_blocks = ["0.0.0.0/0"] on port 22</div>
+          <div class="sc-example">RDS publicly_accessible = true</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">INFRA-03</span>
+        <div class="sc-title">Container Security</div>
+        <div class="sc-desc">Running as root in container, privileged: true, host network/PID sharing, no resource limits, mounting sensitive host paths, base images with known CVEs.</div>
+        <div class="sc-examples">
+          <div class="sc-example">USER root in Dockerfile</div>
+          <div class="sc-example">securityContext: { privileged: true }</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">INFRA-04</span>
+        <div class="sc-title">Insecure Defaults</div>
+        <div class="sc-desc">Debug mode in production, default admin credentials, CORS wildcard (*), missing security headers (CSP, HSTS, X-Frame-Options), directory listing enabled.</div>
+        <div class="sc-examples">
+          <div class="sc-example">DEBUG=True in Django production</div>
+          <div class="sc-example">cors({ origin: '*' }) — all origins</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">INFRA-05</span>
+        <div class="sc-title">Missing Encryption at Infrastructure Level</div>
+        <div class="sc-desc">S3 buckets without server-side encryption, RDS without encryption, EBS volumes unencrypted, secrets in environment variables instead of secrets manager.</div>
+        <div class="sc-examples">
+          <div class="sc-example">aws_s3_bucket — no server_side_encryption</div>
+          <div class="sc-example">ENV DB_PASS=hardcoded in Dockerfile</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">IAM policies — * actions/resources, admin roles</div>
+        <div class="ai-check">Security group rules — 0.0.0.0/0 on sensitive ports</div>
+        <div class="ai-check">Dockerfile — USER root, privileged, sensitive mounts</div>
+        <div class="ai-check">K8s manifests — securityContext, resource limits</div>
+        <div class="ai-check">CORS configuration — origins, methods, credentials</div>
+        <div class="ai-check">Security headers — CSP, HSTS, X-Frame-Options</div>
+        <div class="ai-check">Debug/development flags in production configs</div>
+        <div class="ai-check">Secrets in env vars vs secrets manager references</div>
+      </div>
+    </div>
+    <div class="scan-map"><span>Scan nodes:</span><span class="scan-tag active">iac_scan</span><span class="scan-tag">deep_scan</span></div>
+  </div>
+</div>
+
+<!-- P8 -->
+<div class="priority-item" id="p8">
+  <div class="priority-header" onclick="toggle('p8')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p8)">P8 · MEDIUM</span>
+      <span class="ph-severity">Aids attackers</span>
+    </div>
+    <div class="ph-title"><strong>Error Handling</strong> &amp; Logging</div>
+    <div class="ph-meta">
+      <div class="ph-count">4 subcategories</div>
+      <div class="ph-impact">INFO DISCLOSURE</div>
+      <div class="ph-chevron" id="chev-p8">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p8">
+    <div class="priority-desc">Bad error handling doesn't directly compromise systems but it provides attackers with the reconnaissance they need. Stack traces reveal frameworks, library versions, and file paths. Logs that contain PII or tokens create liability and enable further attacks. Silent failures hide real security events.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">ERR-01</span>
+        <div class="sc-title">Information Leakage in Errors</div>
+        <div class="sc-desc">Full stack traces returned to client, internal paths exposed, database error messages with schema info, framework/version disclosure in headers.</div>
+        <div class="sc-examples">
+          <div class="sc-example">res.status(500).json({ error: err.stack })</div>
+          <div class="sc-example">X-Powered-By: Express 4.18.2</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">ERR-02</span>
+        <div class="sc-title">PII / Secret Logging</div>
+        <div class="sc-desc">Passwords, tokens, credit card numbers, SSNs, email addresses logged. Authorization headers logged by request middleware. Health data in debug logs.</div>
+        <div class="sc-examples">
+          <div class="sc-example">logger.debug('Request:', req.headers) — logs tokens</div>
+          <div class="sc-example">console.log('User:', JSON.stringify(user)) — PII</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">ERR-03</span>
+        <div class="sc-title">Missing Audit Trail</div>
+        <div class="sc-desc">No logging of auth events (login, logout, password reset), privilege changes, sensitive data access, admin actions. Compliance requirement and forensic necessity.</div>
+        <div class="sc-examples">
+          <div class="sc-example">Admin deletes user — no log entry</div>
+          <div class="sc-example">Failed login attempts not recorded</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">ERR-04</span>
+        <div class="sc-title">Silent Failures</div>
+        <div class="sc-desc">Catch blocks that swallow exceptions, empty catch{}, security checks that fail open instead of closed. An auth check that throws is treated as "auth passed."</div>
+        <div class="sc-examples">
+          <div class="sc-example">try { verifyToken() } catch(e) { } — silent</div>
+          <div class="sc-example">if (err) return; // continues execution</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">Error responses — stack traces, internal paths returned</div>
+        <div class="ai-check">Response headers — framework/version disclosure</div>
+        <div class="ai-check">Logger calls — what fields are being logged</div>
+        <div class="ai-check">Auth/admin operations — are they being audited</div>
+        <div class="ai-check">Empty catch blocks or catch blocks that continue</div>
+        <div class="ai-check">Security checks that throw vs return false</div>
+        <div class="ai-check">PII fields (email, ssn, dob) in log statements</div>
+        <div class="ai-check">GDPR/HIPAA data — logged anywhere?</div>
+      </div>
+    </div>
+    <div class="scan-map"><span>Scan nodes:</span><span class="scan-tag active">deep_scan</span><span class="scan-tag">cross_file</span></div>
+  </div>
+</div>
+
+<!-- P9 -->
+<div class="priority-item" id="p9">
+  <div class="priority-header" onclick="toggle('p9')">
+    <div class="ph-badge">
+      <span class="ph-num" style="background:var(--p9); color:var(--ink)">P9 · LOW</span>
+      <span class="ph-severity">Attack surface bloat</span>
+    </div>
+    <div class="ph-title"><strong>Code Quality</strong> &amp; Attack Surface</div>
+    <div class="ph-meta">
+      <div class="ph-count">4 subcategories</div>
+      <div class="ph-impact">LATENT RISK</div>
+      <div class="ph-chevron" id="chev-p9">▾</div>
+    </div>
+  </div>
+  <div class="priority-body" id="body-p9">
+    <div class="priority-desc">Code quality issues don't directly create vulnerabilities but they increase the probability of vulnerabilities hiding inside them. Dead code, debug endpoints, and overly complex functions are where bugs — including security bugs — tend to live undetected the longest.</div>
+    <div class="subcat-grid">
+      <div class="subcat-card">
+        <span class="sc-tag">QUAL-01</span>
+        <div class="sc-title">Dead Code & Zombie Endpoints</div>
+        <div class="sc-desc">Unused routes, commented-out code with credentials, old API versions still active, test endpoints in production code that are never called but still accessible.</div>
+        <div class="sc-examples">
+          <div class="sc-example">app.get('/debug/users') — test endpoint</div>
+          <div class="sc-example">// OLD: password=admin123 (in comment)</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">QUAL-02</span>
+        <div class="sc-title">Overly Complex Functions</div>
+        <div class="sc-desc">Functions over 200 lines, cyclomatic complexity over 15, deeply nested conditions. Complexity correlates with bug density — security bugs hide in complex code.</div>
+        <div class="sc-examples">
+          <div class="sc-example">500-line auth handler — impossible to audit</div>
+          <div class="sc-example">Nested if/else 8 levels deep in payment logic</div>
+        </div>
+      </div>
+      <div class="subcat-card">
+        <span class="sc-tag">QUAL-03</span>
+        <div class="sc-title">Unsafe Coding Patterns</div>
+        <div class="sc-desc">Disabling security features with flags (NODE_TLS_REJECT_UNAUTHORIZED=0), TODO/FIXME comments near security code, using deprecated security APIs.</div>
+        <div class="sc-examples">
+          <div class="sc-example">process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'</div>
+          <div class="sc-example">// TODO: add auth check here</div>
+        </div>
+      </div>
+      <div class="subcat-card alt">
+        <span class="sc-tag">QUAL-04</span>
+        <div class="sc-title">Missing Rate Limiting & DoS Protection</div>
+        <div class="sc-desc">No rate limiting on auth endpoints, expensive operations (regex, PDF generation, image processing) callable without limits, no request size limits.</div>
+        <div class="sc-examples">
+          <div class="sc-example">POST /login — no rate limit</div>
+          <div class="sc-example">PDF generation endpoint — no auth, no limit</div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-focus">
+      <div class="ai-focus-title">What Astra AI specifically checks for</div>
+      <div class="ai-checklist">
+        <div class="ai-check">Routes with no apparent callers or references</div>
+        <div class="ai-check">TODO/FIXME comments mentioning security</div>
+        <div class="ai-check">TLS_REJECT_UNAUTHORIZED, strictSSL: false</div>
+        <div class="ai-check">Function length and nesting depth in security-critical files</div>
+        <div class="ai-check">Auth/payment endpoints — rate limiting middleware?</div>
+        <div class="ai-check">Commented-out code containing credentials or tokens</div>
+        <div class="ai-check">Deprecated API usage (Node.js crypto, Python hashlib)</div>
+        <div class="ai-check">Request body size limits on upload endpoints</div>
+      </div>
+    </div>
+    <div class="scan-map"><span>Scan nodes:</span><span class="scan-tag active">deep_scan</span></div>
+  </div>
+</div>
+
+</div><!-- end .section -->
+
+<!-- ASTRA NODE MAPPING -->
+<div class="astra-section">
+  <div class="overview-title">Astra Scan Node Coverage</div>
+  <div class="overview-sub">Which graph nodes cover which priority categories — and how they use system context from repo_intel.</div>
+  <div class="node-grid">
+    <div class="node-card">
+      <div class="node-name">repo_intel</div>
+      <div class="node-desc">Builds SystemIntelReport before any scanning. Every subsequent node reads this as context — making all scans domain-aware.</div>
+      <div class="node-covers">
+        <div class="node-cover" style="color:var(--ink-muted)">→ Informs all nodes</div>
+        <div class="node-cover" style="color:var(--ink-muted)">→ Tech stack, auth mechanism</div>
+        <div class="node-cover" style="color:var(--ink-muted)">→ Critical paths, attack surface</div>
+        <div class="node-cover" style="color:var(--ink-muted)">→ What to scan first and why</div>
+      </div>
+    </div>
+    <div class="node-card" style="background:var(--surface-1)">
+      <div class="node-name">deep_scan</div>
+      <div class="node-desc">Per-file AI analysis. Covers most categories because it reads actual code with full system context.</div>
+      <div class="node-covers">
+        <div class="node-cover"><span style="color:var(--p0);font-weight:600">P0</span>&nbsp;Auth & Authorization</div>
+        <div class="node-cover"><span style="color:var(--p1);font-weight:600">P1</span>&nbsp;Injection</div>
+        <div class="node-cover"><span style="color:var(--p2);font-weight:600">P2</span>&nbsp;Secrets (in code)</div>
+        <div class="node-cover"><span style="color:var(--p4);font-weight:600">P4</span>&nbsp;Cryptography</div>
+        <div class="node-cover"><span style="color:var(--p5);font-weight:600">P5</span>&nbsp;Input Validation</div>
+        <div class="node-cover"><span style="color:var(--p8);font-weight:600">P8</span>&nbsp;Error Handling</div>
+        <div class="node-cover"><span style="color:var(--p9);font-weight:600">P9</span>&nbsp;Code Quality</div>
+      </div>
+    </div>
+    <div class="node-card">
+      <div class="node-name">secrets_scan</div>
+      <div class="node-desc">Dedicated secrets track. Runs in parallel with deep_scan. Covers current code AND git history.</div>
+      <div class="node-covers">
+        <div class="node-cover"><span style="color:var(--p2);font-weight:600">P2</span>&nbsp;Hardcoded API keys</div>
+        <div class="node-cover"><span style="color:var(--p2);font-weight:600">P2</span>&nbsp;Passwords & credentials</div>
+        <div class="node-cover"><span style="color:var(--p2);font-weight:600">P2</span>&nbsp;Private keys & certs</div>
+        <div class="node-cover"><span style="color:var(--p2);font-weight:600">P2</span>&nbsp;Git history secrets</div>
+      </div>
+    </div>
+    <div class="node-card" style="background:var(--surface-1)">
+      <div class="node-name">iac_scan</div>
+      <div class="node-desc">Infrastructure-as-Code track. Runs in parallel. Covers Terraform, Helm, K8s, Dockerfile, CloudFormation.</div>
+      <div class="node-covers">
+        <div class="node-cover"><span style="color:var(--p6);font-weight:600">P6</span>&nbsp;CVE in dependencies</div>
+        <div class="node-cover"><span style="color:var(--p7);font-weight:600">P7</span>&nbsp;IAM overprivilege</div>
+        <div class="node-cover"><span style="color:var(--p7);font-weight:600">P7</span>&nbsp;Network exposure</div>
+        <div class="node-cover"><span style="color:var(--p7);font-weight:600">P7</span>&nbsp;Container security</div>
+        <div class="node-cover"><span style="color:var(--p7);font-weight:600">P7</span>&nbsp;Insecure defaults</div>
+      </div>
+    </div>
+    <div class="node-card">
+      <div class="node-name">cross_file</div>
+      <div class="node-desc">The only node that can see across the whole codebase. Business logic and architectural flaws only visible from this view.</div>
+      <div class="node-covers">
+        <div class="node-cover"><span style="color:var(--p0);font-weight:600">P0</span>&nbsp;Auth middleware gaps</div>
+        <div class="node-cover"><span style="color:var(--p3);font-weight:600">P3</span>&nbsp;Business logic flaws</div>
+        <div class="node-cover"><span style="color:var(--p3);font-weight:600">P3</span>&nbsp;Race conditions</div>
+        <div class="node-cover"><span style="color:var(--p3);font-weight:600">P3</span>&nbsp;Workflow bypass</div>
+        <div class="node-cover"><span style="color:var(--p3);font-weight:600">P3</span>&nbsp;Trust boundaries</div>
+      </div>
+    </div>
+    <div class="node-card" style="background:var(--surface-1)">
+      <div class="node-name">enrich_critical</div>
+      <div class="node-desc">Second-pass deep dive on CRITICAL findings only. Re-reads the specific files involved with full context. Confirms, expands, or dismisses.</div>
+      <div class="node-covers">
+        <div class="node-cover"><span style="color:var(--p0);font-weight:600">P0</span>&nbsp;Auth — confirm & expand</div>
+        <div class="node-cover"><span style="color:var(--p3);font-weight:600">P3</span>&nbsp;Business logic — confirm</div>
+        <div class="node-cover" style="color:var(--ink-muted)">→ Reduces false positives</div>
+        <div class="node-cover" style="color:var(--ink-muted)">→ Generates exploit scenarios</div>
+        <div class="node-cover" style="color:var(--ink-muted)">→ Concrete remediation steps</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-left">
+    <div class="footer-icon"><svg viewBox="0 0 16 16"><path d="M8 1L1 4v8l7 3 7-3V4L8 1zm0 2.2l4.5 1.9L8 7 3.5 5.1 8 3.2zM3 6.6l4 1.7V13L3 11.3V6.6zm10 4.7l-4 1.7V8.3l4-1.7v4.7z"/></svg></div>
+    Astra Security — Code Review Taxonomy Reference
+  </div>
+  <div class="footer-right">
+    P0 – P9 · 10 priority levels · 47 categories<br/>
+    v1.0 · 2026-05-09
+  </div>
+</footer>
+
+<script>
+function toggle(id) {
+  const body = document.getElementById('body-' + id);
+  const chev = document.getElementById('chev-' + id);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.classList.toggle('open', !isOpen);
+  chev.textContent = isOpen ? '▾' : '▴';
+}
+// Smooth scroll for nav links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>
