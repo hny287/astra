@@ -73,9 +73,10 @@ export async function POST(request: NextRequest) {
   if (!title) return NextResponse.json({ error: 'title required' }, { status: 400 });
 
   let scanId: string | null = body.scanId ?? null;
+  // When linking to a finding, inherit its rich fields if not explicitly provided
   if (findingId) {
     const finding = await prisma.finding.findUnique({ where: { id: findingId } });
-    if (finding) scanId = finding.scanId;
+    if (finding && !scanId) scanId = finding.scanId;
   }
 
   const task = await prisma.task.create({

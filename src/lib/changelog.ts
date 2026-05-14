@@ -11,6 +11,27 @@ export interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.20.0',
+    date: '2026-05-14',
+    title: 'Bidirectional field sync between Tasks & Alerts',
+    description: 'Expanded Task-Finding sync beyond status and assignment: all rich fields (title, description, severity, codeSnippet, exploitationScenario, remediation, cwe, owasp, exploitScore, cvssScore, confidence, aiExplanation, aiFix, file, lineStart, lineEnd, scanner, ruleId, category, language) now sync bidirectionally between linked Findings and Tasks. TaskDataTable expanded detail now matches AlertDetail with file location, code snippet, proof of concept, remediation, AI explanation, AI fix, clickable CWE/OWASP references, exploit score bar, full CvssScore component, and confidence bar. CvssScore compact mode drops "CVSS" label; tooltips show "CVSS v3.1". Column headers "CVSS" → "CVSS Score" (100px).',
+    categories: [
+      { label: 'New', items: [
+        'syncFindingFieldsToTask() and syncTaskFieldsToFinding() — bidirectional sync of all rich fields between linked Findings and Tasks',
+      ]},
+      { label: 'Improved', items: [
+        'TaskDataTable expanded detail now shows all AlertDetail fields: file location, code snippet, proof of concept, remediation, AI explanation, AI fix, references (CWE/OWASP as clickable links), exploit score bar, full CvssScore component with tooltip, confidence bar — uses task fields first, falls back to linked finding',
+        'Task API GET /tasks includes all rich fields from linked finding',
+        'CvssScore compact mode: removed "CVSS" text label; tooltips show "CVSS v3.1"',
+        'Column headers renamed "CVSS" to "CVSS Score" (100px width) in both tables',
+      ]},
+      { label: 'Changed', items: [
+        'Finding PATCH and persist node now call syncFindingFieldsToTask after updates',
+        'Task PATCH calls syncTaskFieldsToFinding when rich fields change',
+      ]},
+    ],
+  },
+  {
     version: '2.19.0',
     date: '2026-05-14',
     title: 'Unified Tasks & Alerts',

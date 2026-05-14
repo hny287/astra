@@ -69,3 +69,65 @@ export async function syncTaskStatusToFinding(taskId: string, status: string) {
     data: { status: status as any },
   });
 }
+
+/** Sync all rich fields from a Finding to its linked Task(s). */
+export async function syncFindingFieldsToTask(findingId: string) {
+  const finding = await prisma.finding.findUnique({ where: { id: findingId } });
+  if (!finding) return;
+  return prisma.task.updateMany({
+    where: { findingId },
+    data: {
+      title: finding.title,
+      description: finding.description,
+      severity: finding.severity,
+      scanner: finding.scanner,
+      ruleId: finding.ruleId,
+      file: finding.file,
+      lineStart: finding.lineStart,
+      lineEnd: finding.lineEnd,
+      codeSnippet: finding.codeSnippet,
+      language: finding.language,
+      category: finding.category,
+      cwe: finding.cwe,
+      owasp: finding.owasp,
+      aiExplanation: finding.aiExplanation,
+      aiFix: finding.aiFix,
+      exploitationScenario: finding.exploitationScenario,
+      exploitScore: finding.exploitScore,
+      cvssScore: finding.cvssScore,
+      confidence: finding.confidence,
+      remediation: finding.remediation,
+    },
+  });
+}
+
+/** Sync all rich fields from a Task to its linked Finding. */
+export async function syncTaskFieldsToFinding(taskId: string) {
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task?.findingId) return;
+  return prisma.finding.update({
+    where: { id: task.findingId },
+    data: {
+      title: task.title,
+      description: task.description,
+      severity: task.severity,
+      scanner: task.scanner,
+      ruleId: task.ruleId,
+      file: task.file,
+      lineStart: task.lineStart,
+      lineEnd: task.lineEnd,
+      codeSnippet: task.codeSnippet,
+      language: task.language,
+      ...(task.category ? { category: task.category } : {}),
+      cwe: task.cwe,
+      owasp: task.owasp,
+      aiExplanation: task.aiExplanation,
+      aiFix: task.aiFix,
+      exploitationScenario: task.exploitationScenario,
+      exploitScore: task.exploitScore,
+      cvssScore: task.cvssScore,
+      confidence: task.confidence,
+      remediation: task.remediation,
+    },
+  });
+}

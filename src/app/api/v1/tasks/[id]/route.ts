@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth, canWrite, canAdmin } from '@/lib/rbac';
-import { syncTaskAssignmentToFinding, syncTaskStatusToFinding } from '@/lib/task-sync';
+import { syncTaskAssignmentToFinding, syncTaskStatusToFinding, syncTaskFieldsToFinding } from '@/lib/task-sync';
 
 export async function GET(
   request: NextRequest,
@@ -116,6 +116,12 @@ export async function PATCH(
   // Sync status changes to linked Finding
   if (body.status && body.status !== task.status && task.findingId) {
     await syncTaskStatusToFinding(id, body.status);
+  }
+
+  // Sync rich field changes back to linked Finding
+  const hasRichFieldChange = richFields.some(f => body[f] !== undefined);
+  if (hasRichFieldChange && task.findingId) {
+    await syncTaskFieldsToFinding(id).catch(() => {});
   }
 
   return NextResponse.json(updated);

@@ -1,6 +1,6 @@
 import type { ScanState } from '../state';
 import { prisma } from '@/lib/db';
-import { createTaskFromFinding } from '@/lib/task-sync';
+import { createTaskFromFinding, syncFindingFieldsToTask } from '@/lib/task-sync';
 
 const VALID_CATEGORIES = ['SAST', 'SCA', 'SECRETS', 'IAC', 'DATA_FLOW', 'BUSINESS_LOGIC'] as const;
 type ValidCategory = typeof VALID_CATEGORIES[number];
@@ -76,6 +76,8 @@ export async function persistNode(state: ScanState): Promise<Partial<ScanState>>
             confidence: finding.confidence,
           },
         });
+        // Sync updated fields to any linked Task
+        await syncFindingFieldsToTask(existing.id).catch(() => {});
       } else {
         await prisma.finding.create({
           data: {

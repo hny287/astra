@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth, canWrite } from '@/lib/rbac';
-import { syncFindingAssignmentToTask, syncFindingStatusToTask } from '@/lib/task-sync';
+import { syncFindingAssignmentToTask, syncFindingStatusToTask, syncFindingFieldsToTask } from '@/lib/task-sync';
 
 export async function PATCH(
   request: NextRequest,
@@ -23,6 +23,9 @@ export async function PATCH(
   if (assignedToId !== undefined) updateData.assignedToId = assignedToId || null;
 
   const updated = await prisma.finding.update({ where: { id }, data: updateData });
+
+  // Sync field changes to linked Task
+  await syncFindingFieldsToTask(id).catch(() => {});
 
   if (status && status !== finding.status) {
     await prisma.alertHistory.create({
