@@ -27,7 +27,7 @@ export async function POST(
   }
 
   const finding = task.finding;
-  const scan = await prisma.scan.findUnique({ where: { id: finding.scanId } });
+  const scan = await prisma.scan.findUnique({ where: { id: finding.scanId! } });
   if (!scan) {
     return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
   }

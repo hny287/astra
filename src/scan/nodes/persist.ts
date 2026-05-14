@@ -57,49 +57,54 @@ export async function persistNode(state: ScanState): Promise<Partial<ScanState>>
 
   try {
     for (const finding of state.deduplicatedFindings) {
-      await prisma.finding.upsert({
-        where: {
-          fingerprint_scanId: {
+      const existing = await prisma.finding.findFirst({
+        where: { fingerprint: finding.fingerprint, scanId: state.scanId },
+      });
+      if (existing) {
+        await prisma.finding.update({
+          where: { id: existing.id },
+          data: {
+            title: finding.title,
+            description: finding.description,
+            severity: normalizeSeverity(finding.severity),
+            category: normalizeCategory(finding.category),
+            aiExplanation: finding.aiExplanation,
+            aiFix: finding.aiFix,
+            exploitationScenario: finding.exploitationScenario,
+            exploitScore: finding.exploitScore,
+            cvssScore: finding.cvssScore,
+            confidence: finding.confidence,
+          },
+        });
+      } else {
+        await prisma.finding.create({
+          data: {
             fingerprint: finding.fingerprint,
             scanId: state.scanId,
+            scanner: finding.scanner,
+            ruleId: finding.ruleId,
+            title: finding.title,
+            description: finding.description,
+            severity: normalizeSeverity(finding.severity),
+            category: normalizeCategory(finding.category),
+            file: finding.file,
+            lineStart: finding.lineStart,
+            lineEnd: finding.lineEnd,
+            codeSnippet: finding.codeSnippet,
+            language: finding.language,
+            cwe: finding.cwe,
+            owasp: finding.owasp,
+            aiExplanation: finding.aiExplanation,
+            aiFix: finding.aiFix,
+            exploitationScenario: finding.exploitationScenario,
+            exploitScore: finding.exploitScore,
+            cvssScore: finding.cvssScore,
+            confidence: finding.confidence,
+            remediation: finding.remediation,
+            rawJson: finding.raw as any,
           },
-        },
-        create: {
-          fingerprint: finding.fingerprint,
-          scanId: state.scanId,
-          scanner: finding.scanner,
-          ruleId: finding.ruleId,
-          title: finding.title,
-          description: finding.description,
-          severity: normalizeSeverity(finding.severity),
-          category: normalizeCategory(finding.category),
-          file: finding.file,
-          lineStart: finding.lineStart,
-          lineEnd: finding.lineEnd,
-          codeSnippet: finding.codeSnippet,
-          language: finding.language,
-          cwe: finding.cwe,
-          owasp: finding.owasp,
-          aiExplanation: finding.aiExplanation,
-          aiFix: finding.aiFix,
-          exploitationScenario: finding.exploitationScenario,
-          exploitScore: finding.exploitScore,
-          confidence: finding.confidence,
-          remediation: finding.remediation,
-          rawJson: finding.raw as any,
-        },
-        update: {
-          title: finding.title,
-          description: finding.description,
-          severity: normalizeSeverity(finding.severity),
-          category: normalizeCategory(finding.category),
-          aiExplanation: finding.aiExplanation,
-          aiFix: finding.aiFix,
-          exploitationScenario: finding.exploitationScenario,
-          exploitScore: finding.exploitScore,
-          confidence: finding.confidence,
-        },
-      });
+        });
+      }
     }
 
     const taskCreationErrors: string[] = [];

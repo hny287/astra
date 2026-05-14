@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth, canWrite, canAdmin } from '@/lib/rbac';
-import { syncTaskAssignmentToFinding } from '@/lib/task-sync';
+import { syncTaskAssignmentToFinding, syncTaskStatusToFinding } from '@/lib/task-sync';
 
 export async function GET(
   request: NextRequest,
@@ -55,9 +55,9 @@ export async function PATCH(
     updateData.type = body.type;
     historyEntries.push({ action: 'TYPE_CHANGE', oldValue: task.type, newValue: body.type });
   }
-  if (body.priority !== undefined && body.priority !== task.priority) {
-    updateData.priority = body.priority;
-    historyEntries.push({ action: 'PRIORITY_CHANGE', oldValue: task.priority, newValue: body.priority });
+  if (body.severity !== undefined && body.severity !== task.severity) {
+    updateData.severity = body.severity;
+    historyEntries.push({ action: 'SEVERITY_CHANGE', oldValue: task.severity, newValue: body.severity });
   }
   if (body.status !== undefined && body.status !== task.status) {
     updateData.status = body.status;
@@ -97,12 +97,25 @@ export async function PATCH(
     }
   }
 
+  // Rich scanner fields
+  const richFields = ['scanner', 'ruleId', 'file', 'lineStart', 'lineEnd', 'codeSnippet', 'language', 'category', 'cwe', 'owasp', 'aiExplanation', 'aiFix', 'exploitationScenario', 'exploitScore', 'cvssScore', 'confidence', 'remediation'] as const;
+  for (const field of richFields) {
+    if (body[field] !== undefined) {
+      updateData[field] = body[field];
+    }
+  }
+
   const updated = await prisma.task.update({ where: { id }, data: updateData });
 
   if (historyEntries.length > 0) {
     await prisma.taskHistory.createMany({
       data: historyEntries.map(e => ({ taskId: id, userId, ...e })),
     });
+  }
+
+  // Sync status changes to linked Finding
+  if (body.status && body.status !== task.status && task.findingId) {
+    await syncTaskStatusToFinding(id, body.status);
   }
 
   return NextResponse.json(updated);

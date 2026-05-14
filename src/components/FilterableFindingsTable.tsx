@@ -2,18 +2,21 @@
 
 import { useState, useMemo } from 'react';
 import SeverityBadge from './SeverityBadge';
+import CvssScore from './CvssScore';
 import AlertDetail from './AlertDetail';
 import { useAiChat } from './AiChatProvider';
 
-type AlertStatus = 'OPEN' | 'CONFIRMED' | 'FALSE_POSITIVE' | 'REMEDIATED' | 'ACCEPTED_RISK' | 'IN_PROGRESS';
+type ItemStatus = 'OPEN' | 'IN_PROGRESS' | 'IN_REVIEW' | 'COMPLETED' | 'FALSE_POSITIVE' | 'ACCEPTED_RISK' | 'BLOCKED' | 'CANCELLED';
 
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   OPEN: { color: 'var(--ibm-semantic-error)', label: 'Open' },
-  CONFIRMED: { color: 'var(--ibm-semantic-warning)', label: 'Confirmed' },
-  FALSE_POSITIVE: { color: 'var(--ibm-ink-subtle)', label: 'False Positive' },
-  REMEDIATED: { color: 'var(--ibm-semantic-success)', label: 'Remediated' },
-  ACCEPTED_RISK: { color: 'var(--ibm-primary)', label: 'Accept Risk' },
   IN_PROGRESS: { color: 'var(--ibm-blue-50)', label: 'In Progress' },
+  IN_REVIEW: { color: 'var(--ibm-semantic-warning)', label: 'In Review' },
+  COMPLETED: { color: 'var(--ibm-semantic-success)', label: 'Completed' },
+  FALSE_POSITIVE: { color: 'var(--ibm-ink-subtle)', label: 'False Positive' },
+  ACCEPTED_RISK: { color: 'var(--ibm-primary)', label: 'Accept Risk' },
+  BLOCKED: { color: 'var(--ibm-semantic-error)', label: 'Blocked' },
+  CANCELLED: { color: 'var(--ibm-ink-subtle)', label: 'Cancelled' },
 };
 
 interface Finding {
@@ -32,14 +35,15 @@ interface Finding {
   codeSnippet: string;
   exploitationScenario: string | null;
   exploitScore: number | null;
+  cvssScore: number | null;
   cwe: string[];
   owasp: string[];
   remediation: string;
   description: string;
-  status: AlertStatus;
+  status: ItemStatus;
   assignedToId: string | null;
   assignedTo?: { id: string; name: string } | null;
-  task?: { id: string; title: string; status: string; priority: string } | null;
+  task?: { id: string; title: string; status: string; severity: string } | null;
 }
 
 interface FilterableFindingsTableProps {
@@ -52,11 +56,13 @@ const CATEGORIES = ['SAST', 'SCA', 'SECRETS', 'IAC', 'DATA_FLOW', 'BUSINESS_LOGI
 const STATUSES: { value: string; label: string }[] = [
   { value: 'ALL', label: 'All statuses' },
   { value: 'OPEN', label: 'Open' },
-  { value: 'CONFIRMED', label: 'Confirmed' },
-  { value: 'FALSE_POSITIVE', label: 'False Positive' },
-  { value: 'REMEDIATED', label: 'Remediated' },
-  { value: 'ACCEPTED_RISK', label: 'Accepted Risk' },
   { value: 'IN_PROGRESS', label: 'In Progress' },
+  { value: 'IN_REVIEW', label: 'In Review' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'FALSE_POSITIVE', label: 'False Positive' },
+  { value: 'ACCEPTED_RISK', label: 'Accepted Risk' },
+  { value: 'BLOCKED', label: 'Blocked' },
+  { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
 export default function FilterableFindingsTable({ findings, onRefresh }: FilterableFindingsTableProps) {
@@ -180,7 +186,7 @@ export default function FilterableFindingsTable({ findings, onRefresh }: Filtera
       </div>
 
       <div style={{ border: '1px solid var(--ibm-hairline)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '80px 90px 100px 1fr 60px 1fr 80px 80px 48px 70px 40px', padding: '10px 16px', background: 'var(--ibm-surface-1)', borderBottom: '1px solid var(--ibm-hairline)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '80px 90px 100px 1fr 60px 1fr 80px 80px 48px 100px 70px 40px', padding: '10px 16px', background: 'var(--ibm-surface-1)', borderBottom: '1px solid var(--ibm-hairline)' }}>
           {[
             { field: 'severity', label: 'Sev' },
             { field: 'status', label: 'Status' },
@@ -191,6 +197,7 @@ export default function FilterableFindingsTable({ findings, onRefresh }: Filtera
             { field: '', label: 'Scanner' },
             { field: 'category', label: 'Category' },
             { field: 'confidence', label: 'Conf' },
+            { field: '', label: 'CVSS Score' },
             { field: '', label: 'Task' },
             { field: '', label: '' },
           ].map(col => (
@@ -212,7 +219,7 @@ export default function FilterableFindingsTable({ findings, onRefresh }: Filtera
           return (
             <div key={key} style={{ borderBottom: '1px solid var(--ibm-hairline)' }}>
               <div
-                style={{ display: 'grid', gridTemplateColumns: '80px 90px 100px 1fr 60px 1fr 80px 80px 48px 70px 40px', padding: '8px 16px', alignItems: 'center', cursor: 'pointer' }}
+                style={{ display: 'grid', gridTemplateColumns: '80px 90px 100px 1fr 60px 1fr 80px 80px 48px 100px 70px 40px', padding: '8px 16px', alignItems: 'center', cursor: 'pointer' }}
                 onClick={() => toggle(key)}
               >
                 <SeverityBadge severity={f.severity} />
@@ -230,6 +237,7 @@ export default function FilterableFindingsTable({ findings, onRefresh }: Filtera
                 <span className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)' }}>{f.scanner}</span>
                 <span className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)' }}>{f.category.replace('_', ' ')}</span>
                 <span className="ibm-caption tabular-nums" style={{ color: 'var(--ibm-ink-muted)', textAlign: 'right' }}>{f.confidence != null ? `${(f.confidence * 100).toFixed(0)}%` : '\u2014'}</span>
+                <CvssScore score={f.cvssScore ?? 0} compact />
                 <span className="ibm-caption" style={{ color: f.task ? 'var(--ibm-primary)' : 'var(--ibm-ink-subtle)', fontSize: 11 }}>
                   {f.task ? f.task.status : '\u2014'}
                 </span>
@@ -313,6 +321,9 @@ export default function FilterableFindingsTable({ findings, onRefresh }: Filtera
                           <span className="ibm-caption tabular-nums" style={{ color: 'var(--ibm-ink)', fontFamily: "'IBM Plex Mono', monospace", minWidth: 28 }}>{f.exploitScore.toFixed(1)}</span>
                         </div>
                       </div>
+                    )}
+                    {f.cvssScore != null && (
+                      <CvssScore score={f.cvssScore} />
                     )}
                     {f.codeSnippet && (
                       <div>

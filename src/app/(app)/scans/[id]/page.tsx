@@ -28,14 +28,15 @@ interface Finding {
   codeSnippet: string;
   exploitationScenario: string | null;
   exploitScore: number | null;
+  cvssScore: number | null;
   cwe: string[];
   owasp: string[];
   remediation: string;
   description: string;
-  status: 'OPEN' | 'CONFIRMED' | 'FALSE_POSITIVE' | 'REMEDIATED' | 'ACCEPTED_RISK' | 'IN_PROGRESS';
+  status: 'OPEN' | 'IN_PROGRESS' | 'IN_REVIEW' | 'COMPLETED' | 'FALSE_POSITIVE' | 'ACCEPTED_RISK' | 'BLOCKED' | 'CANCELLED';
   assignedToId: string | null;
   assignedTo: { id: string; name: string } | null;
-  task: { id: string; title: string; status: string; priority: string } | null;
+  task: { id: string; title: string; status: string; severity: string } | null;
 }
 
 interface BusinessLogicRule {

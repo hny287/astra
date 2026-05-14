@@ -48,7 +48,7 @@ export async function POST(
   let aiText: string;
   try {
     const result = await sendChatMessage(content, {
-      scanId: finding.scanId,
+      scanId: finding.scanId ?? undefined,
       findingId,
       userId,
       conversationHistory,
@@ -70,6 +70,7 @@ export async function POST(
         aiExplanation: finding.aiExplanation,
         aiFix: finding.aiFix,
         exploitScore: finding.exploitScore,
+        cvssScore: finding.cvssScore,
         codeSnippet: finding.codeSnippet,
       },
     });

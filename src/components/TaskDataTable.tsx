@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import AlertDetail from './AlertDetail';
+import CvssScore from './CvssScore';
 import { useAiChat } from './AiChatProvider';
 import { useAppData } from './AppDataProvider';
 
-type TaskPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
-type TaskStatus = 'OPEN' | 'IN_PROGRESS' | 'BLOCKED' | 'IN_REVIEW' | 'COMPLETED' | 'CANCELLED' | 'DUPLICATE';
+type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
+type ItemStatus = 'OPEN' | 'IN_PROGRESS' | 'IN_REVIEW' | 'COMPLETED' | 'FALSE_POSITIVE' | 'ACCEPTED_RISK' | 'BLOCKED' | 'CANCELLED';
 type TaskType = 'FINDING_TRIAGE' | 'REMEDIATION' | 'MANUAL_REVIEW' | 'MANUAL' | 'AI_GENERATED';
 
 interface Finding {
@@ -16,11 +17,18 @@ interface Finding {
   file: string;
   lineStart: number;
   lineEnd: number;
+  codeSnippet: string;
   cwe: string[];
   owasp: string[];
   remediation: string;
   description: string;
   category: string;
+  exploitationScenario: string | null;
+  exploitScore: number | null;
+  cvssScore: number | null;
+  confidence: number;
+  aiExplanation: string | null;
+  aiFix: string | null;
 }
 
 interface TaskComment {
@@ -53,8 +61,8 @@ interface Task {
   title: string;
   description: string;
   type: TaskType;
-  priority: TaskPriority;
-  status: TaskStatus;
+  severity: Severity;
+  status: ItemStatus;
   assignedToId: string | null;
   assignedTo?: { id: string; name: string; email: string } | null;
   scanId: string | null;
@@ -63,7 +71,22 @@ interface Task {
   finding?: Finding | null;
   dueDate: string | null;
   category: string | null;
-  severity: string | null;
+  scanner: string;
+  ruleId: string;
+  file: string;
+  lineStart: number;
+  lineEnd: number;
+  codeSnippet: string;
+  language: string;
+  cwe: string[];
+  owasp: string[];
+  aiExplanation: string | null;
+  aiFix: string | null;
+  exploitationScenario: string | null;
+  exploitScore: number | null;
+  cvssScore: number | null;
+  confidence: number;
+  remediation: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,7 +98,7 @@ interface User {
   role: string;
 }
 
-const PRIORITY_BADGE: Record<TaskPriority, { bg: string; label: string; textColor: string }> = {
+const SEVERITY_BADGE: Record<Severity, { bg: string; label: string; textColor: string }> = {
   CRITICAL: { bg: '#da1e28', label: 'C', textColor: '#fff' },
   HIGH: { bg: '#6977e0', label: 'H', textColor: '#fff' },
   MEDIUM: { bg: '#8a8a8a', label: 'M', textColor: '#fff' },
@@ -83,7 +106,7 @@ const PRIORITY_BADGE: Record<TaskPriority, { bg: string; label: string; textColo
   INFO: { bg: '#0072c3', label: 'I', textColor: '#fff' },
 };
 
-const PRIORITY_LABEL: Record<TaskPriority, string> = {
+const SEVERITY_LABEL: Record<Severity, string> = {
   CRITICAL: 'Critical',
   HIGH: 'High',
   MEDIUM: 'Medium',
@@ -91,14 +114,15 @@ const PRIORITY_LABEL: Record<TaskPriority, string> = {
   INFO: 'Info',
 };
 
-const STATUS_BADGE: Record<TaskStatus, { bg: string; label: string; textColor: string }> = {
+const STATUS_BADGE: Record<ItemStatus, { bg: string; label: string; textColor: string }> = {
   OPEN: { bg: '#198038', label: 'Open', textColor: '#fff' },
   IN_PROGRESS: { bg: '#f1c21b', label: 'In Progress', textColor: '#161616' },
-  BLOCKED: { bg: '#da1e28', label: 'Blocked', textColor: '#fff' },
   IN_REVIEW: { bg: '#5a6986', label: 'In Review', textColor: '#fff' },
   COMPLETED: { bg: '#8a8a8a', label: 'Completed', textColor: '#fff' },
+  FALSE_POSITIVE: { bg: '#e0e0e0', label: 'False Positive', textColor: '#525252' },
+  ACCEPTED_RISK: { bg: '#0072c3', label: 'Accept Risk', textColor: '#fff' },
+  BLOCKED: { bg: '#da1e28', label: 'Blocked', textColor: '#fff' },
   CANCELLED: { bg: '#e0e0e0', label: 'Cancelled', textColor: '#525252' },
-  DUPLICATE: { bg: '#e0e0e0', label: 'Duplicate', textColor: '#525252' },
 };
 
 const TYPE_LABEL: Record<TaskType, string> = {
@@ -117,16 +141,17 @@ const TYPE_COLOR: Record<TaskType, string> = {
   AI_GENERATED: 'var(--ibm-primary)',
 };
 
-const PRIORITIES: TaskPriority[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
+const SEVERITIES_LIST: Severity[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'];
 const STATUSES: { value: string; label: string }[] = [
   { value: '', label: 'All statuses' },
   { value: 'OPEN', label: 'Open' },
   { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'BLOCKED', label: 'Blocked' },
   { value: 'IN_REVIEW', label: 'In Review' },
   { value: 'COMPLETED', label: 'Completed' },
+  { value: 'FALSE_POSITIVE', label: 'False Positive' },
+  { value: 'ACCEPTED_RISK', label: 'Accepted Risk' },
+  { value: 'BLOCKED', label: 'Blocked' },
   { value: 'CANCELLED', label: 'Cancelled' },
-  { value: 'DUPLICATE', label: 'Duplicate' },
 ];
 const TYPES: { value: string; label: string }[] = [
   { value: '', label: 'All types' },
@@ -149,12 +174,11 @@ export default function TaskDataTable() {
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [severityFilter, setSeverityFilter] = useState('');
-  const [sortField, setSortField] = useState<string>('priority');
+  const [sortField, setSortField] = useState<string>('severity');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [offset, setOffset] = useState(0);
   const [pageSize, setPageSize] = useState(25);
@@ -188,7 +212,7 @@ export default function TaskDataTable() {
     title: '',
     description: '',
     type: 'MANUAL' as TaskType,
-    priority: 'MEDIUM' as TaskPriority,
+    severity: 'MEDIUM' as Severity,
     assignedToId: '',
     dueDate: '',
     findingId: '',
@@ -214,7 +238,6 @@ export default function TaskDataTable() {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     if (typeFilter) params.set('type', typeFilter);
-    if (priorityFilter) params.set('priority', priorityFilter);
     if (statusFilter) params.set('status', statusFilter);
     if (assigneeFilter) params.set('assignedToId', assigneeFilter);
     if (categoryFilter) params.set('category', categoryFilter);
@@ -234,7 +257,7 @@ export default function TaskDataTable() {
     } catch {} finally {
       setLoading(false);
     }
-  }, [search, typeFilter, priorityFilter, statusFilter, assigneeFilter, categoryFilter, severityFilter, sortField, sortDir, offset, pageSize]);
+  }, [search, typeFilter, statusFilter, assigneeFilter, categoryFilter, severityFilter, sortField, sortDir, offset, pageSize]);
 
   useEffect(() => {
     fetchTasks();
@@ -382,7 +405,7 @@ export default function TaskDataTable() {
   const batchAction = async (action: string, value?: any) => {
     const patch: Record<string, any> = {};
     if (action === 'reassign') patch.assignedToId = value;
-    else if (action === 'priority') patch.priority = value;
+    else if (action === 'severity') patch.severity = value;
     else if (action === 'in_progress') patch.status = 'IN_PROGRESS';
     else if (action === 'complete') patch.status = 'COMPLETED';
     else if (action === 'cancel') patch.status = 'CANCELLED';
@@ -408,7 +431,7 @@ export default function TaskDataTable() {
         title: newTask.title,
         description: newTask.description,
         type: newTask.type,
-        priority: newTask.priority,
+        severity: newTask.severity,
         assignedToId: newTask.assignedToId || null,
         dueDate: newTask.dueDate || null,
       };
@@ -443,7 +466,7 @@ export default function TaskDataTable() {
       }
       setShowCreateModal(false);
       setEditingTaskId(null);
-      setNewTask({ title: '', description: '', type: 'MANUAL', priority: 'MEDIUM', assignedToId: '', dueDate: '', findingId: '' });
+      setNewTask({ title: '', description: '', type: 'MANUAL', severity: 'MEDIUM', assignedToId: '', dueDate: '', findingId: '' });
       fetchTasks();
     } finally {
       setCreating(false);
@@ -456,7 +479,7 @@ export default function TaskDataTable() {
       title: task.title,
       description: task.description,
       type: task.type,
-      priority: task.priority,
+      severity: task.severity,
       assignedToId: task.assignedToId ?? '',
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
       findingId: task.findingId ?? '',
@@ -472,7 +495,7 @@ export default function TaskDataTable() {
         title: `Copy of ${task.title}`,
         description: task.description,
         type: task.type,
-        priority: task.priority,
+        severity: task.severity,
         assignedToId: task.assignedToId ?? null,
       }),
     });
@@ -519,7 +542,6 @@ export default function TaskDataTable() {
   const resetFilters = () => {
     setSearch('');
     setTypeFilter('');
-    setPriorityFilter('');
     setStatusFilter('');
     setAssigneeFilter('');
     setCategoryFilter('');
@@ -600,10 +622,6 @@ export default function TaskDataTable() {
         <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setOffset(0); }} style={selectStyle}>
           {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
-        <select value={priorityFilter} onChange={e => { setPriorityFilter(e.target.value); setOffset(0); }} style={selectStyle}>
-          <option value="">All priority</option>
-          {PRIORITIES.map(p => <option key={p} value={p}>{PRIORITY_LABEL[p]}</option>)}
-        </select>
         <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setOffset(0); }} style={selectStyle}>
           {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
@@ -631,7 +649,7 @@ export default function TaskDataTable() {
         <div style={{ background: '#161616', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span className="ibm-body-sm" style={{ color: '#fff', fontWeight: 600 }}>{selected.size} selected</span>
           <button onClick={() => batchAction('reassign', '')} style={{ ...btnStyle, background: '#393939', color: '#fff', border: '1px solid #525252' }}>Reassign</button>
-          <button onClick={() => batchAction('priority', 'MEDIUM')} style={{ ...btnStyle, background: '#393939', color: '#fff', border: '1px solid #525252' }}>Change Priority</button>
+          <button onClick={() => batchAction('severity', 'MEDIUM')} style={{ ...btnStyle, background: '#393939', color: '#fff', border: '1px solid #525252' }}>Change Severity</button>
           <button onClick={() => batchAction('in_progress')} style={{ ...btnStyle, background: '#393939', color: '#fff', border: '1px solid #525252' }}>Mark In Progress</button>
           <button onClick={() => batchAction('complete')} style={{ ...btnStyle, background: '#393939', color: '#fff', border: '1px solid #525252' }}>Complete</button>
           <button onClick={() => batchAction('cancel')} style={{ ...btnStyle, background: '#393939', color: '#fff', border: '1px solid #525252' }}>Cancel</button>
@@ -640,7 +658,7 @@ export default function TaskDataTable() {
       )}
 
       <div style={{ border: '1px solid var(--ibm-hairline)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '40px 32px 48px 100px 1fr 90px 100px 90px 120px 100px 32px', padding: '10px 16px', background: 'var(--ibm-surface-1)', borderBottom: '1px solid var(--ibm-hairline)', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '40px 32px 48px 100px 1fr 90px 100px 100px 90px 120px 100px 32px', padding: '10px 16px', background: 'var(--ibm-surface-1)', borderBottom: '1px solid var(--ibm-hairline)', alignItems: 'center' }}>
           <div>
             <input
               type="checkbox"
@@ -651,10 +669,11 @@ export default function TaskDataTable() {
           </div>
           <span />
           {[
-            { field: 'priority', label: '' },
+            { field: 'severity', label: '' },
             { field: 'id', label: 'ID' },
             { field: 'title', label: 'Title' },
-            { field: 'priority', label: 'Priority' },
+            { field: 'severity', label: 'Severity' },
+            { field: '', label: 'CVSS Score' },
             { field: 'status', label: 'Status' },
             { field: 'type', label: 'Type' },
             { field: 'assignedToId', label: 'Assignee' },
@@ -663,17 +682,17 @@ export default function TaskDataTable() {
           ].map((col, i) => (
             <span
               key={col.field + i}
-              onClick={() => col.field && col.field !== 'priority' || col.field === 'priority' && col.label === 'Priority' ? toggleSort(col.field) : undefined}
+              onClick={() => col.field && col.field !== 'severity' || col.field === 'severity' && col.label === 'Severity' ? toggleSort(col.field) : undefined}
               className="ibm-label"
               style={{
                 color: 'var(--ibm-ink-muted)',
-                cursor: col.field && (col.field !== 'priority' || col.label === 'Priority') ? 'pointer' : 'default',
+                cursor: col.field && (col.field !== 'severity' || col.label === 'Severity') ? 'pointer' : 'default',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
               }}
             >
-              {col.label}{col.field && (col.field !== 'priority' || col.label === 'Priority') ? arrow(col.field) : ''}
+              {col.label}{col.field && (col.field !== 'severity' || col.label === 'Severity') ? arrow(col.field) : ''}
             </span>
           ))}
         </div>
@@ -686,7 +705,7 @@ export default function TaskDataTable() {
 
         {tasks.map(task => {
           const isExpanded = expanded === task.id;
-          const pb = PRIORITY_BADGE[task.priority] ?? PRIORITY_BADGE.MEDIUM;
+          const pb = SEVERITY_BADGE[task.severity] ?? SEVERITY_BADGE.MEDIUM;
           const sb = STATUS_BADGE[task.status] ?? STATUS_BADGE.OPEN;
           const isSelected = selected.has(task.id);
 
@@ -695,7 +714,7 @@ export default function TaskDataTable() {
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '40px 32px 48px 100px 1fr 90px 100px 90px 120px 100px 32px',
+                  gridTemplateColumns: '40px 32px 48px 100px 1fr 90px 100px 100px 90px 120px 100px 32px',
                   padding: '8px 16px',
                   alignItems: 'start',
                   background: isSelected ? 'var(--ibm-blue-10)' : 'var(--ibm-canvas)',
@@ -730,7 +749,8 @@ export default function TaskDataTable() {
                     </span>
                   )}
                 </div>
-                <span className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)' }}>{PRIORITY_LABEL[task.priority]}</span>
+                <span className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)' }}>{SEVERITY_LABEL[task.severity]}</span>
+                <CvssScore score={task.cvssScore ?? 0} compact />
                 <span style={{
                   display: 'inline-block', padding: '2px 8px', fontSize: 12, fontWeight: 600,
                   letterSpacing: '0.32px', background: sb.bg, color: sb.textColor,
@@ -865,39 +885,119 @@ export default function TaskDataTable() {
                             </div>
                           )}
 
-                          {expandedTask.finding?.remediation && (
-                            <div style={{ marginBottom: 16, borderLeft: '3px solid var(--ibm-semantic-success)', paddingLeft: 12 }}>
-                              <p className="ibm-label" style={{ color: 'var(--ibm-semantic-success)', marginBottom: 4 }}>Remediation</p>
-                              <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', whiteSpace: 'pre-wrap' }}>{expandedTask.finding.remediation}</p>
-                            </div>
-                          )}
+                          {(() => {
+                            const t = expandedTask;
+                            const f = t.finding;
+                            const file = t.file || f?.file;
+                            const lineStart = t.lineStart || f?.lineStart;
+                            const codeSnippet = t.codeSnippet || f?.codeSnippet;
+                            const exploitationScenario = t.exploitationScenario || f?.exploitationScenario;
+                            const remediation = t.remediation || f?.remediation;
+                            const cwe = t.cwe.length > 0 ? t.cwe : (f?.cwe ?? []);
+                            const owasp = t.owasp.length > 0 ? t.owasp : (f?.owasp ?? []);
+                            const exploitScore = t.exploitScore ?? f?.exploitScore ?? null;
+                            const cvssScore = t.cvssScore ?? f?.cvssScore ?? null;
+                            const confidence = t.confidence || f?.confidence || 0;
+                            const aiExplanation = t.aiExplanation || f?.aiExplanation;
+                            const aiFix = t.aiFix || f?.aiFix;
+                            const scanner = t.scanner || f?.category || '';
+                            return (
+                              <>
+                                {file && (
+                                  <div style={{ marginBottom: 16 }}>
+                                    <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>File location</p>
+                                    <span className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}>
+                                      {file}{lineStart ? `:${lineStart}` : ''}
+                                    </span>
+                                    {scanner && <span className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginLeft: 12 }}>{scanner}</span>}
+                                  </div>
+                                )}
 
-                          {expandedTask.finding && (expandedTask.finding.cwe.length > 0 || expandedTask.finding.owasp.length > 0) && (
-                            <div style={{ marginBottom: 16 }}>
-                              <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>References</p>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                {expandedTask.finding.cwe.map(c => (
-                                  <span key={c} style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', color: 'var(--ibm-primary)', padding: '2px 8px', fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '0.16px' }}>
-                                    {c}
-                                  </span>
-                                ))}
-                                {expandedTask.finding.owasp.map(o => (
-                                  <span key={o} style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', color: 'var(--ibm-primary)', padding: '2px 8px', fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '0.16px' }}>
-                                    {o}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
+                                {codeSnippet && (
+                                  <div style={{ marginBottom: 20 }}>
+                                    <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Code snippet</p>
+                                    <pre style={{ padding: 16, background: 'var(--ibm-surface-2)', border: '1px solid var(--ibm-hairline)', overflow: 'auto', maxHeight: 240, fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', lineHeight: 1.5 }}>{codeSnippet}</pre>
+                                  </div>
+                                )}
 
-                          {expandedTask.finding?.file && (
-                            <div style={{ marginBottom: 16 }}>
-                              <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>File location</p>
-                              <span className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}>
-                                {expandedTask.finding.file}:{expandedTask.finding.lineStart}
-                              </span>
-                            </div>
-                          )}
+                                {exploitationScenario && (
+                                  <div style={{ marginBottom: 20, borderLeft: '3px solid var(--ibm-semantic-error)', paddingLeft: 12 }}>
+                                    <p className="ibm-label" style={{ color: 'var(--ibm-semantic-error)', marginBottom: 4 }}>Proof of Concept</p>
+                                    <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', whiteSpace: 'pre-wrap' }}>{exploitationScenario}</p>
+                                  </div>
+                                )}
+
+                                {remediation && (
+                                  <div style={{ marginBottom: 20, borderLeft: '3px solid var(--ibm-semantic-success)', paddingLeft: 12 }}>
+                                    <p className="ibm-label" style={{ color: 'var(--ibm-semantic-success)', marginBottom: 4 }}>Remediation</p>
+                                    <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', whiteSpace: 'pre-wrap' }}>{remediation}</p>
+                                  </div>
+                                )}
+
+                                {aiExplanation && (
+                                  <div style={{ marginBottom: 20 }}>
+                                    <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>AI Explanation</p>
+                                    <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', whiteSpace: 'pre-wrap' }}>{aiExplanation}</p>
+                                  </div>
+                                )}
+
+                                {aiFix && (
+                                  <div style={{ marginBottom: 20 }}>
+                                    <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>AI Fix Suggestion</p>
+                                    <pre style={{ padding: 16, background: 'var(--ibm-surface-2)', border: '1px solid var(--ibm-hairline)', overflow: 'auto', maxHeight: 240, fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', lineHeight: 1.5 }}>{aiFix}</pre>
+                                  </div>
+                                )}
+
+                                {(cwe.length > 0 || owasp.length > 0) && (
+                                  <div style={{ marginBottom: 20 }}>
+                                    <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>References</p>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                      {cwe.map(c => (
+                                        <a key={c} href={`https://cwe.mitre.org/data/definitions/${c.replace('CWE-', '')}.html`} target="_blank" rel="noopener noreferrer" style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', color: 'var(--ibm-primary)', padding: '2px 8px', fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", textDecoration: 'none', letterSpacing: '0.16px' }}>
+                                          {c}
+                                        </a>
+                                      ))}
+                                      {owasp.map(o => (
+                                        <a key={o} href={`https://owasp.org/www-project-top-ten/${o}`} target="_blank" rel="noopener noreferrer" style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', color: 'var(--ibm-primary)', padding: '2px 8px', fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", textDecoration: 'none', letterSpacing: '0.16px' }}>
+                                          {o}
+                                        </a>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {exploitScore != null && (
+                                  <div style={{ marginBottom: 20 }}>
+                                    <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Exploit Score</p>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                      <div style={{ flex: 1, height: 8, background: 'var(--ibm-surface-2)' }}>
+                                        <div style={{
+                                          width: `${Math.min(exploitScore / 10, 1) * 100}%`,
+                                          height: '100%',
+                                          background: exploitScore >= 8 ? 'var(--ibm-semantic-error)' : exploitScore >= 5 ? 'var(--ibm-semantic-warning)' : 'var(--ibm-semantic-success)',
+                                        }} />
+                                      </div>
+                                      <span className="ibm-caption tabular-nums" style={{ color: 'var(--ibm-ink)', fontFamily: "'IBM Plex Mono', monospace", minWidth: 28 }}>{exploitScore.toFixed(1)}</span>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {cvssScore != null && (
+                                  <CvssScore score={cvssScore} />
+                                )}
+
+                                <div style={{ marginBottom: 20 }}>
+                                  <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Confidence</p>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div style={{ flex: 1, height: 8, background: 'var(--ibm-surface-2)' }}>
+                                      <div style={{ width: `${confidence * 100}%`, height: '100%', background: 'var(--ibm-primary)' }} />
+                                    </div>
+                                    <span className="ibm-caption tabular-nums" style={{ color: 'var(--ibm-ink)', fontFamily: "'IBM Plex Mono', monospace", minWidth: 36 }}>{(confidence * 100).toFixed(0)}%</span>
+                                  </div>
+                                </div>
+                              </>
+                            );
+                          })()}
 
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--ibm-hairline)' }}>
                             {([
@@ -1075,9 +1175,9 @@ export default function TaskDataTable() {
                 </select>
               </div>
               <div>
-                <label className="ibm-label" style={{ display: 'block', marginBottom: 4, color: 'var(--ibm-ink-muted)' }}>Priority</label>
-                <select value={newTask.priority} onChange={e => setNewTask(prev => ({ ...prev, priority: e.target.value as TaskPriority }))} style={{ width: '100%', ...selectStyle }}>
-                  {PRIORITIES.map(p => <option key={p} value={p}>{PRIORITY_LABEL[p]}</option>)}
+                <label className="ibm-label" style={{ display: 'block', marginBottom: 4, color: 'var(--ibm-ink-muted)' }}>Severity</label>
+                <select value={newTask.severity} onChange={e => setNewTask(prev => ({ ...prev, severity: e.target.value as Severity }))} style={{ width: '100%', ...selectStyle }}>
+                  {SEVERITIES_LIST.map(p => <option key={p} value={p}>{SEVERITY_LABEL[p]}</option>)}
                 </select>
               </div>
               <div>
@@ -1125,14 +1225,14 @@ export default function TaskDataTable() {
                     <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', fontWeight: 600, marginBottom: 4 }}>{suggestion.title || suggestion.name || 'Suggested task'}</p>
                     {suggestion.description && <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 8 }}>{suggestion.description}</p>}
                     <div style={{ display: 'flex', gap: 8 }}>
-                      {suggestion.priority && (
+                      {suggestion.severity && (
                         <span style={{
                           padding: '2px 8px', fontSize: 11, fontWeight: 600,
-                          background: PRIORITY_BADGE[suggestion.priority as TaskPriority]?.bg ?? '#8a8a8a',
-                          color: PRIORITY_BADGE[suggestion.priority as TaskPriority]?.textColor ?? '#fff',
+                          background: SEVERITY_BADGE[suggestion.severity as Severity]?.bg ?? '#8a8a8a',
+                          color: SEVERITY_BADGE[suggestion.severity as Severity]?.textColor ?? '#fff',
                           letterSpacing: '0.32px',
                         }}>
-                          {suggestion.priority}
+                          {suggestion.severity}
                         </span>
                       )}
                       <button

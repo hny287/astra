@@ -40,11 +40,11 @@ export async function POST(request: NextRequest) {
           oldValue = task.assignedToId;
           newValue = payload.assignedToId || null;
           break;
-        case 'changePriority':
-          updateData.priority = payload.priority;
-          historyAction = 'PRIORITY_CHANGE';
-          oldValue = task.priority;
-          newValue = payload.priority;
+        case 'changeSeverity':
+          updateData.severity = payload.severity;
+          historyAction = 'SEVERITY_CHANGE';
+          oldValue = task.severity;
+          newValue = payload.severity;
           break;
         case 'changeStatus':
           updateData.status = payload.status;

@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import SeverityBadge from './SeverityBadge';
+import CvssScore from './CvssScore';
 import { useAiChat } from './AiChatProvider';
 import { useAppData } from './AppDataProvider';
 
-type AlertStatus = 'OPEN' | 'CONFIRMED' | 'FALSE_POSITIVE' | 'REMEDIATED' | 'ACCEPTED_RISK' | 'IN_PROGRESS';
+type ItemStatus = 'OPEN' | 'IN_PROGRESS' | 'IN_REVIEW' | 'COMPLETED' | 'FALSE_POSITIVE' | 'ACCEPTED_RISK' | 'BLOCKED' | 'CANCELLED';
 
 interface Comment {
   id: string;
@@ -36,7 +37,7 @@ interface TaskSummary {
   id: string;
   title: string;
   status: string;
-  priority: string;
+  severity: string;
   type: string;
 }
 
@@ -44,7 +45,7 @@ interface FindingDetail {
   id: string;
   title: string;
   severity: string;
-  status: AlertStatus;
+  status: ItemStatus;
   description: string;
   file: string;
   lineStart: number;
@@ -55,6 +56,7 @@ interface FindingDetail {
   cwe: string[];
   owasp: string[];
   exploitScore: number | null;
+  cvssScore: number | null;
   confidence: number;
   assignedToId: string | null;
   category: string;
@@ -67,11 +69,13 @@ interface FindingDetail {
 
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   OPEN: { color: 'var(--ibm-semantic-error)', label: 'Open' },
-  CONFIRMED: { color: 'var(--ibm-semantic-warning)', label: 'Confirmed' },
-  FALSE_POSITIVE: { color: 'var(--ibm-ink-subtle)', label: 'False Positive' },
-  REMEDIATED: { color: 'var(--ibm-semantic-success)', label: 'Remediated' },
-  ACCEPTED_RISK: { color: 'var(--ibm-primary)', label: 'Accept Risk' },
   IN_PROGRESS: { color: 'var(--ibm-blue-50)', label: 'In Progress' },
+  IN_REVIEW: { color: 'var(--ibm-semantic-warning)', label: 'In Review' },
+  COMPLETED: { color: 'var(--ibm-semantic-success)', label: 'Completed' },
+  FALSE_POSITIVE: { color: 'var(--ibm-ink-subtle)', label: 'False Positive' },
+  ACCEPTED_RISK: { color: 'var(--ibm-primary)', label: 'Accept Risk' },
+  BLOCKED: { color: 'var(--ibm-semantic-error)', label: 'Blocked' },
+  CANCELLED: { color: 'var(--ibm-ink-subtle)', label: 'Cancelled' },
 };
 
 interface AlertDetailProps {
@@ -110,7 +114,7 @@ export default function AlertDetail({ findingId, onClose }: AlertDetailProps) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  const changeStatus = async (status: AlertStatus) => {
+  const changeStatus = async (status: ItemStatus) => {
     setChangingStatus(status);
     await fetch(`/api/v1/findings/${findingId}`, {
       method: 'PATCH',
@@ -190,10 +194,11 @@ export default function AlertDetail({ findingId, onClose }: AlertDetailProps) {
   const statusCfg = STATUS_CONFIG[finding.status] ?? STATUS_CONFIG.OPEN;
   const assignedUser = users.find(u => u.id === finding.assignedToId);
 
-  const ACTION_BUTTONS: { status: AlertStatus; label: string; accent: string }[] = [
-    { status: 'CONFIRMED', label: 'Confirm', accent: 'var(--ibm-semantic-success)' },
+  const ACTION_BUTTONS: { status: ItemStatus; label: string; accent: string }[] = [
+    { status: 'IN_PROGRESS', label: 'Start', accent: 'var(--ibm-blue-50)' },
+    { status: 'IN_REVIEW', label: 'In Review', accent: 'var(--ibm-semantic-warning)' },
+    { status: 'COMPLETED', label: 'Resolve', accent: 'var(--ibm-semantic-success)' },
     { status: 'FALSE_POSITIVE', label: 'False Positive', accent: 'var(--ibm-ink-subtle)' },
-    { status: 'REMEDIATED', label: 'Remediated', accent: 'var(--ibm-semantic-success)' },
     { status: 'ACCEPTED_RISK', label: 'Accept Risk', accent: 'var(--ibm-semantic-warning)' },
   ];
 
@@ -296,7 +301,7 @@ export default function AlertDetail({ findingId, onClose }: AlertDetailProps) {
             <a href={`/tasks?expand=${finding.task.id}`} style={{ color: 'var(--ibm-primary)', fontSize: 13, fontFamily: "'IBM Plex Sans', sans-serif" }}>
               {finding.task.title}
               <span style={{ marginLeft: 6, fontSize: 11, background: 'var(--ibm-surface-1)', padding: '1px 6px', border: '1px solid var(--ibm-hairline)' }}>{finding.task.status}</span>
-              <span style={{ marginLeft: 4, fontSize: 11, background: 'var(--ibm-surface-1)', padding: '1px 6px', border: '1px solid var(--ibm-hairline)' }}>{finding.task.priority}</span>
+              <span style={{ marginLeft: 4, fontSize: 11, background: 'var(--ibm-surface-1)', padding: '1px 6px', border: '1px solid var(--ibm-hairline)' }}>{finding.task.severity}</span>
             </a>
           ) : (
             <button
@@ -394,6 +399,10 @@ export default function AlertDetail({ findingId, onClose }: AlertDetailProps) {
                 <span className="ibm-caption tabular-nums" style={{ color: 'var(--ibm-ink)', fontFamily: "'IBM Plex Mono', monospace", minWidth: 28 }}>{finding.exploitScore.toFixed(1)}</span>
               </div>
             </div>
+          )}
+
+          {'cvssScore' in finding && finding.cvssScore != null && (
+            <CvssScore score={finding.cvssScore as number} />
           )}
 
           <div style={{ marginBottom: 20 }}>

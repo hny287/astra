@@ -50,13 +50,15 @@ enum UserRole {
   VIEWER
 }
 
-enum AlertStatus {
+enum ItemStatus {
   OPEN
-  CONFIRMED
-  FALSE_POSITIVE
-  REMEDIATED
-  ACCEPTED_RISK
   IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+  FALSE_POSITIVE
+  ACCEPTED_RISK
+  BLOCKED
+  CANCELLED
 }
 
 enum AiCallStatus {
@@ -75,23 +77,6 @@ enum TaskType {
   AI_GENERATED
 }
 
-enum TaskPriority {
-  CRITICAL
-  HIGH
-  MEDIUM
-  LOW
-  INFO
-}
-
-enum TaskStatus {
-  OPEN
-  IN_PROGRESS
-  BLOCKED
-  IN_REVIEW
-  COMPLETED
-  CANCELLED
-  DUPLICATE
-}
 
 model User {
   id           String   @id @default(cuid())
@@ -168,14 +153,14 @@ model Scan {
 model Finding {
   id              String      @id @default(cuid())
   fingerprint     String
-  scanId          String
-  scanner         String
-  ruleId          String
+  scanId          String?
+  scanner         String      @default("")
+  ruleId          String      @default("")
   title           String
   description     String      @default("")
   severity        Severity
   category        Category
-  file            String
+  file            String      @default("")
   lineStart       Int         @default(0)
   lineEnd         Int         @default(0)
   codeSnippet     String      @default("")
@@ -186,10 +171,11 @@ model Finding {
   aiFix                String?
   exploitationScenario String?
   exploitScore         Float?
+  cvssScore            Float?
   confidence           Float     @default(0.5)
   remediation          String    @default("")
   rawJson              Json      @default("{}")
-  status          AlertStatus @default(OPEN)
+  status          ItemStatus @default(OPEN)
   assignedToId    String?
   createdAt       DateTime    @default(now())
 
@@ -201,7 +187,6 @@ model Finding {
   aiCallLogs   AiCallLog[]
   task         Task?
 
-  @@unique([fingerprint, scanId])
   @@index([scanId])
   @@index([severity])
   @@index([category])
@@ -431,8 +416,8 @@ model Task {
   title        String
   description  String      @default("")
   type         TaskType    @default(MANUAL)
-  priority     TaskPriority @default(MEDIUM)
-  status       TaskStatus  @default(OPEN)
+  severity     Severity    @default(MEDIUM)
+  status       ItemStatus  @default(OPEN)
   findingId    String?    @unique
   scanId       String?
   assignedToId String?
@@ -441,6 +426,25 @@ model Task {
   closedAt     DateTime?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
+
+  // Rich scanner fields (shared with Finding)
+  scanner              String    @default("")
+  ruleId               String    @default("")
+  file                 String    @default("")
+  lineStart            Int       @default(0)
+  lineEnd              Int       @default(0)
+  codeSnippet          String    @default("")
+  language             String    @default("")
+  category             Category?
+  cwe                  String[]  @default([])
+  owasp                String[]  @default([])
+  aiExplanation        String?
+  aiFix                String?
+  exploitationScenario String?
+  exploitScore         Float?
+  cvssScore            Float?
+  confidence           Float     @default(0.5)
+  remediation          String    @default("")
 
   finding     Finding?    @relation(fields: [findingId], references: [id], onDelete: SetNull)
   scan       Scan?        @relation(fields: [scanId], references: [id], onDelete: SetNull)
@@ -451,7 +455,7 @@ model Task {
 
   @@index([status])
   @@index([type])
-  @@index([priority])
+  @@index([severity])
   @@index([assignedToId])
   @@index([scanId])
   @@index([findingId])

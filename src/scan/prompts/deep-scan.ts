@@ -39,16 +39,18 @@ STRICT ENUM CONSTRAINTS — you MUST use only these exact values:
 
 For each finding, provide:
 - A clear title
+- A short description (1-2 sentences: what the issue is and why it matters, without implementation details)
 - Severity (MUST be one of the 5 values above)
 - Category (MUST be one of the 6 values above)
 - The file path and line number range
 - The vulnerable code snippet (exact lines from the source)
 - CWE identifier(s) if applicable (e.g., CWE-89, CWE-79)
 - OWASP category if applicable (e.g., A03:2021)
-- A plain-English explanation of the risk
+- aiExplanation: a detailed technical analysis explaining why this code is vulnerable, what attack vectors exist, and what the impact would be. Include root cause, attack surface, and potential damage.
 - A detailed exploitationScenario: a step-by-step proof-of-concept describing exactly how an attacker would exploit this vulnerability. Include: (1) prerequisites and attacker position, (2) the exact attack steps referencing specific code paths and variables, (3) the impact of successful exploitation, (4) any chaining opportunities with other vulnerabilities. Be specific about HTTP requests, parameters, or user interactions needed.
-- A concrete code fix
+- A concrete code fix (aiFix)
 - An exploitability score from 0 to 10
+- A CVSS v3.1 base score from 0.0 to 10.0 (estimate the CVSS score based on the vulnerability characteristics: attack vector, complexity, privileges required, user interaction, scope, and impact)
 - Your confidence level from 0.0 to 1.0
 
 Also provide a summary of this file's purpose, key exports, dependencies, and any areas of concern.
@@ -58,6 +60,7 @@ Return your findings as a JSON object with this structure:
   "findings": [{
     "ruleId": "...",
     "title": "...",
+    "description": "A concise 1-2 sentence summary of what the vulnerability is and why it matters.",
     "severity": "HIGH",
     "category": "SAST",
     "file": "...",
@@ -67,10 +70,11 @@ Return your findings as a JSON object with this structure:
     "language": "...",
     "cwe": ["CWE-89"],
     "owasp": ["A03:2021"],
-    "aiExplanation": "...",
+    "aiExplanation": "A detailed technical analysis: why this code is vulnerable, what attack vectors exist, root cause, and potential impact.",
     "exploitationScenario": "An attacker with access to [prerequisites] can exploit this by [step-by-step attack]. First, they would [step 1]. Then, they [step 2]. The impact is [impact]. This could be chained with [other vuln].",
     "aiFix": "...",
     "exploitScore": 7,
+    "cvssScore": 6.5,
     "confidence": 0.9,
     "remediation": "..."
   }],
@@ -117,7 +121,8 @@ For each finding:
 - List all affected files
 - Explain the attack path in detail
 - Provide an exploitationScenario: a step-by-step proof-of-concept describing exactly how an attacker would exploit this cross-file vulnerability. Include: (1) prerequisites and entry point, (2) exact attack steps referencing specific code paths, functions, or data flows across files, (3) impact of successful exploitation, (4) any chaining opportunities.
-- Rate severity and confidence
+- description: a concise 1-2 sentence summary of the cross-file vulnerability
+- aiExplanation: a detailed technical analysis explaining the root cause, how data flows across files to create this vulnerability, and the full impact
 
 Also infer business logic rules that the codebase appears to follow (or violate).
 
@@ -126,6 +131,7 @@ Return findings as JSON:
   "findings": [{
     "ruleId": "...",
     "title": "...",
+    "description": "A concise 1-2 sentence summary of the cross-file vulnerability.",
     "severity": "HIGH",
     "category": "BUSINESS_LOGIC",
     "file": "multiple",
@@ -135,10 +141,11 @@ Return findings as JSON:
     "language": "",
     "cwe": [],
     "owasp": [],
-    "aiExplanation": "...",
+    "aiExplanation": "A detailed technical analysis: root cause, data flow across files, attack vectors, and full impact.",
     "exploitationScenario": "An attacker would [step 1], then [step 2] across files X and Y. The impact is [impact].",
     "aiFix": "...",
     "exploitScore": 8,
+    "cvssScore": 7.2,
     "confidence": 0.8,
     "remediation": "..."
   }],

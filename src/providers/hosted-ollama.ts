@@ -23,8 +23,10 @@ export class HostedOllamaProvider implements AIProvider {
 
   constructor(config: HostedOllamaConfig) {
     const apiKey = config.apiKeyEnv ? process.env[config.apiKeyEnv] ?? "" : "";
+    // The ollama SDK appends /api/ to the host, so strip any trailing /api to avoid doubling
+    const normalizedHost = (config.baseURL ?? "http://localhost:11434").replace(/\/api\/?$/, '');
     this.client = new Ollama({
-      host: config.baseURL ?? "http://localhost:11434",
+      host: normalizedHost,
       headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
     });
     this.model = config.model;

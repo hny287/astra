@@ -615,7 +615,7 @@ const SCANNERS = [
 
 const CAPABILITIES = [
   { tag: 'AI', title: 'AI-powered analysis', description: 'No static pattern matching. Multi-stage AI reads your code semantically, traces data flows, and identifies architectural risks that rule-based scanners cannot express.' },
-  { tag: 'TR', title: 'Alert triage workflow', description: 'Built-in status tracking (OPEN → CONFIRMED → REMEDIATED), assignment, comments, and a full history timeline. Every change is audited.' },
+  { tag: 'TR', title: 'Alert triage workflow', description: 'Built-in status tracking (OPEN → IN_PROGRESS → COMPLETED), assignment, comments, and a full history timeline. Every change is audited.' },
   { tag: 'TK', title: 'Task management', description: 'Auto-generated remediation tasks from HIGH/CRITICAL findings. Full task lifecycle: priority, assignee, due date, bidirectional finding links, and AI assistance.' },
   { tag: 'CH', title: 'AI chat assistant', description: 'Context-aware chat at global, scan, and finding level. Multi-turn memory, DB-backed system prompts, and switchable model mid-conversation.' },
   { tag: 'OB', title: 'AI observability', description: 'Every AI call logged with provider, model, tokens, latency, and full prompt/response. Filterable table with per-call retry from the UI.' },

@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
   const type = searchParams.get('type') ?? undefined;
-  const priority = searchParams.get('priority') ?? undefined;
   const status = searchParams.get('status') ?? undefined;
   const assignedToId = searchParams.get('assignedToId') ?? undefined;
   const scanId = searchParams.get('scanId') ?? undefined;
@@ -25,7 +24,7 @@ export async function GET(request: NextRequest) {
 
   const where: Record<string, unknown> = {};
   if (type) where.type = type;
-  if (priority) where.priority = priority;
+  if (severity) where.severity = severity;
   if (status) where.status = status;
   if (assignedToId) where.assignedToId = assignedToId;
   if (scanId) where.scanId = scanId;
@@ -37,12 +36,7 @@ export async function GET(request: NextRequest) {
     if (dueAfter) dueDateFilter.gte = new Date(dueAfter);
     where.dueDate = dueDateFilter;
   }
-  if (severity || category) {
-    const findingFilter: Record<string, unknown> = {};
-    if (severity) findingFilter.severity = severity;
-    if (category) findingFilter.category = category;
-    where.finding = findingFilter;
-  }
+  if (category) where.category = category;
   if (search) {
     where.OR = [
       { title: { contains: search, mode: 'insensitive' } },
@@ -57,7 +51,7 @@ export async function GET(request: NextRequest) {
       take: limit,
       skip: offset,
       include: {
-        finding: { select: { id: true, severity: true, category: true, title: true, file: true, lineStart: true } },
+        finding: { select: { id: true, severity: true, category: true, title: true, file: true, lineStart: true, lineEnd: true, codeSnippet: true, cwe: true, owasp: true, exploitationScenario: true, exploitScore: true, cvssScore: true, confidence: true, remediation: true, aiExplanation: true, aiFix: true } },
         scan: { select: { id: true, repoUrl: true, branch: true, commitSha: true } },
         assignedTo: { select: { id: true, name: true, email: true } },
         createdBy: { select: { id: true, name: true, email: true } },
@@ -75,7 +69,7 @@ export async function POST(request: NextRequest) {
   if (!canWrite(role!)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const body = await request.json();
-  const { title, description, type, priority, assignedToId, dueDate, findingId } = body;
+  const { title, description, type, severity, assignedToId, dueDate, findingId } = body;
   if (!title) return NextResponse.json({ error: 'title required' }, { status: 400 });
 
   let scanId: string | null = body.scanId ?? null;
@@ -84,21 +78,35 @@ export async function POST(request: NextRequest) {
     if (finding) scanId = finding.scanId;
   }
 
-  const closedAt = (type === 'COMPLETED' || type === 'CANCELLED') ? new Date() : undefined;
-
   const task = await prisma.task.create({
     data: {
       title,
       description: description ?? '',
       type: type ?? 'MANUAL',
-      priority: priority ?? 'MEDIUM',
+      severity: severity ?? 'MEDIUM',
       status: 'OPEN',
       assignedToId: assignedToId ?? null,
       createdById: userId,
       dueDate: dueDate ? new Date(dueDate) : null,
-      closedAt: closedAt ?? null,
       findingId: findingId ?? null,
       scanId,
+      scanner: body.scanner ?? '',
+      ruleId: body.ruleId ?? '',
+      file: body.file ?? '',
+      lineStart: body.lineStart ?? 0,
+      lineEnd: body.lineEnd ?? 0,
+      codeSnippet: body.codeSnippet ?? '',
+      language: body.language ?? '',
+      category: body.category ?? null,
+      cwe: body.cwe ?? [],
+      owasp: body.owasp ?? [],
+      aiExplanation: body.aiExplanation ?? null,
+      aiFix: body.aiFix ?? null,
+      exploitationScenario: body.exploitationScenario ?? null,
+      exploitScore: body.exploitScore ?? null,
+      cvssScore: body.cvssScore ?? null,
+      confidence: body.confidence ?? 0.5,
+      remediation: body.remediation ?? '',
     },
   });
 

@@ -21,6 +21,6 @@ export async function POST(
     return NextResponse.json({ task: existing, message: 'Task already exists for this finding' });
   }
 
-  const task = await createTaskFromFinding(id, finding.scanId, userId!);
+  const task = await createTaskFromFinding(id, finding.scanId ?? '', userId!);
   return NextResponse.json({ task }, { status: 201 });
 }

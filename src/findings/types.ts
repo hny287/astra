@@ -20,6 +20,7 @@ export interface UnifiedFinding {
   aiFix: string;
   exploitationScenario: string;
   exploitScore: number;
+  cvssScore: number;
   confidence: number;
   remediation: string;
   raw: string;

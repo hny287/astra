@@ -223,7 +223,7 @@ const DEFAULT_CONFIG = {
     retryBackoffMs: 1000,
     timeoutMs: 30000,
     systemPrompt:
-      DEFAULT_SYSTEM_PROMPT + '\n\nSeverity levels: CRITICAL, HIGH, MEDIUM, LOW, INFO\nFinding categories: SAST (code-level vulns), SCA (dependency vulns), SECRETS (hardcoded credentials), IAC (infra misconfig), DATA_FLOW (unsafe data flow), BUSINESS_LOGIC (logic flaws)\nStatus values: OPEN, CONFIRMED, FALSE_POSITIVE, REMEDIATED, ACCEPTED_RISK, IN_PROGRESS',
+      DEFAULT_SYSTEM_PROMPT + '\n\nSeverity levels: CRITICAL, HIGH, MEDIUM, LOW, INFO\nFinding categories: SAST (code-level vulns), SCA (dependency vulns), SECRETS (hardcoded credentials), IAC (infra misconfig), DATA_FLOW (unsafe data flow), BUSINESS_LOGIC (logic flaws)\nStatus values: OPEN, IN_PROGRESS, IN_REVIEW, COMPLETED, FALSE_POSITIVE, ACCEPTED_RISK, BLOCKED, CANCELLED',
   },
 };
 

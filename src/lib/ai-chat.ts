@@ -99,6 +99,7 @@ function buildSystemPrompt(
       aiExplanation?: string | null;
       aiFix?: string | null;
       exploitScore?: number | null;
+      cvssScore?: number | null;
       codeSnippet?: string | null;
     };
   }
@@ -116,6 +117,7 @@ function buildSystemPrompt(
   prompt += `Confidence: ${(f.confidence * 100).toFixed(0)}%\n`;
   prompt += `Status: ${f.status}\n`;
   if (f.exploitScore != null) prompt += `Exploit Score: ${f.exploitScore}/10\n`;
+  if (f.cvssScore != null) prompt += `CVSS Score: ${f.cvssScore}/10\n`;
   if (f.cwe.length > 0) prompt += `CWE: ${f.cwe.join(', ')}\n`;
   if (f.owasp.length > 0) prompt += `OWASP: ${f.owasp.join(', ')}\n`;
   if (f.codeSnippet) prompt += `\nVulnerable code:\n\`\`\`\n${f.codeSnippet}\n\`\`\`\n`;
@@ -123,7 +125,7 @@ function buildSystemPrompt(
   if (f.remediation) prompt += `\nRemediation:\n${f.remediation}\n`;
   if (f.aiExplanation) prompt += `\nAI analysis:\n${f.aiExplanation}\n`;
   if (f.aiFix) prompt += `\nSuggested fix:\n${f.aiFix}\n`;
-  if (f.description) prompt += `\nDescription:\n${f.description}\n`;
+  if (f.description && f.description !== f.aiExplanation) prompt += `\nSummary:\n${f.description}\n`;
   prompt += `\nAnswer the user's questions about this finding. Be specific, reference the details above, and provide actionable advice.`;
   return prompt;
 }
@@ -153,6 +155,7 @@ export async function sendChatMessage(
       aiExplanation?: string | null;
       aiFix?: string | null;
       exploitScore?: number | null;
+      cvssScore?: number | null;
       codeSnippet?: string | null;
     };
   }

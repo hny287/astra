@@ -1,13 +1,5 @@
 import { prisma } from '@/lib/db';
 
-const SEVERITY_TO_PRIORITY: Record<string, string> = {
-  CRITICAL: 'CRITICAL',
-  HIGH: 'HIGH',
-  MEDIUM: 'MEDIUM',
-  LOW: 'LOW',
-  INFO: 'INFO',
-};
-
 export async function createTaskFromFinding(findingId: string, scanId: string, userId?: string) {
   const finding = await prisma.finding.findUnique({ where: { id: findingId } });
   if (!finding) return null;
@@ -18,11 +10,30 @@ export async function createTaskFromFinding(findingId: string, scanId: string, u
       title: finding.title,
       description: finding.description,
       type: 'FINDING_TRIAGE',
-      priority: (SEVERITY_TO_PRIORITY[finding.severity] as any) || 'MEDIUM',
-      status: 'OPEN',
+      severity: finding.severity,
+      status: finding.status,
       findingId: finding.id,
       scanId,
       createdById: userId ?? null,
+      assignedToId: finding.assignedToId ?? null,
+      // Copy rich scanner fields from Finding
+      scanner: finding.scanner,
+      ruleId: finding.ruleId,
+      file: finding.file,
+      lineStart: finding.lineStart,
+      lineEnd: finding.lineEnd,
+      codeSnippet: finding.codeSnippet,
+      language: finding.language,
+      category: finding.category,
+      cwe: finding.cwe,
+      owasp: finding.owasp,
+      aiExplanation: finding.aiExplanation,
+      aiFix: finding.aiFix,
+      exploitationScenario: finding.exploitationScenario,
+      exploitScore: finding.exploitScore,
+      cvssScore: finding.cvssScore,
+      confidence: finding.confidence,
+      remediation: finding.remediation,
     },
   });
 }
@@ -40,5 +51,21 @@ export async function syncTaskAssignmentToFinding(taskId: string, assignedToId: 
   return prisma.finding.update({
     where: { id: task.findingId },
     data: { assignedToId },
+  });
+}
+
+export async function syncFindingStatusToTask(findingId: string, status: string) {
+  return prisma.task.updateMany({
+    where: { findingId },
+    data: { status: status as any },
+  });
+}
+
+export async function syncTaskStatusToFinding(taskId: string, status: string) {
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task?.findingId) return;
+  return prisma.finding.update({
+    where: { id: task.findingId },
+    data: { status: status as any },
   });
 }

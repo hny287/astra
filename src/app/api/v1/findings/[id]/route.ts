@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth, canWrite } from '@/lib/rbac';
-import { syncFindingAssignmentToTask } from '@/lib/task-sync';
+import { syncFindingAssignmentToTask, syncFindingStatusToTask } from '@/lib/task-sync';
 
 export async function PATCH(
   request: NextRequest,
@@ -13,7 +13,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await request.json();
-  const { status, priority, assignedToId } = body;
+  const { status, assignedToId } = body;
 
   const finding = await prisma.finding.findUnique({ where: { id } });
   if (!finding) return NextResponse.json({ error: 'Finding not found' }, { status: 404 });
@@ -28,6 +28,7 @@ export async function PATCH(
     await prisma.alertHistory.create({
       data: { findingId: id, userId, action: 'STATUS_CHANGE', oldValue: finding.status, newValue: status },
     });
+    await syncFindingStatusToTask(id, status);
   }
   if (assignedToId !== undefined && assignedToId !== finding.assignedToId) {
     await prisma.alertHistory.create({

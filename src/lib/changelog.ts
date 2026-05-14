@@ -11,6 +11,35 @@ export interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.19.0',
+    date: '2026-05-14',
+    title: 'Unified Tasks & Alerts',
+    description: 'Merged AlertStatus and TaskStatus into a single ItemStatus enum; replaced TaskPriority with Severity; added rich scanner fields to Task model; added cvssScore to Finding and Task; made Finding.scanId nullable for manual alert creation; bidirectional status sync between linked Findings and Tasks.',
+    categories: [
+      { label: 'Schema', items: [
+        'ItemStatus enum replaces AlertStatus and TaskStatus (OPEN, IN_PROGRESS, IN_REVIEW, COMPLETED, FALSE_POSITIVE, ACCEPTED_RISK, BLOCKED, CANCELLED)',
+        'Task.priority renamed to Task.severity (reuses Severity enum: CRITICAL, HIGH, MEDIUM, LOW, INFO)',
+        'Task model gains rich scanner fields: scanner, ruleId, file, lineStart, lineEnd, codeSnippet, language, category, cwe, owasp, aiExplanation, aiFix, exploitationScenario, exploitScore, cvssScore, confidence, remediation',
+        'Finding.cvssScore added (nullable Float)',
+        'Finding.scanId made nullable for manually created alerts',
+        'Removed @@unique([fingerprint, scanId]) from Finding',
+      ]},
+      { label: 'API', items: [
+        'Tasks API now accepts/returns severity instead of priority',
+        'Tasks API supports rich scanner fields on create/update',
+        'Findings PATCH syncs status changes to linked Tasks',
+        'Tasks PATCH syncs status changes to linked Findings',
+        'Batch action changePriority renamed to changeSeverity',
+      ]},
+      { label: 'UI', items: [
+        'Unified status badges across Alerts and Tasks',
+        'TaskDataTable shows severity instead of priority',
+        'AlertDetail shows unified status actions (Start, In Review, Resolve, False Positive, Accept Risk)',
+        'CVSS score bar added to AlertDetail',
+      ]},
+    ],
+  },
+  {
     version: '2.17.0',
     date: '2026-05-09',
     title: 'Branding refactor — env-driven product identity',
@@ -50,8 +79,8 @@ const CHANGELOG: ChangelogEntry[] = [
           'AI enrichment — every finding gets severity assessment, exploitation scenario, remediation guidance, exploit score (0–10), and CWE/OWASP mapping',
           'Multi-provider AI — 7 providers: Cloud Ollama, Hosted Ollama, OpenAI, Anthropic, Bedrock (stub), Azure AI Foundry (stub), LangGraph (stub); per-node provider/model overrides',
           'AI Chat — context-aware chat at 3 levels: global, scan, and per-finding; multi-turn memory; DB-backed system prompts; model selector mid-conversation',
-          'Alert triage — status workflow (OPEN → CONFIRMED → IN_PROGRESS → REMEDIATED / FALSE_POSITIVE / ACCEPTED_RISK), assignment, comments, history timeline',
-          'Tasks — full task lifecycle: FINDING_TRIAGE / REMEDIATION / MANUAL_REVIEW / MANUAL / AI_GENERATED types, priorities, statuses, batch operations, bidirectional finding links',
+          'Alert triage — unified status workflow (OPEN → IN_PROGRESS → IN_REVIEW → COMPLETED / FALSE_POSITIVE / ACCEPTED_RISK / BLOCKED / CANCELLED), assignment, comments, history timeline',
+          'Tasks — full task lifecycle: FINDING_TRIAGE / REMEDIATION / MANUAL_REVIEW / MANUAL / AI_GENERATED types, severity levels, unified statuses, batch operations, bidirectional finding links',
           'Observability — every AI call logged with provider, model, tokens, latency, prompt, response; filterable AI Calls table with per-call retry',
           'Security — RBAC (ADMIN/ANALYST/VIEWER), JWT sessions, rate limiting, AES-256-GCM token encryption, per-user scan ownership, audit history on every mutation',
           'GitHub integration — PAT linking, repo/branch selectors, encrypted token storage',
@@ -532,7 +561,7 @@ const CHANGELOG: ChangelogEntry[] = [
           'Authentication system with NextAuth v5 — email/password credentials, JWT sessions, role-based access (ADMIN/ANALYST/VIEWER)',
           'Sign-in page, admin-only user creation via /settings/users',
           'AppShell layout with utility bar, navigation, theme toggle, and user menu',
-          'Alert triage workflow — status tracking (OPEN/CONFIRMED/FALSE_POSITIVE/REMEDIATED/ACCEPTED_RISK/IN_PROGRESS), assignment, comments, history',
+          'Alert triage workflow — unified status tracking (OPEN/IN_PROGRESS/IN_REVIEW/COMPLETED/FALSE_POSITIVE/ACCEPTED_RISK/BLOCKED/CANCELLED), assignment, comments, history',
           'AlertDetail slide-out panel with status actions and history timeline',
           'Settings index page with Profile, GitHub, and User Management cards',
           'GitHub integration — PAT linking, repo/branch selectors, connected account display',
