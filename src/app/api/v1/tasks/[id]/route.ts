@@ -98,7 +98,7 @@ export async function PATCH(
   }
 
   // Rich scanner fields
-  const richFields = ['scanner', 'ruleId', 'file', 'lineStart', 'lineEnd', 'codeSnippet', 'language', 'category', 'cwe', 'owasp', 'aiExplanation', 'aiFix', 'exploitationScenario', 'exploitScore', 'cvssScore', 'confidence', 'remediation'] as const;
+  const richFields = ['scanner', 'ruleId', 'file', 'lineStart', 'lineEnd', 'codeSnippet', 'language', 'category', 'cwe', 'owasp', 'aiExplanation', 'aiFix', 'exploitationScenario', 'exploitScore', 'cvssScore', 'cvssVector', 'confidence', 'remediation'] as const;
   for (const field of richFields) {
     if (body[field] !== undefined) {
       updateData[field] = body[field];

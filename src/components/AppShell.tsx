@@ -9,7 +9,7 @@ import AiChatProvider, { useAiChat } from './AiChatProvider';
 import AppDataProvider from './AppDataProvider';
 import { ReactNode } from 'react';
 
-const NAV_LINKS = [
+const NAV_LINKS: { href: string; label: string; external?: boolean }[] = [
   { href: '/scans', label: 'Scans' },
   { href: '/tasks', label: 'Tasks' },
   { href: '/pipeline', label: 'Pipeline' },
@@ -18,6 +18,7 @@ const NAV_LINKS = [
   { href: '/rules', label: 'Rules' },
   { href: '/glossary', label: 'Glossary' },
   { href: '/changelog', label: 'Changelog' },
+  { href: '/unified-spec.html', label: 'Spec', external: true },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {
@@ -92,6 +93,24 @@ function AppShellInner({ children }: { children: ReactNode }) {
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
               {NAV_LINKS.map((link) => (
+                link.external ? (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ibm-body-sm"
+                    style={{
+                      color: 'var(--ibm-ink-muted)',
+                      textDecoration: 'none',
+                      padding: '12px 16px',
+                      borderBottom: '2px solid transparent',
+                      fontWeight: 400,
+                    }}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -106,6 +125,7 @@ function AppShellInner({ children }: { children: ReactNode }) {
                 >
                   {link.label}
                 </Link>
+                )
               ))}
             </div>
           </div>

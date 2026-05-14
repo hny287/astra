@@ -57,6 +57,7 @@ interface FindingDetail {
   owasp: string[];
   exploitScore: number | null;
   cvssScore: number | null;
+  cvssVector: string | null;
   confidence: number;
   assignedToId: string | null;
   category: string;
@@ -402,7 +403,7 @@ export default function AlertDetail({ findingId, onClose }: AlertDetailProps) {
           )}
 
           {'cvssScore' in finding && finding.cvssScore != null && (
-            <CvssScore score={finding.cvssScore as number} />
+            <CvssScore score={finding.cvssScore as number} vector={finding.cvssVector} />
           )}
 
           <div style={{ marginBottom: 20 }}>

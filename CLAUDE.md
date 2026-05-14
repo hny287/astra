@@ -32,6 +32,14 @@ The platform is a closed-source, enterprise-grade application security scanning 
 | `context/architecture.html` | Complete project reference: BRD/PRD/TRD, diagrams, changelog, glossary (served at localhost:8080) |
 | `context/superpowers-reference.md` | Superpowers 5.1.0 skills reference — all 14 skills with rules, invocation triggers, workflow |
 | `spec/2026-05-10-unified-platform-spec.html` | Unified platform spec v5.0 — 16 sections with Mermaid DFDs, scan pipeline graph, taxonomy, competitive, roadmap, financial projections |
+| `KNOWLEDGE/new knowledge/astra-pipeline-reference.md` | **Enterprise scan pipeline v4.0** — 24-node DAG, phase-by-phase reference, node summary table, storage architecture, design decisions |
+| `KNOWLEDGE/new knowledge/astra-core-spec.html` | Core platform spec |
+| `KNOWLEDGE/new knowledge/astra-dfds.md` | Data flow diagrams |
+| `KNOWLEDGE/new knowledge/astra-competitive-analysis.html` | Competitive analysis |
+| `KNOWLEDGE/new knowledge/code-review-taxonomy.html` | Code review taxonomy |
+| `KNOWLEDGE/new knowledge/scan-graph.html` | Scan graph visualization |
+| `KNOWLEDGE/new knowledge/platform-spec-v4.html` | Platform spec v4 |
+| `KNOWLEDGE/new knowledge/unified-spec-glm.html` | Unified spec (GLM version) |
 
 ## Architecture
 
@@ -289,7 +297,7 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 
 | Date | Change |
 |------|--------|
-| 2026-05-14 | v2.20.0: **Bidirectional field sync** — syncFindingFieldsToTask()/syncTaskFieldsToFinding() sync all rich fields bidirectionally between linked Findings and Tasks; TaskDataTable expanded detail matches AlertDetail; Task API includes rich fields from linked finding; CvssScore compact drops "CVSS" label, tooltips show "CVSS v3.1"; column headers "CVSS" → "CVSS Score" (100px) |
+| 2026-05-14 | v2.20.0: **Bidirectional field sync + CVSS vector** — syncFindingFieldsToTask()/syncTaskFieldsToFinding() sync all rich fields bidirectionally; TaskDataTable matches AlertDetail; cvssVector field on Finding/Task stores CVSS v3.1 vector string; CvssScore component parses and displays vector metrics; AI pipeline generates cvssVector |
 | 2026-05-14 | v2.19.0: **Unified Tasks & Alerts** — ItemStatus enum replaces AlertStatus/TaskStatus; TaskPriority replaced by Severity; Task model gains rich scanner fields (codeSnippet, aiExplanation, aiFix, exploitationScenario, exploitScore, cvssScore, confidence, remediation, etc.); Finding.cvssScore added; Finding.scanId nullable for manual alerts; bidirectional status sync between linked Findings and Tasks; batch action changePriority → changeSeverity |
 | 2026-05-10 | v2.18.0: **Unified spec v5.0** — scan-graph section rebuilt as static Mermaid flowcharts (Data Plane + Control Plane) with 34-node reference table, replacing broken interactive SVG/JS; all 19 DFDs now render via Mermaid v11 CDN; spec/ directory added to file-tree glossary; changelog updated |
 | 2026-05-09 | v2.17.0: **Branding refactor** — all product identity configurable via env vars through `src/lib/branding.ts`; AstraConfig → ScanConfig; astra.config.json → scan.config.json; parseAstraRule → parseScanRule; .astra → .rule; all hardcoded brand strings replaced with imports from branding.ts |

@@ -172,6 +172,7 @@ model Finding {
   exploitationScenario String?
   exploitScore         Float?
   cvssScore            Float?
+  cvssVector           String?
   confidence           Float     @default(0.5)
   remediation          String    @default("")
   rawJson              Json      @default("{}")
@@ -443,6 +444,7 @@ model Task {
   exploitationScenario String?
   exploitScore         Float?
   cvssScore            Float?
+  cvssVector           String?
   confidence           Float     @default(0.5)
   remediation          String    @default("")
 

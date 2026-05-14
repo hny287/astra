@@ -51,6 +51,7 @@ For each finding, provide:
 - A concrete code fix (aiFix)
 - An exploitability score from 0 to 10
 - A CVSS v3.1 base score from 0.0 to 10.0 (estimate the CVSS score based on the vulnerability characteristics: attack vector, complexity, privileges required, user interaction, scope, and impact)
+- A CVSS v3.1 vector string (e.g., CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H) representing the individual metric values that produce the cvssScore
 - Your confidence level from 0.0 to 1.0
 
 Also provide a summary of this file's purpose, key exports, dependencies, and any areas of concern.
@@ -75,6 +76,7 @@ Return your findings as a JSON object with this structure:
     "aiFix": "...",
     "exploitScore": 7,
     "cvssScore": 6.5,
+    "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
     "confidence": 0.9,
     "remediation": "..."
   }],
@@ -114,6 +116,7 @@ STRICT ENUM CONSTRAINTS — you MUST use only these exact values:
   - BUSINESS_LOGIC: Logic flaws, privilege escalation, broken access control patterns
 - confidence: a number between 0.0 and 1.0
 - exploitScore: a number between 0 and 10
+- cvssVector: a CVSS v3.1 vector string (e.g., CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H) representing the individual metric values
 - rule status: MUST be "CANDIDATE" (rules are not confirmed until human review)
 
 For each finding:
@@ -146,6 +149,7 @@ Return findings as JSON:
     "aiFix": "...",
     "exploitScore": 8,
     "cvssScore": 7.2,
+    "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
     "confidence": 0.8,
     "remediation": "..."
   }],

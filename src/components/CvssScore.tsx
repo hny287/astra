@@ -10,6 +10,49 @@ const CVSS_RANGES = [
   { min: 0, max: 0, label: 'None', color: '#a8a8a8', textColor: '#fff', description: 'No measurable security impact.' },
 ];
 
+const VECTOR_LABELS: Record<string, string> = {
+  AV: 'Attack Vector',
+  AC: 'Attack Complexity',
+  PR: 'Privileges Required',
+  UI: 'User Interaction',
+  S: 'Scope',
+  C: 'Confidentiality',
+  I: 'Integrity',
+  A: 'Availability',
+  E: 'Exploit Code Maturity',
+  RL: 'Remediation Level',
+  RC: 'Report Confidence',
+};
+
+const VECTOR_VALUES: Record<string, Record<string, string>> = {
+  AV: { N: 'Network', A: 'Adjacent', L: 'Local', P: 'Physical' },
+  AC: { L: 'Low', H: 'High' },
+  PR: { N: 'None', L: 'Low', H: 'High' },
+  UI: { N: 'None', R: 'Required' },
+  S: { U: 'Unchanged', C: 'Changed' },
+  C: { H: 'High', L: 'Low', N: 'None' },
+  I: { H: 'High', L: 'Low', N: 'None' },
+  A: { H: 'High', L: 'Low', N: 'None' },
+  E: { X: 'Not Defined', H: 'High', F: 'Functional', P: 'Proof-of-Concept', U: 'Unproven' },
+  RL: { X: 'Not Defined', U: 'Unavailable', W: 'Workaround', T: 'Temporary Fix', O: 'Official Fix' },
+  RC: { X: 'Not Defined', C: 'Confirmed', R: 'Reasonable', U: 'Unknown' },
+};
+
+function parseCvssVector(vector: string): { abbr: string; label: string; value: string; meaning: string }[] {
+  const parts = vector.replace(/^CVSS:3\.1\/?/, '').split('/');
+  const metrics: { abbr: string; label: string; value: string; meaning: string }[] = [];
+  for (const part of parts) {
+    const colonIdx = part.indexOf(':');
+    if (colonIdx === -1) continue;
+    const abbr = part.substring(0, colonIdx);
+    const value = part.substring(colonIdx + 1);
+    const label = VECTOR_LABELS[abbr] || abbr;
+    const meaning = VECTOR_VALUES[abbr]?.[value] || value;
+    metrics.push({ abbr, label, value, meaning });
+  }
+  return metrics;
+}
+
 function getRange(score: number) {
   if (score === 0) return CVSS_RANGES[4];
   for (const r of CVSS_RANGES) {
@@ -20,12 +63,14 @@ function getRange(score: number) {
 
 interface CvssScoreProps {
   score: number;
+  vector?: string | null;
   compact?: boolean;
 }
 
-export default function CvssScore({ score, compact }: CvssScoreProps) {
+export default function CvssScore({ score, vector, compact }: CvssScoreProps) {
   const [showTip, setShowTip] = useState(false);
   const range = getRange(score);
+  const metrics = vector ? parseCvssVector(vector) : [];
 
   if (compact) {
     return (
@@ -45,12 +90,29 @@ export default function CvssScore({ score, compact }: CvssScoreProps) {
           <span style={{
             position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
             background: '#161616', color: '#fff', padding: '8px 12px', fontSize: 12, lineHeight: 1.4,
-            width: 220, zIndex: 100, marginBottom: 4,
+            width: 280, zIndex: 100, marginBottom: 4,
             fontFamily: "'IBM Plex Sans', sans-serif", letterSpacing: '0.16px',
           }}>
             <span style={{ fontWeight: 600, color: range.color }}>CVSS v3.1 {score.toFixed(1)} — {range.label}</span>
             <br />
             <span style={{ color: '#c6c6c6' }}>{range.description}</span>
+            {metrics.length > 0 && (
+              <>
+                <span style={{ display: 'block', marginTop: 6, borderTop: '1px solid #393939', paddingTop: 6 }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#e0e0e0' }}>{vector}</span>
+                </span>
+                <table style={{ marginTop: 4, width: '100%', fontSize: 10, borderCollapse: 'collapse' }}>
+                  <tbody>
+                    {metrics.filter(m => VECTOR_LABELS[m.abbr]).slice(0, 8).map(m => (
+                      <tr key={m.abbr}>
+                        <td style={{ padding: '1px 6px 1px 0', fontWeight: 600, color: '#a0a0a0' }}>{m.abbr}</td>
+                        <td style={{ padding: '1px 0' }}>{m.meaning}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
             <span style={{ display: 'block', marginTop: 6, borderTop: '1px solid #393939', paddingTop: 6, color: '#a8a8a8', fontSize: 11 }}>
               0.0 None · 0.1–3.9 Low · 4.0–6.9 Medium · 7.0–8.9 High · 9.0–10.0 Critical
             </span>
@@ -101,6 +163,11 @@ export default function CvssScore({ score, compact }: CvssScoreProps) {
           {range.label}
         </span>
       </div>
+      {vector && (
+        <p style={{ marginTop: 6, fontSize: 12, fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ibm-ink-muted)', wordBreak: 'break-all' }}>
+          {vector}
+        </p>
+      )}
       {showTip && (
         <div style={{
           marginTop: 8, padding: '10px 14px', background: 'var(--ibm-surface-1)',
@@ -111,6 +178,19 @@ export default function CvssScore({ score, compact }: CvssScoreProps) {
           <p style={{ margin: '6px 0 0', color: 'var(--ibm-ink-muted)', fontSize: 12 }}>
             {range.description}
           </p>
+          {metrics.length > 0 && (
+            <table style={{ marginTop: 8, width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+              <tbody>
+                {metrics.filter(m => VECTOR_LABELS[m.abbr]).map(m => (
+                  <tr key={m.abbr} style={{ borderBottom: '1px solid var(--ibm-hairline)' }}>
+                    <td style={{ padding: '3px 8px 3px 0', fontWeight: 600, color: 'var(--ibm-ink-muted)', whiteSpace: 'nowrap' }}>{m.label}</td>
+                    <td style={{ padding: '3px 0' }}>{m.meaning}</td>
+                    <td style={{ padding: '3px 0 3px 8px', fontFamily: "'IBM Plex Mono', monospace", color: 'var(--ibm-ink-muted)', fontSize: 11 }}>{m.abbr}:{m.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
           <table style={{ marginTop: 8, width: '100%', fontSize: 11, borderCollapse: 'collapse' }}>
             <tbody>
               {CVSS_RANGES.filter(r => r.label !== 'None').map(r => (

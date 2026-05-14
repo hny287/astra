@@ -14,10 +14,13 @@ const CHANGELOG: ChangelogEntry[] = [
     version: '2.20.0',
     date: '2026-05-14',
     title: 'Bidirectional field sync between Tasks & Alerts',
-    description: 'Expanded Task-Finding sync beyond status and assignment: all rich fields (title, description, severity, codeSnippet, exploitationScenario, remediation, cwe, owasp, exploitScore, cvssScore, confidence, aiExplanation, aiFix, file, lineStart, lineEnd, scanner, ruleId, category, language) now sync bidirectionally between linked Findings and Tasks. TaskDataTable expanded detail now matches AlertDetail with file location, code snippet, proof of concept, remediation, AI explanation, AI fix, clickable CWE/OWASP references, exploit score bar, full CvssScore component, and confidence bar. CvssScore compact mode drops "CVSS" label; tooltips show "CVSS v3.1". Column headers "CVSS" → "CVSS Score" (100px).',
+    description: 'Expanded Task-Finding sync beyond status and assignment: all rich fields (title, description, severity, codeSnippet, exploitationScenario, remediation, cwe, owasp, exploitScore, cvssScore, cvssVector, confidence, aiExplanation, aiFix, file, lineStart, lineEnd, scanner, ruleId, category, language) now sync bidirectionally between linked Findings and Tasks. TaskDataTable expanded detail now matches AlertDetail. CvssScore component shows CVSS v3.1 vector string with parsed metric breakdown (AV, AC, PR, UI, S, C, I, A). AI pipeline now generates cvssVector alongside cvssScore.',
     categories: [
       { label: 'New', items: [
         'syncFindingFieldsToTask() and syncTaskFieldsToFinding() — bidirectional sync of all rich fields between linked Findings and Tasks',
+        'cvssVector field on Finding and Task models — stores the CVSS v3.1 vector string (e.g., CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N)',
+        'CvssScore component now parses and displays vector metrics (Attack Vector, Attack Complexity, Privileges Required, etc.) in both compact tooltip and full detail view',
+        'AI deep-scan and cross-file prompts now request cvssVector alongside cvssScore',
       ]},
       { label: 'Improved', items: [
         'TaskDataTable expanded detail now shows all AlertDetail fields: file location, code snippet, proof of concept, remediation, AI explanation, AI fix, references (CWE/OWASP as clickable links), exploit score bar, full CvssScore component with tooltip, confidence bar — uses task fields first, falls back to linked finding',

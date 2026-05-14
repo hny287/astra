@@ -73,6 +73,7 @@ export async function persistNode(state: ScanState): Promise<Partial<ScanState>>
             exploitationScenario: finding.exploitationScenario,
             exploitScore: finding.exploitScore,
             cvssScore: finding.cvssScore,
+            cvssVector: finding.cvssVector || null,
             confidence: finding.confidence,
           },
         });
@@ -101,6 +102,7 @@ export async function persistNode(state: ScanState): Promise<Partial<ScanState>>
             exploitationScenario: finding.exploitationScenario,
             exploitScore: finding.exploitScore,
             cvssScore: finding.cvssScore,
+            cvssVector: finding.cvssVector || null,
             confidence: finding.confidence,
             remediation: finding.remediation,
             rawJson: finding.raw as any,

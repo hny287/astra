@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       take: limit,
       skip: offset,
       include: {
-        finding: { select: { id: true, severity: true, category: true, title: true, file: true, lineStart: true, lineEnd: true, codeSnippet: true, cwe: true, owasp: true, exploitationScenario: true, exploitScore: true, cvssScore: true, confidence: true, remediation: true, aiExplanation: true, aiFix: true } },
+        finding: { select: { id: true, severity: true, category: true, title: true, file: true, lineStart: true, lineEnd: true, codeSnippet: true, cwe: true, owasp: true, exploitationScenario: true, exploitScore: true, cvssScore: true, cvssVector: true, confidence: true, remediation: true, aiExplanation: true, aiFix: true } },
         scan: { select: { id: true, repoUrl: true, branch: true, commitSha: true } },
         assignedTo: { select: { id: true, name: true, email: true } },
         createdBy: { select: { id: true, name: true, email: true } },
@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
       exploitationScenario: body.exploitationScenario ?? null,
       exploitScore: body.exploitScore ?? null,
       cvssScore: body.cvssScore ?? null,
+      cvssVector: body.cvssVector ?? null,
       confidence: body.confidence ?? 0.5,
       remediation: body.remediation ?? '',
     },

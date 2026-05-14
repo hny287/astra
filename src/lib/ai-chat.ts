@@ -100,6 +100,7 @@ function buildSystemPrompt(
       aiFix?: string | null;
       exploitScore?: number | null;
       cvssScore?: number | null;
+      cvssVector?: string | null;
       codeSnippet?: string | null;
     };
   }
@@ -118,6 +119,7 @@ function buildSystemPrompt(
   prompt += `Status: ${f.status}\n`;
   if (f.exploitScore != null) prompt += `Exploit Score: ${f.exploitScore}/10\n`;
   if (f.cvssScore != null) prompt += `CVSS Score: ${f.cvssScore}/10\n`;
+  if (f.cvssVector) prompt += `CVSS Vector: ${f.cvssVector}\n`;
   if (f.cwe.length > 0) prompt += `CWE: ${f.cwe.join(', ')}\n`;
   if (f.owasp.length > 0) prompt += `OWASP: ${f.owasp.join(', ')}\n`;
   if (f.codeSnippet) prompt += `\nVulnerable code:\n\`\`\`\n${f.codeSnippet}\n\`\`\`\n`;
@@ -156,6 +158,7 @@ export async function sendChatMessage(
       aiFix?: string | null;
       exploitScore?: number | null;
       cvssScore?: number | null;
+      cvssVector?: string | null;
       codeSnippet?: string | null;
     };
   }

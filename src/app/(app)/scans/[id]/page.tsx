@@ -29,6 +29,7 @@ interface Finding {
   exploitationScenario: string | null;
   exploitScore: number | null;
   cvssScore: number | null;
+  cvssVector: string | null;
   cwe: string[];
   owasp: string[];
   remediation: string;

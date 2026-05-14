@@ -21,6 +21,7 @@ export interface UnifiedFinding {
   exploitationScenario: string;
   exploitScore: number;
   cvssScore: number;
+  cvssVector: string;
   confidence: number;
   remediation: string;
   raw: string;

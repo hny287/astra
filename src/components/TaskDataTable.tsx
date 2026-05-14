@@ -26,6 +26,7 @@ interface Finding {
   exploitationScenario: string | null;
   exploitScore: number | null;
   cvssScore: number | null;
+  cvssVector: string | null;
   confidence: number;
   aiExplanation: string | null;
   aiFix: string | null;
@@ -85,6 +86,7 @@ interface Task {
   exploitationScenario: string | null;
   exploitScore: number | null;
   cvssScore: number | null;
+  cvssVector: string | null;
   confidence: number;
   remediation: string;
   createdAt: string;
@@ -750,7 +752,7 @@ export default function TaskDataTable() {
                   )}
                 </div>
                 <span className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)' }}>{SEVERITY_LABEL[task.severity]}</span>
-                <CvssScore score={task.cvssScore ?? 0} compact />
+                <CvssScore score={task.cvssScore ?? 0} vector={task.cvssVector} compact />
                 <span style={{
                   display: 'inline-block', padding: '2px 8px', fontSize: 12, fontWeight: 600,
                   letterSpacing: '0.32px', background: sb.bg, color: sb.textColor,
@@ -897,6 +899,7 @@ export default function TaskDataTable() {
                             const owasp = t.owasp.length > 0 ? t.owasp : (f?.owasp ?? []);
                             const exploitScore = t.exploitScore ?? f?.exploitScore ?? null;
                             const cvssScore = t.cvssScore ?? f?.cvssScore ?? null;
+                            const cvssVector = t.cvssVector || f?.cvssVector || null;
                             const confidence = t.confidence || f?.confidence || 0;
                             const aiExplanation = t.aiExplanation || f?.aiExplanation;
                             const aiFix = t.aiFix || f?.aiFix;
@@ -983,7 +986,7 @@ export default function TaskDataTable() {
                                 )}
 
                                 {cvssScore != null && (
-                                  <CvssScore score={cvssScore} />
+                                  <CvssScore score={cvssScore} vector={cvssVector} />
                                 )}
 
                                 <div style={{ marginBottom: 20 }}>

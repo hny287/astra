@@ -50,7 +50,7 @@ function mapToUnifiedFinding(raw: any, filePath: string, language: string): Unif
   const ruleId = raw.ruleId || 'ai-layer-1';
   const lineStart = typeof raw.lineStart === 'number' ? raw.lineStart : 0;
   return {
-    fingerprint: fingerprint('ai-layer-1', ruleId, filePath, lineStart),
+    fingerprint: fingerprint('ai-layer-1', ruleId, filePath, lineStart, raw.title),
     scanner: 'ai-layer-1',
     ruleId,
     title: raw.title || 'AI-detected vulnerability',
@@ -69,6 +69,7 @@ function mapToUnifiedFinding(raw: any, filePath: string, language: string): Unif
     exploitationScenario: raw.exploitationScenario || '',
     exploitScore: typeof raw.exploitScore === 'number' ? raw.exploitScore : 5,
     cvssScore: typeof raw.cvssScore === 'number' ? raw.cvssScore : 0,
+    cvssVector: typeof raw.cvssVector === 'string' ? raw.cvssVector : '',
     confidence: typeof raw.confidence === 'number' ? raw.confidence : 0.5,
     remediation: raw.remediation || '',
     raw: JSON.stringify(raw),

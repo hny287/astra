@@ -36,6 +36,7 @@ interface Finding {
   exploitationScenario: string | null;
   exploitScore: number | null;
   cvssScore: number | null;
+  cvssVector: string | null;
   cwe: string[];
   owasp: string[];
   remediation: string;
@@ -237,7 +238,7 @@ export default function FilterableFindingsTable({ findings, onRefresh }: Filtera
                 <span className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)' }}>{f.scanner}</span>
                 <span className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)' }}>{f.category.replace('_', ' ')}</span>
                 <span className="ibm-caption tabular-nums" style={{ color: 'var(--ibm-ink-muted)', textAlign: 'right' }}>{f.confidence != null ? `${(f.confidence * 100).toFixed(0)}%` : '\u2014'}</span>
-                <CvssScore score={f.cvssScore ?? 0} compact />
+                <CvssScore score={f.cvssScore ?? 0} vector={f.cvssVector} compact />
                 <span className="ibm-caption" style={{ color: f.task ? 'var(--ibm-primary)' : 'var(--ibm-ink-subtle)', fontSize: 11 }}>
                   {f.task ? f.task.status : '\u2014'}
                 </span>
@@ -323,7 +324,7 @@ export default function FilterableFindingsTable({ findings, onRefresh }: Filtera
                       </div>
                     )}
                     {f.cvssScore != null && (
-                      <CvssScore score={f.cvssScore} />
+                      <CvssScore score={f.cvssScore} vector={f.cvssVector} />
                     )}
                     {f.codeSnippet && (
                       <div>
