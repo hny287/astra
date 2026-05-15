@@ -598,6 +598,9 @@ export default function LandingPageV2() {
 const PIPELINE_NODES = [
   { label: 'Clone', desc: 'Git clone to secure temp dir. Maps repo structure, languages, and entry points.' },
   { label: 'Discover', desc: 'AI-guided file prioritization. Ranks files by security relevance before scanning.' },
+  { label: 'Git Ingest', desc: 'Extracts commit history, contributor data, hotspot files, languages, and dependencies for AI context.' },
+  { label: 'Git Diagram', desc: 'Generates a Mermaid architecture diagram from repo structure for cross-file analysis.' },
+  { label: 'Tool Scan', desc: 'Runs Trivy and Gitleaks for SCA, IaC, and secret detection. Results enrich deep scan context.' },
   { label: 'Deep Scan', desc: 'Per-file AI analysis. Parallel batched vulnerability detection with exploit scoring.' },
   { label: 'Cross-File', desc: 'Business logic inference. Traces data flows across files to find systemic issues.' },
   { label: 'Aggregate', desc: 'SHA-256 deduplication. Merges and fingerprints findings across all scanner sources.' },

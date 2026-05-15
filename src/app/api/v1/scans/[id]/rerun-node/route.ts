@@ -7,13 +7,16 @@ import { requireAuth, requireScanOwnership, canWrite } from '@/lib/rbac';
 const NODE_TO_SCANNER: Record<string, string[]> = {
   clone: [],
   discover: ['ai-discover'],
+  git_ingest: [],
+  git_diagram: [],
+  tool_scan: ['trivy', 'gitleaks'],
   deep_scan: ['ai-layer-1'],
   cross_file: ['ai-layer-2'],
   aggregate: [],
   persist: [],
 };
 
-const VALID_NODES: NodeName[] = ['clone', 'discover', 'deep_scan', 'cross_file', 'aggregate', 'persist'];
+const VALID_NODES: NodeName[] = ['clone', 'discover', 'git_ingest', 'git_diagram', 'tool_scan', 'deep_scan', 'cross_file', 'aggregate', 'persist'];
 
 export async function POST(
   request: NextRequest,

@@ -59,6 +59,9 @@ interface ScanConfig {
 
 const SCAN_NODE_TABS = [
   { key: 'discover', label: 'Discover' },
+  { key: 'gitIngest', label: 'Git Ingest' },
+  { key: 'gitDiagram', label: 'Git Diagram' },
+  { key: 'toolScan', label: 'Tool Scan' },
   { key: 'deepScan', label: 'Deep Scan' },
   { key: 'crossFile', label: 'Cross-File' },
 ];

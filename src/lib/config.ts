@@ -25,7 +25,7 @@ export const nodeConfigSchema = z.object({
   scanDepth: z
     .enum(["quick", "standard", "deep", "exhaustive"])
     .default("standard"),
-  maxFileBytes: z.number().positive().default(51200),
+  maxFileBytes: z.number().positive().default(204800),
   maxOutputTokens: z.number().positive().default(4096),
   contextWindowOverride: z.number().nullable().default(null),
   instructions: z.string().default(""),
@@ -81,6 +81,9 @@ export const providerSchema = z.object({
 export const scanSchema = z.object({
   nodes: z.object({
     discover: nodeConfigSchema,
+    gitIngest: nodeConfigSchema,
+    gitDiagram: nodeConfigSchema,
+    toolScan: nodeConfigSchema,
     deepScan: nodeConfigSchema,
     crossFile: nodeConfigSchema,
   }),
@@ -127,6 +130,27 @@ export function loadConfig(path: string): ScanConfig {
 
 const CONFIG_DB_KEY_CONST = SCAN_CONFIG_DB_KEY;
 
+const DEFAULT_NODE_CONFIGS: Record<string, z.infer<typeof nodeConfigSchema>> = {
+  discover: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'low', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 2048, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 3, retryBackoffMs: 2000, timeoutMs: 60000, concurrency: 1 },
+  gitIngest: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'none', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 1024, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 2, retryBackoffMs: 1000, timeoutMs: 30000, concurrency: 1 },
+  gitDiagram: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.3, thinkingDepth: 'low', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 2048, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 2, retryBackoffMs: 1000, timeoutMs: 60000, concurrency: 1 },
+  toolScan: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'none', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 1024, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 2, retryBackoffMs: 1000, timeoutMs: 180000, concurrency: 1 },
+  deepScan: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'medium', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 4096, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 3, retryBackoffMs: 2000, timeoutMs: 120000, concurrency: 5 },
+  crossFile: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.3, thinkingDepth: 'medium', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 4096, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 3, retryBackoffMs: 2000, timeoutMs: 180000, concurrency: 1 },
+};
+
+function ensureNodeConfigs(config: Record<string, unknown>): Record<string, unknown> {
+  const scan = (config as any).scan ?? {};
+  const existingNodes = scan.nodes ?? {};
+  const nodes = { ...existingNodes };
+  for (const [key, defaults] of Object.entries(DEFAULT_NODE_CONFIGS)) {
+    if (!nodes[key]) {
+      nodes[key] = defaults;
+    }
+  }
+  return { ...config, scan: { ...scan, nodes } };
+}
+
 export async function loadConfigFromDb(): Promise<ScanConfig> {
   const { prisma } = await import("@/lib/db");
   const row = await prisma.config.findUnique({ where: { key: CONFIG_DB_KEY_CONST } });
@@ -141,7 +165,8 @@ export async function loadConfigFromDb(): Promise<ScanConfig> {
     await prisma.config.create({ data: { key: CONFIG_DB_KEY_CONST, value: config as any } });
     return config;
   }
-  return configSchema.parse(row.value);
+  const patched = ensureNodeConfigs(row.value as Record<string, unknown>);
+  return configSchema.parse(patched);
 }
 
 export async function saveConfigToDb(config: ScanConfig): Promise<void> {
@@ -159,6 +184,9 @@ export function mergeNodeOverrides(
   base: ScanConfig,
   overrides: {
     discover?: PartialNodeOverrides;
+    gitIngest?: PartialNodeOverrides;
+    gitDiagram?: PartialNodeOverrides;
+    toolScan?: PartialNodeOverrides;
     deepScan?: PartialNodeOverrides;
     crossFile?: PartialNodeOverrides;
   }
@@ -169,6 +197,9 @@ export function mergeNodeOverrides(
       ...base.scan,
       nodes: {
         discover: { ...base.scan.nodes.discover, ...overrides.discover },
+        gitIngest: { ...base.scan.nodes.gitIngest, ...overrides.gitIngest },
+        gitDiagram: { ...base.scan.nodes.gitDiagram, ...overrides.gitDiagram },
+        toolScan: { ...base.scan.nodes.toolScan, ...overrides.toolScan },
         deepScan: { ...base.scan.nodes.deepScan, ...overrides.deepScan },
         crossFile: { ...base.scan.nodes.crossFile, ...overrides.crossFile },
       },

@@ -152,6 +152,9 @@ export async function persistNode(state: ScanState): Promise<Partial<ScanState>>
         commitSha: state.commitSha || undefined,
         totalInputTokens: state.tokenUsage.input,
         totalOutputTokens: state.tokenUsage.output,
+        repoIntel: state.repoIntel ? (state.repoIntel as any) : undefined,
+        architectureDiagram: state.architectureDiagram || undefined,
+        toolFindingsCount: state.toolFindings?.length ?? 0,
       },
     });
 

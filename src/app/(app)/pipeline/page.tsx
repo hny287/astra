@@ -31,6 +31,9 @@ interface PipelineConfig {
   scan: {
     nodes: {
       discover: NodeConfig;
+      gitIngest: NodeConfig;
+      gitDiagram: NodeConfig;
+      toolScan: NodeConfig;
       deepScan: NodeConfig;
       crossFile: NodeConfig;
     };
@@ -49,6 +52,9 @@ interface PipelineConfig {
 const PIPELINE_NODES = [
   { id: 'clone', label: 'Clone', type: 'system', description: 'Git clone the target repository to a temp directory' },
   { id: 'discover', label: 'Discover', type: 'ai', description: 'AI-guided file discovery and prioritization' },
+  { id: 'git_ingest', label: 'Git Ingest', type: 'system', description: 'Extract git metadata: commits, contributors, hotspots, languages' },
+  { id: 'git_diagram', label: 'Git Diagram', type: 'system', description: 'Generate Mermaid architecture diagram from repo structure' },
+  { id: 'tool_scan', label: 'Tool Scan', type: 'system', description: 'Run Trivy and Gitleaks static analysis scanners' },
   { id: 'deep_scan', label: 'Deep Scan', type: 'ai', description: 'Per-file vulnerability analysis with AI' },
   { id: 'cross_file', label: 'Cross-File', type: 'ai', description: 'Cross-file business logic and data flow analysis' },
   { id: 'aggregate', label: 'Aggregate', type: 'system', description: 'Deduplicate and merge findings from all scanners' },
@@ -58,6 +64,9 @@ const PIPELINE_NODES = [
 const NODE_COLORS: Record<string, string> = {
   clone: 'var(--ibm-blue-50)',
   discover: 'var(--ibm-purple-50)',
+  git_ingest: 'var(--ibm-teal-50)',
+  git_diagram: 'var(--ibm-teal-50)',
+  tool_scan: 'var(--ibm-orange-50)',
   deep_scan: 'var(--ibm-semantic-error)',
   cross_file: 'var(--ibm-semantic-warning)',
   aggregate: 'var(--ibm-semantic-success)',
@@ -131,7 +140,7 @@ export default function PipelinePage() {
 
   const allModels = config ? Object.values(config.providers).flatMap(p => Object.keys(p.models)) : [];
 
-  const updateNodeConfig = (nodeKey: 'discover' | 'deepScan' | 'crossFile', newConfig: NodeConfig) => {
+  const updateNodeConfig = (nodeKey: keyof PipelineConfig['scan']['nodes'], newConfig: NodeConfig) => {
     if (!config) return;
     setConfig({
       ...config,
@@ -175,6 +184,9 @@ export default function PipelinePage() {
   const nodeConfigMap: Record<string, NodeConfig | null> = {
     clone: null,
     discover: config.scan.nodes.discover,
+    git_ingest: config.scan.nodes.gitIngest,
+    git_diagram: config.scan.nodes.gitDiagram,
+    tool_scan: config.scan.nodes.toolScan,
     deep_scan: config.scan.nodes.deepScan,
     cross_file: config.scan.nodes.crossFile,
     aggregate: null,
@@ -272,7 +284,7 @@ export default function PipelinePage() {
                   <NodeConfigEditor
                     nodeId={selectedNode}
                     config={nodeCfg}
-                    onChange={c => updateNodeConfig(selectedNode as 'discover' | 'deepScan' | 'crossFile', c)}
+                    onChange={c => updateNodeConfig(selectedNode as keyof PipelineConfig['scan']['nodes'], c)}
                     models={allModels}
                   />
                 ) : (

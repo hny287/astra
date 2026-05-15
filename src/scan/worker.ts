@@ -5,6 +5,9 @@ import { TEMP_DIR_PREFIX } from '@/lib/branding';
 import { claimNextJob, markJobComplete, markJobFailed, enqueueNextJob, markScanCompletedIfNeeded, markScanFailed, type NodeName } from './queue';
 import { cloneNode } from './nodes/clone';
 import { discoverNode } from './nodes/discover';
+import { gitIngestNode } from './nodes/git-ingest';
+import { gitDiagramNode } from './nodes/git-diagram';
+import { toolScanNode } from './nodes/tool-scan';
 import { deepScanNode } from './nodes/deep-scan';
 import { crossFileNode } from './nodes/cross-file';
 import { aggregateNode } from './nodes/aggregate';
@@ -14,6 +17,9 @@ import type { ScanState } from './state';
 const NODE_FNS: Record<string, (state: ScanState) => Promise<Partial<ScanState>>> = {
   clone: cloneNode,
   discover: discoverNode,
+  git_ingest: gitIngestNode,
+  git_diagram: gitDiagramNode,
+  tool_scan: toolScanNode,
   deep_scan: deepScanNode,
   cross_file: crossFileNode,
   aggregate: aggregateNode,
@@ -132,6 +138,9 @@ async function reconstructState(scanId: string, currentInput: Record<string, unk
     discoveredFiles: [],
     skippedFiles: [],
     totalFiles: 0,
+    repoIntel: null,
+    architectureDiagram: '',
+    toolFindings: [],
     findingsPerFile: {},
     fileSummaries: [],
     crossFileFindings: [],
@@ -165,6 +174,9 @@ function mergeStateFromOutput(state: ScanState, _node: string, output: Record<st
   if (output.discoveredFiles) state.discoveredFiles = output.discoveredFiles as any[];
   if (output.skippedFiles) state.skippedFiles = output.skippedFiles as string[];
   if (output.totalFiles) state.totalFiles = output.totalFiles as number;
+  if (output.repoIntel) state.repoIntel = output.repoIntel as ScanState['repoIntel'];
+  if (output.architectureDiagram) state.architectureDiagram = output.architectureDiagram as string;
+  if (output.toolFindings) state.toolFindings = output.toolFindings as any[];
   if (output.findingsPerFile) state.findingsPerFile = output.findingsPerFile as Record<string, any>;
   if (output.fileSummaries) state.fileSummaries = output.fileSummaries as any[];
   if (output.crossFileFindings) state.crossFileFindings = output.crossFileFindings as any[];

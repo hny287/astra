@@ -34,6 +34,9 @@ type NodePhase = 'pending' | 'running' | 'completed' | 'failed';
 const NODE_PIPELINE = [
   { id: 'clone', label: 'Clone', source: 'clone' },
   { id: 'discover', label: 'Discover', source: 'discover' },
+  { id: 'git_ingest', label: 'Git Ingest', source: 'git_ingest' },
+  { id: 'git_diagram', label: 'Git Diagram', source: 'git_diagram' },
+  { id: 'tool_scan', label: 'Tool Scan', source: 'tool_scan' },
   { id: 'deep_scan', label: 'Deep Scan', source: 'deep_scan' },
   { id: 'cross_file', label: 'Cross-File', source: 'cross_file' },
   { id: 'aggregate', label: 'Aggregate', source: 'aggregate' },

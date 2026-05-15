@@ -1,7 +1,7 @@
 import type { ScanState } from '../state';
 
 export async function aggregateNode(state: ScanState): Promise<Partial<ScanState>> {
-  const allFindings = [...state.allFindings, ...state.crossFileFindings];
+  const allFindings = [...state.allFindings, ...state.crossFileFindings, ...(state.toolFindings ?? [])];
 
   const seen = new Set<string>();
   const deduplicatedFindings = allFindings.filter(f => {

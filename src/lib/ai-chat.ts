@@ -5,6 +5,7 @@ import type { ScanConfig, ChatConfig } from './config';
 import { DEFAULT_SYSTEM_PROMPT } from './branding';
 import { instrumentedSend } from '@/lib/ai-instrumentation';
 import { loadPrompts } from '../scan/prompts/deep-scan';
+import { prisma } from '@/lib/db';
 
 let cachedProvider: AIProvider | null = null;
 let cachedConfigHash: string = '';
@@ -78,6 +79,29 @@ async function getChatProvider(override?: { provider?: string; model?: string })
   return { provider, chatConfig };
 }
 
+interface RepoIntel {
+  commitCount: number;
+  contributorCount: number;
+  branchCount: number;
+  languages: { language: string; percentage: number }[];
+  hotspotFiles: { path: string; changeCount: number }[];
+  dependencies: { name: string; type: string }[];
+  codeIntel?: CodeIntelSummary | null;
+}
+
+interface CodeIntelSummary {
+  files: number;
+  imports: number;
+  apiRoutes: number;
+  dataModels: number;
+  entryPoints: number;
+  deadExports: number;
+  callChains: number;
+  topApiRoutes: { method: string; path: string; handler: string }[];
+  topDataModels: { name: string; fields: number; relations: number }[];
+  topDeadExports: string[];
+}
+
 function buildSystemPrompt(
   chatConfig: ChatConfig,
   dbChatPrompt: string,
@@ -103,14 +127,54 @@ function buildSystemPrompt(
       cvssVector?: string | null;
       codeSnippet?: string | null;
     };
-  }
+  },
+  scanContext?: {
+    repoUrl: string;
+    repoIntel: RepoIntel | null;
+    architectureDiagram: string | null;
+  },
 ): string {
   const basePrompt = dbChatPrompt || chatConfig.systemPrompt || DEFAULT_SYSTEM_PROMPT;
 
-  if (!context?.finding) return basePrompt;
+  let prompt = basePrompt;
+
+  // Inject scan-level repo context
+  if (scanContext?.repoIntel) {
+    prompt += `\n\nYou are analyzing the repository: ${scanContext.repoUrl}`;
+    prompt += `\nRepository has ${scanContext.repoIntel.commitCount} commits, ${scanContext.repoIntel.contributorCount} contributors, ${scanContext.repoIntel.branchCount} branches`;
+    if (scanContext.repoIntel.languages.length > 0) {
+      prompt += `\nLanguages: ${scanContext.repoIntel.languages.map(l => `${l.language} (${l.percentage}%)`).join(', ')}`;
+    }
+    if (scanContext.repoIntel.hotspotFiles.length > 0) {
+      prompt += `\nHotspot files (most changed): ${scanContext.repoIntel.hotspotFiles.slice(0, 10).map(h => `${h.path} (${h.changeCount} changes)`).join(', ')}`;
+    }
+    if (scanContext.repoIntel.dependencies.length > 0) {
+      prompt += `\nDependencies: ${scanContext.repoIntel.dependencies.map(d => `${d.name} (${d.type})`).join(', ')}`;
+    }
+
+    // Inject CodeIntel summary
+    const ci = scanContext.repoIntel.codeIntel;
+    if (ci) {
+      prompt += `\n\nCode structure: ${ci.files} files, ${ci.entryPoints} entry points, ${ci.apiRoutes} API routes, ${ci.dataModels} data models, ${ci.deadExports} dead exports`;
+      if (ci.topApiRoutes.length > 0) {
+        prompt += `\nKey API routes: ${ci.topApiRoutes.slice(0, 10).map(r => `${r.method} ${r.path}`).join(', ')}`;
+      }
+      if (ci.topDataModels.length > 0) {
+        prompt += `\nData models: ${ci.topDataModels.slice(0, 10).map(m => `${m.name} (${m.fields} fields)`).join(', ')}`;
+      }
+      if (ci.topDeadExports.length > 0) {
+        prompt += `\nDead exports: ${ci.topDeadExports.slice(0, 10).join(', ')}`;
+      }
+    }
+  }
+  if (scanContext?.architectureDiagram) {
+    prompt += `\n\nArchitecture diagram:\n${scanContext.architectureDiagram}`;
+  }
+
+  if (!context?.finding) return prompt;
 
   const f = context.finding;
-  let prompt = `${basePrompt}\n\nYou are currently discussing a specific security finding:\n\n`;
+  prompt += `\n\nYou are currently discussing a specific security finding:\n\n`;
   prompt += `Finding: "${f.title}"\n`;
   prompt += `Severity: ${f.severity}\n`;
   prompt += `File: ${f.file}:${f.lineStart}-${f.lineEnd}\n`;
@@ -165,7 +229,49 @@ export async function sendChatMessage(
 ): Promise<{ text: string; inputTokens: number; outputTokens: number; durationMs: number }> {
   const { provider, chatConfig } = await getChatProvider(context?.modelOverride);
   const dbPrompts = await loadPrompts();
-  const systemPrompt = buildSystemPrompt(chatConfig, dbPrompts.chat, context);
+
+  // Fetch scan-level context when scanId is provided
+  let scanContext: { repoUrl: string; repoIntel: RepoIntel | null; architectureDiagram: string | null } | undefined;
+  if (context?.scanId) {
+    const scan = await prisma.scan.findUnique({
+      where: { id: context.scanId },
+      select: { repoUrl: true, repoIntel: true, architectureDiagram: true },
+    });
+    if (scan) {
+      const rawIntel = scan.repoIntel as any;
+      let codeIntelSummary: CodeIntelSummary | null = null;
+      if (rawIntel?.codeIntel) {
+        const ci = rawIntel.codeIntel;
+        codeIntelSummary = {
+          files: ci.files?.length ?? 0,
+          imports: ci.imports?.length ?? 0,
+          apiRoutes: ci.apiRoutes?.length ?? 0,
+          dataModels: ci.dataModels?.length ?? 0,
+          entryPoints: ci.entryPoints?.length ?? 0,
+          deadExports: ci.deadExports?.length ?? 0,
+          callChains: ci.callChains?.length ?? 0,
+          topApiRoutes: (ci.apiRoutes ?? []).slice(0, 10).map((r: any) => ({ method: r.method ?? 'ANY', path: r.path ?? '', handler: r.handler ?? '' })),
+          topDataModels: (ci.dataModels ?? []).slice(0, 10).map((m: any) => ({ name: m.name ?? '', fields: m.fields?.length ?? 0, relations: m.relations?.length ?? 0 })),
+          topDeadExports: (ci.deadExports ?? []).slice(0, 10),
+        };
+      }
+      scanContext = {
+        repoUrl: scan.repoUrl,
+        repoIntel: {
+          commitCount: rawIntel?.commitCount ?? 0,
+          contributorCount: rawIntel?.contributorCount ?? 0,
+          branchCount: rawIntel?.branchCount ?? 0,
+          languages: rawIntel?.languages ?? [],
+          hotspotFiles: rawIntel?.hotspotFiles ?? [],
+          dependencies: rawIntel?.dependencies ?? [],
+          codeIntel: codeIntelSummary,
+        },
+        architectureDiagram: scan.architectureDiagram,
+      };
+    }
+  }
+
+  const systemPrompt = buildSystemPrompt(chatConfig, dbPrompts.chat, context, scanContext);
 
   const messages: ChatMessage[] | undefined = context?.conversationHistory?.length
     ? [...context.conversationHistory, { role: 'user' as const, content: userMessage }]

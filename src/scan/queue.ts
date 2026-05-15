@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 
-const NODE_PIPELINE = ['clone', 'discover', 'deep_scan', 'cross_file', 'aggregate', 'persist'] as const;
+const NODE_PIPELINE = ['clone', 'discover', 'git_ingest', 'git_diagram', 'tool_scan', 'deep_scan', 'cross_file', 'aggregate', 'persist'] as const;
 
 export type NodeName = typeof NODE_PIPELINE[number];
 
