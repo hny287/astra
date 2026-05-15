@@ -86,6 +86,138 @@ function mapToBusinessRule(raw: any): BusinessLogicRule {
   };
 }
 
+function buildCrossFileUserPrompt(summariesText: string, state: ScanState): string {
+  let prompt = '';
+
+  // Inject repo intelligence if available
+  if (state.repoIntel) {
+    const ri = state.repoIntel;
+    prompt += `## Repository Intelligence\n`;
+    prompt += `- ${ri.commitCount} commits, ${ri.contributorCount} contributors, ${ri.branchCount} branches\n`;
+    if (ri.languages.length > 0) {
+      prompt += `- Languages: ${ri.languages.map(l => `${l.language} (${l.percentage}%)`).join(', ')}\n`;
+    }
+    if (ri.hotspotFiles.length > 0) {
+      prompt += `- Hotspot files (most changed):\n${ri.hotspotFiles.slice(0, 10).map(h => `  - ${h.path} (${h.changeCount} changes)`).join('\n')}\n`;
+    }
+    if (ri.dependencies.length > 0) {
+      prompt += `- Dependencies: ${ri.dependencies.map(d => `${d.name} (${d.type})`).join(', ')}\n`;
+    }
+    prompt += '\n';
+  }
+
+  // Inject full code intelligence
+  const ci = state.repoIntel?.codeIntel;
+  if (ci) {
+    prompt += `## Codebase Intelligence\n\n`;
+    prompt += `**Overview:** ${ci.files.length} files, ${ci.entryPoints.length} entry points, ${ci.apiRoutes.length} API routes, ${ci.dataModels.length} data models, ${ci.deadExports.length} dead exports, ${ci.callChains.length} call chains\n\n`;
+
+    // File map — role, exports count, imports count per file
+    prompt += `### File Map\n`;
+    const maxFiles = Math.min(ci.files.length, 200);
+    for (let i = 0; i < maxFiles; i++) {
+      const f = ci.files[i];
+      prompt += `- ${f.path} (${f.language}, ${f.role}, ${f.exports.length} exports, ${f.imports.length} imports)\n`;
+    }
+    if (ci.files.length > maxFiles) {
+      prompt += `- ... and ${ci.files.length - maxFiles} more files\n`;
+    }
+    prompt += '\n';
+
+    // Import graph — which files depend on which
+    if (ci.imports.length > 0) {
+      prompt += `### Import Graph\n`;
+      const maxEdges = Math.min(ci.imports.length, 150);
+      for (let i = 0; i < maxEdges; i++) {
+        const imp = ci.imports[i];
+        prompt += `- ${imp.from} → ${imp.to}`;
+        if (imp.symbols.length > 0 && imp.symbols.length <= 5) {
+          prompt += ` (${imp.symbols.join(', ')})`;
+        } else if (imp.symbols.length > 5) {
+          prompt += ` (${imp.symbols.slice(0, 5).join(', ')} +${imp.symbols.length - 5})`;
+        }
+        prompt += '\n';
+      }
+      if (ci.imports.length > maxEdges) {
+        prompt += `- ... and ${ci.imports.length - maxEdges} more import edges\n`;
+      }
+      prompt += '\n';
+    }
+
+    // API routes
+    if (ci.apiRoutes.length > 0) {
+      prompt += `### API Routes\n`;
+      for (const r of ci.apiRoutes) {
+        prompt += `- ${r.method} ${r.path} → ${r.handler}`;
+        if (r.middleware.length > 0) prompt += ` [${r.middleware.join(', ')}]`;
+        prompt += '\n';
+      }
+      prompt += '\n';
+    }
+
+    // Data models
+    if (ci.dataModels.length > 0) {
+      prompt += `### Data Models\n`;
+      for (const m of ci.dataModels) {
+        prompt += `- **${m.name}** (${m.fields.length} fields, ${m.relations.length} relations)\n`;
+        for (const f of m.fields.slice(0, 15)) {
+          prompt += `  - ${f.name}: ${f.type}${f.nullable ? '?' : ''}\n`;
+        }
+        if (m.fields.length > 15) prompt += `  - ... +${m.fields.length - 15} more fields\n`;
+        for (const r of m.relations) {
+          prompt += `  - ↔ ${r.name} → ${r.target} (${r.type})\n`;
+        }
+      }
+      prompt += '\n';
+    }
+
+    // Call chains (security-relevant)
+    if (ci.callChains.length > 0) {
+      prompt += `### Security-Relevant Call Chains\n`;
+      for (const c of ci.callChains) {
+        prompt += `- ${c.entry} → ${c.chain.join(' → ')} (risk: ${c.risk})\n`;
+      }
+      prompt += '\n';
+    }
+
+    // Dead exports
+    if (ci.deadExports.length > 0) {
+      prompt += `### Dead Exports\n`;
+      for (const d of ci.deadExports.slice(0, 30)) {
+        prompt += `- ${d}\n`;
+      }
+      if (ci.deadExports.length > 30) prompt += `- ... +${ci.deadExports.length - 30} more\n`;
+      prompt += '\n';
+    }
+  }
+
+  // Inject architecture diagram if available
+  if (state.architectureDiagram) {
+    prompt += `## Architecture Diagram\n\n${state.architectureDiagram}\n\n`;
+  }
+
+  // Inject tool scanner findings summary
+  if (state.toolFindings && state.toolFindings.length > 0) {
+    prompt += `## Known Findings from Static Analysis Tools\n`;
+    const byScanner: Record<string, number> = {};
+    const byFile: Record<string, string[]> = {};
+    for (const f of state.toolFindings) {
+      byScanner[f.scanner] = (byScanner[f.scanner] || 0) + 1;
+      const fileKey = f.file || '(unknown)';
+      if (!byFile[fileKey]) byFile[fileKey] = [];
+      byFile[fileKey].push(`[${f.scanner}] ${f.severity} ${f.category}: "${f.title}"`);
+    }
+    prompt += `Total: ${state.toolFindings.length} findings (${Object.entries(byScanner).map(([s, c]) => `${c} ${s}`).join(', ')})\n`;
+    for (const [file, findings] of Object.entries(byFile).slice(0, 30)) {
+      prompt += `- ${file}: ${findings.join('; ')}\n`;
+    }
+    prompt += `\nConsider these findings when analyzing cross-file vulnerabilities. Enrich or confirm them as appropriate.\n\n`;
+  }
+
+  prompt += `## File Summaries for Cross-File Analysis\n\n${summariesText}`;
+  return prompt;
+}
+
 export async function crossFileNode(state: ScanState): Promise<Partial<ScanState>> {
   const startTime = Date.now();
   const nodeConfig: NodeConfig = state.config.scan.nodes.crossFile;
@@ -123,7 +255,7 @@ Summary: ${s.summary}`;
     };
   }
 
-  const userPrompt = `File Summaries for Cross-File Analysis:\n\n${summariesText}`;
+  const userPrompt = buildCrossFileUserPrompt(summariesText, state);
 
   const request: AIRequest = {
     system: systemPrompt,

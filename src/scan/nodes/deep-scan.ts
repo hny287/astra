@@ -92,6 +92,118 @@ async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function buildFilePrompt(
+  filePath: string,
+  language: string,
+  content: string,
+  toolFindings: import('../../findings/types').UnifiedFinding[] | undefined,
+  repoIntel: ScanState['repoIntel'],
+  architectureDiagram: string | undefined,
+): string {
+  let prompt = `File: ${filePath}\nLanguage: ${language}`;
+
+  // Inject repo intelligence context
+  if (repoIntel) {
+    prompt += `\n\n## Repository Intelligence\n`;
+    prompt += `- ${repoIntel.commitCount} commits, ${repoIntel.contributorCount} contributors, ${repoIntel.branchCount} branches\n`;
+    if (repoIntel.languages.length > 0) {
+      prompt += `- Languages: ${repoIntel.languages.map(l => `${l.language} (${l.percentage}%)`).join(', ')}\n`;
+    }
+    if (repoIntel.hotspotFiles.length > 0) {
+      prompt += `- Hotspot files (most changed):\n${repoIntel.hotspotFiles.slice(0, 10).map(h => `  - ${h.path} (${h.changeCount} changes)`).join('\n')}\n`;
+    }
+    if (repoIntel.dependencies.length > 0) {
+      prompt += `- Dependencies: ${repoIntel.dependencies.map(d => `${d.name} (${d.type})`).join(', ')}\n`;
+    }
+  }
+
+  // Inject code intelligence (per-file context + direct dependencies)
+  const ci = repoIntel?.codeIntel;
+  if (ci) {
+    const thisFile = ci.files.find(f => f.path === filePath || filePath.endsWith(f.path));
+    const directImports = ci.imports.filter(imp => imp.from === filePath || filePath.endsWith(imp.from));
+
+    prompt += `\n\n## Codebase Intelligence\n`;
+    prompt += `- ${ci.files.length} files analyzed, ${ci.entryPoints.length} entry points, ${ci.apiRoutes.length} API routes, ${ci.dataModels.length} data models`;
+    if (ci.deadExports.length > 0) {
+      prompt += `, ${ci.deadExports.length} dead exports`;
+    }
+    prompt += `\n`;
+
+    // This file's role and exports
+    if (thisFile) {
+      prompt += `\n### This File\n`;
+      prompt += `- Role: ${thisFile.role}\n`;
+      if (thisFile.exports.length > 0) {
+        prompt += `- Exports: ${thisFile.exports.slice(0, 20).join(', ')}\n`;
+      }
+      if (thisFile.imports.length > 0) {
+        prompt += `- Imports:\n${thisFile.imports.slice(0, 15).map(i => `  - ${i.symbol} from '${i.from}'`).join('\n')}\n`;
+      }
+    }
+
+    // Direct dependency context — what this file imports
+    if (directImports.length > 0) {
+      prompt += `\n### Direct Dependencies\n`;
+      for (const imp of directImports.slice(0, 15)) {
+        const depFile = ci.files.find(f => f.path === imp.to || (imp.to && imp.to.endsWith(f.path)));
+        if (depFile && depFile.exports.length > 0) {
+          prompt += `- ${imp.to} → exports: ${depFile.exports.slice(0, 10).join(', ')}\n`;
+        }
+      }
+    }
+
+    // API routes reaching this file (security-relevant)
+    const reachingRoutes = ci.apiRoutes.filter(r =>
+      thisFile && (r.handler === filePath || r.handler === thisFile.path)
+    );
+    if (reachingRoutes.length > 0) {
+      prompt += `\n### API Routes Reaching This File\n`;
+      for (const r of reachingRoutes) {
+        prompt += `- ${r.method} ${r.path} → ${r.handler}\n`;
+      }
+    }
+
+    // Security-relevant call chains
+    const relevantChains = ci.callChains.filter(c =>
+      thisFile && (c.entry.includes(thisFile.path) || c.chain.some(s => s.includes(thisFile.path)))
+    );
+    if (relevantChains.length > 0) {
+      prompt += `\n### Security-Relevant Call Chains\n`;
+      for (const c of relevantChains.slice(0, 5)) {
+        prompt += `- ${c.entry} → ${c.chain.join(' → ')} (risk: ${c.risk})\n`;
+      }
+    }
+
+    // Data models (if this file relates to a model)
+    if (ci.dataModels.length > 0) {
+      prompt += `\n### Data Models\n`;
+      for (const m of ci.dataModels.slice(0, 10)) {
+        prompt += `- ${m.name} (${m.fields.length} fields, ${m.relations.length} relations)\n`;
+      }
+    }
+  }
+
+  // Inject architecture diagram
+  if (architectureDiagram) {
+    prompt += `\n\n## Architecture Diagram\n\n${architectureDiagram}\n`;
+  }
+
+  // Inject tool scanner findings for this file as context
+  const fileFindings = (toolFindings ?? []).filter(f => f.file && (f.file === filePath || f.file.endsWith('/' + filePath) || filePath.endsWith(f.file)));
+  if (fileFindings.length > 0) {
+    prompt += `\n\nKnown findings from static analysis tools:`;
+    for (const f of fileFindings.slice(0, 20)) {
+      prompt += `\n- [${f.scanner}] ${f.severity} ${f.category}: "${f.title}" (lines ${f.lineStart}-${f.lineEnd})`;
+      if (f.ruleId) prompt += ` — ${f.ruleId}`;
+    }
+    prompt += `\n\nConsider these findings when analyzing this file. Confirm, enrich, or add new findings as appropriate.`;
+  }
+
+  prompt += `\n\n\`\`\`${language}\n${content}\n\`\`\``;
+  return prompt;
+}
+
 export async function deepScanNode(state: ScanState): Promise<Partial<ScanState>> {
   const startTime = Date.now();
   const nodeConfig: NodeConfig = state.config.scan.nodes.deepScan;
@@ -135,6 +247,13 @@ export async function deepScanNode(state: ScanState): Promise<Partial<ScanState>
   }
 
   for (const batch of batches) {
+    // Check if scan was cancelled between batches
+    const scan = await prisma.scan.findUnique({ where: { id: state.scanId }, select: { status: true } });
+    if (scan?.status === 'FAILED') {
+      await log(state.scanId, 'warn', 'deep_scan', 'Scan cancelled, aborting remaining batches');
+      break;
+    }
+
     const batchIdx = batches.indexOf(batch) + 1;
     await log(state.scanId, 'info', 'deep_scan', `Batch ${batchIdx}/${batches.length} — scanning ${batch.length} files`);
 
@@ -158,7 +277,7 @@ export async function deepScanNode(state: ScanState): Promise<Partial<ScanState>
           return { findings: [], summary: null, error: `File too large for context: ${fileInfo.path} (${estimatedTokens} tokens)` };
         }
 
-        const userPrompt = `File: ${fileInfo.path}\nLanguage: ${fileInfo.language}\n\n\`\`\`${fileInfo.language}\n${content}\n\`\`\``;
+        const userPrompt = buildFilePrompt(fileInfo.path, fileInfo.language, content, state.toolFindings, state.repoIntel, state.architectureDiagram);
 
         const request: AIRequest = {
           system: systemPrompt,

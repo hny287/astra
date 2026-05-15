@@ -50,7 +50,7 @@ The platform is a closed-source, enterprise-grade application security scanning 
 - **API Routes:** `/api/v1/scans`, `/api/v1/findings`, `/api/v1/chat`, `/api/v1/config`, `/api/v1/providers`
 - **Key files:**
   - `astra-app/src/app/page.tsx` — Main dashboard
-  - `astra-app/src/scan/worker.ts` — Background job worker (clone → discover → deepScan → crossFile → aggregate → persist)
+  - `astra-app/src/scan/worker.ts` — Background job worker (clone → discover → gitIngest → gitDiagram → toolScan → deepScan → crossFile → aggregate → persist)
   - `astra-app/src/scan/queue.ts` — Job queue management
   - `astra-app/src/lib/ai-chat.ts` — Chat orchestration (multi-provider)
   - `astra-app/src/lib/config.ts` — Config schema + DB loader (`loadConfigFromDb`, `saveConfigToDb`)
@@ -116,7 +116,7 @@ interface BusinessLogicRule {
 Key models:
 - `Scan` — repo URL, branch, commit SHA, status (`PENDING` | `RUNNING` | `COMPLETED` | `FAILED`), config JSON
 - `Finding` — fingerprint, scanner, ruleId, title, severity, category, file, line range, code snippet, CWE, OWASP, AI explanation/fix
-- `Job` — pipeline node jobs (clone, discover, deep_scan, cross_file, aggregate, persist) with status/attempts/error
+- `Job` — pipeline node jobs (clone, discover, git_ingest, git_diagram, tool_scan, deep_scan, cross_file, aggregate, persist) with status/attempts/error
 - `AiConversation` — chat messages (user/assistant) with scan/finding/user context
 - `AiCallLog` — observability: every AI call logged with provider, model, tokens, latency, status, request/response
 - `Config` — DB-backed key-value config (`key` → JSON `value`). Uses `scan.config` key (see `SCAN_CONFIG_DB_KEY` in branding.ts)
@@ -297,6 +297,10 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 
 | Date | Change |
 |------|--------|
+| 2026-05-15 | v2.23.1: **Fix deep-scan crash on findings with undefined file path + architecture diagram visibility** — Trivy IAC misconfig findings had no Filename, producing file=undefined; deep-scan f.file.endsWith() crashed on every file, producing 0 AI findings; fixed null guards in deep-scan, cross-file, and tool-scan (fallback to Target when Filename is absent); Architecture tab now reads diagram from NodeOutput during in-progress scans; Pipeline tab renders Mermaid diagram inline for git_diagram node |
+| 2026-05-14 | v2.23.0: **DeepWiki-style code intelligence via @optave/codegraph** — git_ingest runs codegraph buildGraph() for AST-derived CodeIntel (per-file exports/imports/roles, import edges, API routes, data models, call chains, dead exports); git_diagram uses real codegraph Mermaid export; deep-scan/cross-file/chat prompts inject structured CodeIntel; Architecture tab shows Code Structure card; graceful fallback to git-only on failure; @optave/codegraph Apache-2.0 dependency added |
+| 2026-05-14 | v2.22.0: **Full pipeline visibility and AI context enrichment** — ScanProgress shows all 9 nodes (was 6); rerun-node API accepts git_ingest/git_diagram/tool_scan; deep-scan AI prompt now includes repoIntel + architectureDiagram (matches cross-file); scan-level AI chat injects repo context in system prompt; git_ingest/git_diagram/tool_scan create NodeOutput records (visible in Pipeline tab); Architecture tab renders Mermaid diagram visually; landing pages show all 9 pipeline steps |
+| 2026-05-14 | v2.21.0: **Pipeline expansion: git_ingest, git_diagram, tool_scan** — 9-node pipeline (clone → discover → git_ingest → git_diagram → tool_scan → deep_scan → cross_file → aggregate → persist); Trivy (SCA/IAC/Secrets) and Gitleaks (Secrets) run as subprocess nodes; repo metadata (commits, contributors, hotspots, languages) stored as repoIntel on Scan; Mermaid architecture diagram generated from repo structure; tool findings injected into deep_scan AI context; repoIntel + diagram injected into cross_file AI context; Architecture tab on scan detail page; fingerprint dedup now includes title |
 | 2026-05-14 | v2.20.0: **Bidirectional field sync + CVSS vector** — syncFindingFieldsToTask()/syncTaskFieldsToFinding() sync all rich fields bidirectionally; TaskDataTable matches AlertDetail; cvssVector field on Finding/Task stores CVSS v3.1 vector string; CvssScore component parses and displays vector metrics; AI pipeline generates cvssVector |
 | 2026-05-14 | v2.19.0: **Unified Tasks & Alerts** — ItemStatus enum replaces AlertStatus/TaskStatus; TaskPriority replaced by Severity; Task model gains rich scanner fields (codeSnippet, aiExplanation, aiFix, exploitationScenario, exploitScore, cvssScore, confidence, remediation, etc.); Finding.cvssScore added; Finding.scanId nullable for manual alerts; bidirectional status sync between linked Findings and Tasks; batch action changePriority → changeSeverity |
 | 2026-05-10 | v2.18.0: **Unified spec v5.0** — scan-graph section rebuilt as static Mermaid flowcharts (Data Plane + Control Plane) with 34-node reference table, replacing broken interactive SVG/JS; all 19 DFDs now render via Mermaid v11 CDN; spec/ directory added to file-tree glossary; changelog updated |
@@ -346,7 +350,7 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 - **Worker queue fairness** — `claimNextJob` picks oldest PENDING job globally, not per-scan. Stale jobs from FAILED scans can block new scans. Fix: filter by scan status in `claimNextJob` or add per-scan priority queue.
 - **Cloud Ollama timeouts (Error 524)** — Cloudflare 524 errors from `api.ohmyllama.com` cause deep_scan failures. Retry logic exists (3 retries) but 125s timeout still fails on large files.
 - **Streaming chat** — Design spec approved (`docs/superpowers/specs/2026-05-07-streaming-chat-design.md`), not yet implemented. Needs: `sendStream()` on all providers, 3 SSE endpoints, UI `ReadableStream` consumer.
-- **Semgrep installation** fails on Ubuntu with `externally-managed-environment` error.
+- **Semgrep installation** fails on Ubuntu with `externally-managed-environment` error. Trivy and Gitleaks are installed and integrated as pipeline nodes.
 - **Scanner Bandit and Checkov** are installed in Dockerfile but not yet called from `runAllScanners()`.
 - **Control Plane modules** (auth, policies, integrations, WebSocket) are designed but not fully implemented.
 - **End-to-end Docker test** not yet verified.
@@ -363,7 +367,10 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 | `astra-app/src/app/api/v1/config/route.ts` | Config GET/PUT (DB-backed) |
 | `astra-app/src/app/api/v1/providers/route.ts` | Provider registry listing |
 | `astra-app/src/app/api/v1/chat/route.ts` | Global chat API |
-| `astra-app/src/scan/worker.ts` | Background job worker (6-node pipeline) |
+| `astra-app/src/scan/worker.ts` | Background job worker (9-node pipeline) |
+| `astra-app/src/scan/nodes/git-ingest.ts` | Git metadata extraction (commits, contributors, hotspots, languages) |
+| `astra-app/src/scan/nodes/git-diagram.ts` | Mermaid architecture diagram generation |
+| `astra-app/src/scan/nodes/tool-scan.ts` | Trivy + Gitleaks runner and normalizer |
 | `astra-app/src/scan/queue.ts` | Job queue (claimNextJob, markJobFailed, etc.) |
 | `astra-app/src/lib/config.ts` | Zod config schema, `loadConfigFromDb`, `saveConfigToDb` |
 | `astra-app/src/lib/ai-chat.ts` | Chat orchestration (provider resolution, system prompt building) |

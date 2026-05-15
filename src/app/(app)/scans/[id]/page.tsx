@@ -10,6 +10,7 @@ import FilterableFindingsTable from '@/components/FilterableFindingsTable';
 import BusinessLogicPanel from '@/components/BusinessLogicPanel';
 import NodeOutputInspector from '@/components/NodeOutputInspector';
 import ExportPanel from '@/components/ExportPanel';
+import MermaidDiagram from '@/components/MermaidDiagram';
 import ScanChat from '@/components/ScanChat';
 import AiCallTable from '@/components/AiCallTable';
 
@@ -77,6 +78,18 @@ interface ScanData {
   findings: Finding[];
   businessRules: BusinessLogicRule[];
   nodeOutputs: NodeOutput[];
+  repoIntel: {
+    commitCount: number;
+    contributorCount: number;
+    branchCount: number;
+    recentCommits: { hash: string; author: string; date: string; message: string }[];
+    topContributors: { name: string; email: string; commitCount: number }[];
+    hotspotFiles: { path: string; changeCount: number }[];
+    languages: { language: string; fileCount: number; percentage: number }[];
+    dependencies: { name: string; version: string; type: string }[];
+  } | null;
+  architectureDiagram: string | null;
+  toolFindingsCount: number;
 }
 
 const STATUS_COLORS: Record<string, { dot: string; text: string }> = {
@@ -86,7 +99,7 @@ const STATUS_COLORS: Record<string, { dot: string; text: string }> = {
   FAILED: { dot: 'var(--ibm-semantic-error)', text: 'var(--ibm-semantic-error)' },
 };
 
-type Tab = 'overview' | 'findings' | 'files' | 'rules' | 'nodes' | 'chat' | 'logs';
+type Tab = 'overview' | 'findings' | 'files' | 'architecture' | 'rules' | 'nodes' | 'chat' | 'logs';
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -105,7 +118,7 @@ export default function ScanDetailPage() {
   const initialTab = (searchParams?.get('tab') ?? 'overview') as Tab;
   const [scan, setScan] = useState<ScanData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<Tab>(['overview', 'findings', 'files', 'rules', 'nodes', 'chat', 'logs'].includes(initialTab) ? initialTab : 'overview');
+  const [activeTab, setActiveTab] = useState<Tab>(['overview', 'findings', 'files', 'architecture', 'rules', 'nodes', 'chat', 'logs'].includes(initialTab) ? initialTab : 'overview');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const fetchScan = useCallback(async () => {
@@ -144,6 +157,7 @@ export default function ScanDetailPage() {
     { id: 'overview', label: 'Overview' },
     { id: 'findings', label: 'Alerts', count: scan.findings.length },
     { id: 'files', label: 'Files' },
+    { id: 'architecture', label: 'Architecture' },
     { id: 'rules', label: 'Rules', count: scan.businessRules.length },
     { id: 'nodes', label: 'Pipeline' },
     { id: 'chat' as Tab, label: 'Chat' },
@@ -289,6 +303,137 @@ export default function ScanDetailPage() {
       {activeTab === 'files' && (
         <div style={{ border: '1px solid var(--ibm-hairline)' }}>
           <FileExplorer findings={scan.findings.map(f => ({ file: f.file, severity: f.severity, title: f.title, lineStart: f.lineStart }))} />
+        </div>
+      )}
+
+      {activeTab === 'architecture' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Repo Intel */}
+          {scan.repoIntel && (
+            <div style={{ padding: 24, background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)' }}>
+              <p className="ibm-eyebrow" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 16 }}>Repository Intelligence</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
+                <div>
+                  <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4 }}>Commits</div>
+                  <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{scan.repoIntel.commitCount}</div>
+                </div>
+                <div>
+                  <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4 }}>Contributors</div>
+                  <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{scan.repoIntel.contributorCount}</div>
+                </div>
+                <div>
+                  <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4 }}>Branches</div>
+                  <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{scan.repoIntel.branchCount}</div>
+                </div>
+                <div>
+                  <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4 }}>Tool Findings</div>
+                  <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{scan.toolFindingsCount}</div>
+                </div>
+              </div>
+              {/* Code Structure (from codegraph) */}
+              {(scan.repoIntel as any)?.codeIntel && (
+                <div style={{ marginTop: 16, padding: 16, background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)' }}>
+                  <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 8 }}>Code Structure</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+                    <div>
+                      <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 2 }}>Analyzed Files</div>
+                      <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{(scan.repoIntel as any).codeIntel.files?.length ?? 0}</div>
+                    </div>
+                    <div>
+                      <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 2 }}>Import Edges</div>
+                      <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{(scan.repoIntel as any).codeIntel.imports?.length ?? 0}</div>
+                    </div>
+                    <div>
+                      <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 2 }}>API Routes</div>
+                      <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{(scan.repoIntel as any).codeIntel.apiRoutes?.length ?? 0}</div>
+                    </div>
+                    <div>
+                      <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 2 }}>Data Models</div>
+                      <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{(scan.repoIntel as any).codeIntel.dataModels?.length ?? 0}</div>
+                    </div>
+                    <div>
+                      <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 2 }}>Entry Points</div>
+                      <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{(scan.repoIntel as any).codeIntel.entryPoints?.length ?? 0}</div>
+                    </div>
+                    <div>
+                      <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 2 }}>Dead Exports</div>
+                      <div className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{(scan.repoIntel as any).codeIntel.deadExports?.length ?? 0}</div>
+                    </div>
+                  </div>
+                  {((scan.repoIntel as any).codeIntel.apiRoutes?.length > 0) && (
+                    <div style={{ marginTop: 12 }}>
+                      <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4 }}>API Routes</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {(scan.repoIntel as any).codeIntel.apiRoutes.slice(0, 20).map((r: any, i: number) => (
+                          <span key={i} style={{ padding: '2px 8px', background: 'var(--ibm-surface-2)', fontSize: 12, borderRadius: 2 }}>
+                            {r.method} {r.path}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {((scan.repoIntel as any).codeIntel.dataModels?.length > 0) && (
+                    <div style={{ marginTop: 12 }}>
+                      <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4 }}>Data Models</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {(scan.repoIntel as any).codeIntel.dataModels.slice(0, 15).map((m: any, i: number) => (
+                          <span key={i} style={{ padding: '2px 8px', background: 'var(--ibm-surface-2)', fontSize: 12, borderRadius: 2 }}>
+                            {m.name} ({m.fields?.length ?? '?'} fields)
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {scan.repoIntel.languages.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 8 }}>Languages</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    {scan.repoIntel.languages.map(l => (
+                      <span key={l.language} style={{ padding: '4px 12px', background: 'var(--ibm-surface-2)', fontSize: 13, borderRadius: 2 }}>
+                        {l.language} <span style={{ color: 'var(--ibm-ink-muted)' }}>{l.percentage}%</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {scan.repoIntel.topContributors.length > 0 && (
+                <div style={{ marginBottom: 16 }}>
+                  <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 8 }}>Top Contributors</div>
+                  {scan.repoIntel.topContributors.slice(0, 5).map(c => (
+                    <div key={c.email} className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', marginBottom: 4 }}>
+                      {c.name} <span style={{ color: 'var(--ibm-ink-muted)' }}>({c.commitCount} commits)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {scan.repoIntel.hotspotFiles.length > 0 && (
+                <div>
+                  <div className="ibm-caption" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 8 }}>Hotspot Files</div>
+                  {scan.repoIntel.hotspotFiles.slice(0, 10).map(h => (
+                    <div key={h.path} className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', marginBottom: 4 }}>
+                      {h.path} <span style={{ color: 'var(--ibm-ink-muted)' }}>({h.changeCount} changes)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {/* Architecture Diagram */}
+          {(() => {
+            const diagram = scan.architectureDiagram || (scan.nodeOutputs?.find(n => n.node === 'git_diagram')?.outputJson as any)?.diagram;
+            return diagram ? (
+              <div style={{ padding: 24, background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)' }}>
+                <p className="ibm-eyebrow" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 16 }}>Architecture Diagram</p>
+                <MermaidDiagram chart={diagram} />
+              </div>
+            ) : (
+              <div style={{ padding: 24, background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)' }}>
+                <p className="ibm-body" style={{ color: 'var(--ibm-ink-muted)' }}>No architecture diagram available. Run a scan to generate one.</p>
+              </div>
+            );
+          })()}
         </div>
       )}
 

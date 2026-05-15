@@ -11,6 +11,96 @@ export interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.23.1',
+    date: '2026-05-15',
+    title: 'Fix deep-scan crash on findings with undefined file path; show architecture diagram in Pipeline and during in-progress scans',
+    description: 'Trivy IAC misconfiguration findings (Dockerfile checks) had no Filename field, producing findings with file=undefined. Deep-scan called f.file.endsWith() on these, crashing every file in the AI analysis batch. Cross-file summary had the same issue. Additionally, the architecture diagram was invisible during in-progress scans (only saved at persist time) and the Pipeline tab showed raw JSON metadata instead of the rendered Mermaid diagram.',
+    categories: [
+      { label: 'Fixed', items: [
+        'deep-scan: f.file.endsWith() crash on undefined file — 0 AI findings produced when Trivy IAC findings had no Filename',
+        'tool-scan: normalizeTrivyMisconfig and normalizeTrivySecret now fall back to result.Target when Filename is empty/undefined',
+        'cross-file: byFile grouping now handles undefined f.file with fallback key "(unknown)"',
+        'deep-scan: imp.to.endsWith() guarded against undefined import target',
+      ]},
+      { label: 'Improved', items: [
+        'Architecture tab reads diagram from NodeOutput as fallback when Scan.architectureDiagram is not yet persisted',
+        'Pipeline tab renders Mermaid diagram inline for git_diagram node instead of showing raw JSON metadata',
+        'git_diagram NodeOutput now includes the full Mermaid diagram string in outputJson.diagram',
+      ]},
+    ],
+  },
+  {
+    version: '2.23.0',
+    date: '2026-05-14',
+    title: 'DeepWiki-style code intelligence via @optave/codegraph',
+    description: 'git_ingest now runs @optave/codegraph to build a real AST-derived dependency graph of the scanned repo. The CodeIntel data structure replaces heuristic classification with actual function signatures, import/export graphs, API routes, data models, call chains, and dead export detection. git_diagram now exports a real Mermaid diagram from codegraph instead of path-based heuristics. Deep-scan, cross-file, and AI chat prompts all inject structured CodeIntel context.',
+    categories: [
+      { label: 'New', items: [
+        'CodeIntel data structure — per-file roles, exports, imports, functions, classes; import edges; API routes; data models; entry points; dead exports; call chains',
+        'git_ingest runs @optave/codegraph buildGraph() after git CLI commands, extracts structured code intelligence, falls back to git-only on failure',
+        'git_diagram uses codegraph exportMermaid() for real dependency diagrams with heuristic fallback',
+        'Deep-scan prompt injects per-file CodeIntel context: role, exports, direct dependencies, API routes, security-relevant call chains, data models',
+        'Cross-file prompt injects full CodeIntel: file map, import graph, API routes, data models, call chains, dead exports',
+        'AI chat injects CodeIntel summary: file count, API routes, data models, dead exports',
+        'Architecture tab shows Code Structure card with analyzed files, import edges, API routes, data models, entry points, dead exports',
+        '@optave/codegraph dependency (Apache-2.0, 34 languages, tree-sitter)',
+      ]},
+      { label: 'Improved', items: [
+        'RepoIntel extended with codeIntel field containing full CodeIntel structure (stored in existing Scan.repoIntel JSON column — no migration needed)',
+        'git_ingest NodeOutput now shows codegraph summary: files, imports, API routes, data models, entry points, dead exports',
+        'git_diagram NodeOutput shows diagramSource field: "codegraph" or "heuristic"',
+        'Graceful degradation: if codegraph fails or is not installed, the system falls back to git-only intelligence and heuristic diagrams',
+      ]},
+    ],
+  },
+  {
+    version: '2.22.0',
+    date: '2026-05-14',
+    title: 'Full pipeline visibility and AI context enrichment',
+    description: 'ScanProgress and rerun-node API now show all 9 pipeline nodes (was 6, missing git_ingest, git_diagram, tool_scan). Deep-scan AI prompt now includes repoIntel and architectureDiagram context — same context that cross-file already had. Scan-level AI chat now includes repository intelligence in system prompt.',
+    categories: [
+      { label: 'Fixed', items: [
+        'ScanProgress shows all 9 pipeline nodes — git_ingest, git_diagram, and tool_scan were missing from the UI progress component',
+        'Progress bar now computes against 9 nodes instead of 6, reaching 100% only when all nodes complete',
+        'rerun-node API accepts git_ingest, git_diagram, and tool_scan — was rejecting these with 400 invalid node',
+        'Landing page pipeline visualization includes all 9 nodes with descriptions',
+      ]},
+      { label: 'Improved', items: [
+        'Deep-scan AI prompt now receives repoIntel (commit count, contributors, hotspot files, languages, dependencies) and architectureDiagram as context — matches cross-file behavior',
+        'Scan-level AI chat (when scanId is present without findingId) now injects repository intelligence and architecture diagram into system prompt',
+        'Rerun-node API maps tool_scan to trivy + gitleaks scanner cleanup for proper re-analysis',
+        'git_ingest, git_diagram, and tool_scan nodes now create NodeOutput records — visible in Pipeline tab with summary metrics',
+        'Architecture tab renders Mermaid diagram visually instead of raw text (with View Source toggle)',
+        'Added mermaid package dependency for client-side diagram rendering',
+      ]},
+    ],
+  },
+  {
+    version: '2.21.0',
+    date: '2026-05-14',
+    title: 'Pipeline expansion: git_ingest, git_diagram, tool_scan nodes',
+    description: 'Added three new pipeline nodes before deep_scan: git_ingest (repo metadata extraction), git_diagram (Mermaid architecture diagram generation), and tool_scan (Trivy + Gitleaks static analysis). Tool findings feed into deep_scan as AI context. Repo intel and architecture diagram feed into cross_file. Pipeline is now 9 nodes: clone → discover → git_ingest → git_diagram → tool_scan → deep_scan → cross_file → aggregate → persist.',
+    categories: [
+      { label: 'New', items: [
+        'git_ingest node — extracts commit history, contributors, hotspot files, language breakdown, dependencies from cloned repo',
+        'git_diagram node — generates Mermaid architecture diagram from repo structure and repo intel',
+        'tool_scan node — runs Trivy (SCA/IAC/Secrets) and Gitleaks (Secrets) as subprocesses, normalizes output to UnifiedFinding[]',
+        'RepoIntel stored on Scan model (repoIntel JSON column) — contributors, hotspots, languages, dependencies',
+        'architectureDiagram stored on Scan model (TEXT column) — Mermaid syntax diagram',
+        'toolFindingsCount stored on Scan model (INT column) — quick count for UI',
+        'Architecture tab on scan detail page — shows repo intel metrics, contributors, hotspot files, and Mermaid diagram',
+        'Tool findings injected into deep_scan per-file AI prompt as "Known findings from static analysis tools"',
+        'Repo intel and architecture diagram injected into cross_file AI prompt as context',
+        'Fingerprint dedup now includes title to prevent multiple findings per file from being collapsed into one',
+      ]},
+      { label: 'Improved', items: [
+        'Pipeline expanded from 6 to 9 nodes with new pre-AI analysis stages',
+        'aggregate node now merges allFindings + crossFileFindings + toolFindings before deduplication',
+        'Scan detail page API returns repoIntel, architectureDiagram, and toolFindingsCount',
+      ]},
+    ],
+  },
+  {
     version: '2.20.0',
     date: '2026-05-14',
     title: 'Bidirectional field sync between Tasks & Alerts',

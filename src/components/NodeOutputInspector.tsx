@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import MermaidDiagram from './MermaidDiagram';
 
 interface NodeOutput {
   id: string;
@@ -100,10 +101,16 @@ export default function NodeOutputInspector({ outputs, scanId, onRerun }: NodeOu
                       <p className="ibm-body-sm" style={{ color: 'var(--ibm-semantic-error)' }}>Error: {output.error}</p>
                     </div>
                   )}
+                  {output.node === 'git_diagram' && (output.outputJson as any)?.diagram && (
+                    <div style={{ marginTop: 12 }}>
+                      <p className="ibm-caption" style={{ color: 'var(--ibm-ink-subtle)', marginBottom: 8 }}>Architecture Diagram</p>
+                      <MermaidDiagram chart={(output.outputJson as any).diagram} />
+                    </div>
+                  )}
                   {[
                     { label: 'Node config', data: output.nodeConfig },
                     { label: 'Input', data: output.inputJson },
-                    { label: 'Output', data: output.outputJson },
+                    { label: 'Output', data: output.node === 'git_diagram' ? (() => { const { diagram: _, ...rest } = output.outputJson as any; return rest; })() : output.outputJson },
                   ].map(item => (
                     <details key={item.label}>
                       <summary className="ibm-caption" style={{ color: 'var(--ibm-primary)', cursor: 'pointer', fontWeight: 600 }}>{item.label}</summary>
