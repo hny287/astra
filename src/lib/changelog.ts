@@ -11,6 +11,29 @@ export interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.28.1',
+    date: '2026-05-16',
+    title: 'Frontpage Carbon redesign',
+    description: 'Reworked all 14 landing page components to use IBM Carbon design system (--ibm-* tokens, ibm-* typography), added @carbon/charts data visualizations, improved content quality, replaced Competition narrative cards with feature comparison table.',
+    categories: [
+      {
+        label: 'Landing page',
+        items: [
+          'Replaced custom dark theme tokens with IBM Carbon design tokens (--ibm-*)',
+          'Replaced sectionStyles with ibm-* typography classes',
+          'Added @carbon/charts: SeverityDonutChart, CategoryBarChart, RemediationComparisonChart, FalsePositiveBarChart',
+          'Competition section: feature comparison table (Astra vs Snyk vs Semgrep vs CodeRabbit)',
+          'OutcomesKpis: added SeverityDonutChart + CategoryBarChart alongside KPI counters',
+          'FeatureBreakdown: added FalsePositiveBarChart',
+          'All borderRadius set to 0 (Carbon sharp aesthetic)',
+          'Theme-aware: respects light/dark mode via --ibm-* CSS variables',
+          'Deleted landingStyles.ts — all styling now via CSS custom properties',
+          'Improved data quality in landingData.ts and demoData.ts',
+        ],
+      },
+    ],
+  },
+  {
     version: '2.28.0',
     date: '2026-05-16',
     title: 'Frontpage redesign',
