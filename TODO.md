@@ -1,7 +1,7 @@
 # Platform — Task Tracker
 
 **Created:** 2026-05-07
-**Updated:** 2026-05-15
+**Updated:** 2026-05-16
 
 ---
 
@@ -115,7 +115,7 @@
 | 78 | **DB-backed prompt management** — retrieve all system prompts (discover, deepScan, crossFile, chat) from DB; UI to edit/version/restore prompts per node | ⚪ | 0m | | Store prompts in Config table under `prompts.*` keys; fall back to hardcoded defaults; every AI call reads from DB, not code |
 | 79 | **Astra-app file system glossary** — complete catalogue of every file in `astra-app/src/`: purpose, exported functions/types, API routes mapped, DB tables touched, providers used | 🟢 | 0m | | Auto-generated + hand-curated; rendered as searchable page in UI and as `docs/glossary/astra-app-files.md`; updated on each code change |
 | 80 | **DB-first context loading for all AI calls** — every AI call (chat, deepScan, crossFile) must load its context (finding, scan, conversation history, config, prompts) from DB; no in-memory shortcuts | ⚪ | 0m | | Audit all `sendChatMessage`/node calls; replace any in-memory state with fresh DB queries; fixes chat memory (task 17) |
-| 112 | **Wire DB rules into AI prompts** — `UserRule` (active) + `BusinessLogicRule` (confirmed) + `guidelines/*.md` never reach AI; only filesystem `patterns/*.json` does | ⚪ | 0m | | Load from DB in deepScanNode, crossFileNode, sendChatMessage; inject alongside patterns; respect isActive/status filters |
+| 112 | **Wire DB rules into AI prompts** — `UserRule` (active) + `BusinessLogicRule` (confirmed) + `guidelines/*.md` never reach AI; only filesystem `patterns/*.json` does | 🟢 | 0m | | COMPLETED v2.26.0: loadRulesForContext() loads UserRule + BusinessLogicRule + patterns + guidelines, injects into deepScan/crossFile/chat with token budget |
 
 ---
 
@@ -201,6 +201,10 @@
 | 105t | AI-enriched tool findings | ✅ 2026-05-15 | 20m | Trivy/Gitleaks findings sent to AI for enrichment (aiExplanation, aiFix, exploitScore, etc.) before storage |
 | 106t | Shared findings/persist.ts + findings/normalize.ts | ✅ 2026-05-15 | 10m | Shared upsertFinding() helper and normalizeSeverity/normalizeCategory extracted from persist.ts |
 | 107t | Persist node refactored | ✅ 2026-05-15 | 10m | No longer creates Finding records; only creates Tasks, BusinessRules, and updates scan metadata |
+| 112 | Wire DB rules into AI prompts | ✅ 2026-05-16 | 0m | loadRulesForContext() + formatter.ts; injected into deepScan/crossFile/chat with token budget; Rules page UI |
+| 108t | Rules page UI redesign — card layout, fix category/SLA/modal bugs | ✅ 2026-05-16 | 30m | Type filter chips, search, colored type badges, left-border cards, section headers, widened modal |
+| 109t | Password management — self-service change + admin reset | ✅ 2026-05-16 | 20m | PATCH /auth/me (self-service), PATCH /users/[id] (admin reset), Change Password card, Reset PW modal |
+| 110t | Knowledge page — unified spec link on Specs tab | ✅ 2026-05-16 | 5m | LinkCard component in FileBrowserSection sidebar; opens /unified-spec.html in new tab |
 
 ---
 
