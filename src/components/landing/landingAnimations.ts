@@ -5,7 +5,6 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { landingTokens } from './landingStyles';
 
 export function useVisible(threshold = 0.15): { ref: React.RefObject<HTMLDivElement | null>; visible: boolean } {
   const ref = useRef<HTMLDivElement>(null);
@@ -76,8 +75,7 @@ export const landingKeyframes = `
   50% { box-shadow: 0 0 16px 4px rgba(15, 98, 254, 0.3); }
 }
 
-/* Note: lpGlow rgba values match landingTokens.accentPrimary (#0f62fe = rgb(15,98,254)).
-   Kept as rgba() for alpha channel support in box-shadow. */
+/* lpGlow rgba values match #0f62fe (Carbon blue-60). Kept as rgba() for alpha channel. */
 
 @keyframes lpType {
   from { width: 0; }
@@ -85,7 +83,7 @@ export const landingKeyframes = `
 }
 
 @keyframes lpNodeLight {
-  0% { border-color: ${landingTokens.borderSubtle}; }
-  100% { border-color: ${landingTokens.accentPrimary}; }
+  0% { border-color: #393939; }
+  100% { border-color: #0f62fe; }
 }
 `;
