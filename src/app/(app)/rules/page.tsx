@@ -15,7 +15,6 @@ interface UserRule {
   scanId: string | null;
   createdAt: string;
   updatedAt: string;
-  // New fields
   type: string;
   scope: string;
   repoUrl: string | null;
@@ -46,26 +45,21 @@ interface BusinessLogicRule {
   createdAt: string;
 }
 
-const SEVERITY_STYLES: Record<string, { color: string; border: string }> = {
-  CRITICAL: { color: 'var(--ibm-semantic-error)', border: 'var(--ibm-red-50)' },
-  HIGH: { color: 'var(--ibm-semantic-error)', border: 'var(--ibm-semantic-warning)' },
-  MEDIUM: { color: 'var(--ibm-semantic-warning)', border: 'var(--ibm-yellow-50)' },
-  LOW: { color: 'var(--ibm-semantic-success)', border: 'var(--ibm-green-40)' },
-  INFO: { color: 'var(--ibm-primary)', border: 'var(--ibm-blue-50)' },
+const CATEGORIES = ['SAST', 'SCA', 'SECRETS', 'IAC', 'DATA_FLOW', 'BUSINESS_LOGIC'] as const;
+
+const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
+  SECURITY: { label: 'Security', color: '#DA1E28', bg: '#FFF1F1', icon: '🛡' },
+  COMPLIANCE: { label: 'Compliance', color: '#0F62FE', bg: '#EDF5FF', icon: '📋' },
+  SLA: { label: 'SLA', color: '#F1C121', bg: '#FFF9DB', icon: '⏱' },
+  BUSINESS_LOGIC: { label: 'Biz Logic', color: '#24A137', bg: '#F0FFF0', icon: '⚙' },
 };
 
-const TYPE_STYLES: Record<string, { color: string; bg: string }> = {
-  SECURITY: { color: 'var(--ibm-semantic-error)', bg: 'rgba(218,30,40,0.08)' },
-  COMPLIANCE: { color: 'var(--ibm-primary)', bg: 'rgba(15,98,254,0.08)' },
-  SLA: { color: 'var(--ibm-semantic-warning)', bg: 'rgba(241,194,27,0.08)' },
-  BUSINESS_LOGIC: { color: 'var(--ibm-semantic-success)', bg: 'rgba(36,161,72,0.08)' },
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  SECURITY: 'Security',
-  COMPLIANCE: 'Compliance',
-  SLA: 'SLA',
-  BUSINESS_LOGIC: 'Biz Logic',
+const SEV_CONFIG: Record<string, { color: string; bg: string }> = {
+  CRITICAL: { color: '#FFFFFF', bg: '#DA1E28' },
+  HIGH: { color: '#FFFFFF', bg: '#EE5A6A' },
+  MEDIUM: { color: '#1D1D1D', bg: '#F1C121' },
+  LOW: { color: '#1D1D1D', bg: '#A7AEAF' },
+  INFO: { color: '#FFFFFF', bg: '#0F62FE' },
 };
 
 const STATUS_COLORS: Record<string, { color: string; border: string }> = {
@@ -74,26 +68,10 @@ const STATUS_COLORS: Record<string, { color: string; border: string }> = {
   REJECTED: { color: 'var(--ibm-semantic-error)', border: 'var(--ibm-semantic-error)' },
 };
 
-type Tab = 'global' | 'ai-inferred';
-
-function SeverityTag({ severity }: { severity: string }) {
-  const s = severity in SEVERITY_STYLES ? severity : 'INFO';
-  const style = SEVERITY_STYLES[s];
-  return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center',
-      fontSize: '12px', fontWeight: 600, letterSpacing: '0.32px', textTransform: 'uppercase',
-      padding: '2px 8px', borderLeft: `3px solid ${style.border}`, color: style.color,
-    }}>
-      {s}
-    </span>
-  );
-}
-
-const INPUT_STYLE: React.CSSProperties = {
+const INPUT: React.CSSProperties = {
   background: 'var(--ibm-canvas)',
   border: '1px solid var(--ibm-hairline)',
-  padding: '11px 16px',
+  padding: '10px 14px',
   fontSize: '14px',
   color: 'var(--ibm-ink)',
   fontFamily: "'IBM Plex Sans', sans-serif",
@@ -101,16 +79,72 @@ const INPUT_STYLE: React.CSSProperties = {
   lineHeight: 1.29,
   width: '100%',
   outline: 'none',
+  borderRadius: 0,
+  boxSizing: 'border-box',
 };
 
-const SELECT_STYLE: React.CSSProperties = {
-  ...INPUT_STYLE,
+const SELECT: React.CSSProperties = {
+  ...INPUT,
   appearance: 'none',
   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23525252'/%3E%3C/svg%3E")`,
   backgroundRepeat: 'no-repeat',
-  backgroundPosition: 'right 16px center',
-  paddingRight: 40,
+  backgroundPosition: 'right 14px center',
+  paddingRight: 36,
 };
+
+const LABEL: React.CSSProperties = {
+  display: 'block',
+  fontSize: '12px',
+  fontWeight: 600,
+  letterSpacing: '0.32px',
+  color: 'var(--ibm-ink-muted)',
+  marginBottom: 4,
+  fontFamily: "'IBM Plex Sans', sans-serif",
+};
+
+const SECTION_HEADER: React.CSSProperties = {
+  fontSize: '13px',
+  fontWeight: 600,
+  letterSpacing: '0.48px',
+  textTransform: 'uppercase' as const,
+  color: 'var(--ibm-ink-muted)',
+  marginTop: 0,
+  marginBottom: 12,
+  paddingBottom: 8,
+  borderBottom: '1px solid var(--ibm-hairline)',
+};
+
+type Tab = 'global' | 'ai-inferred';
+type TypeFilter = 'ALL' | 'SECURITY' | 'COMPLIANCE' | 'SLA' | 'BUSINESS_LOGIC';
+
+function TypeBadge({ type }: { type: string }) {
+  const cfg = TYPE_CONFIG[type] ?? TYPE_CONFIG.SECURITY;
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      fontSize: '11px', fontWeight: 600, letterSpacing: '0.48px', textTransform: 'uppercase',
+      padding: '3px 10px', borderRadius: 0,
+      background: cfg.bg, color: cfg.color,
+      borderLeft: `3px solid ${cfg.color}`,
+    }}>
+      <span style={{ fontSize: 12 }}>{cfg.icon}</span>
+      {cfg.label}
+    </span>
+  );
+}
+
+function SevBadge({ severity }: { severity: string }) {
+  const cfg = SEV_CONFIG[severity] ?? SEV_CONFIG.INFO;
+  return (
+    <span style={{
+      fontSize: '11px', fontWeight: 600, letterSpacing: '0.48px', textTransform: 'uppercase',
+      padding: '3px 10px', borderRadius: 0,
+      background: cfg.bg, color: cfg.color,
+    }}>
+      {severity}
+    </span>
+  );
+}
 
 function AddRuleForm({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [name, setName] = useState('');
@@ -127,7 +161,7 @@ function AddRuleForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
   const [tagsInput, setTagsInput] = useState('');
   const [slaSeverity, setSlaSeverity] = useState('HIGH');
   const [slaHours, setSlaHours] = useState(24);
-  const [slaAction, setSlaAction] = useState('');
+  const [slaAction, setSlaAction] = useState('ESCALATE');
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,101 +189,125 @@ function AddRuleForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(22,22,22,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={onClose}>
-      <div style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', width: 600, maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div style={{ padding: '24px 24px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="ibm-subhead" style={{ color: 'var(--ibm-ink)' }}>Add rule</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--ibm-ink-muted)', fontSize: 18, cursor: 'pointer', padding: 4 }}>&times;</button>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(22,22,22,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(2px)' }} onClick={onClose}>
+      <div style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', width: 720, maxHeight: '90vh', overflow: 'auto', borderRadius: 0 }} onClick={e => e.stopPropagation()}>
+        <div style={{ padding: '24px 28px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--ibm-hairline)', paddingBottom: 16 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 300, color: 'var(--ibm-ink)', margin: 0, fontFamily: "'IBM Plex Sans', sans-serif" }}>Add rule</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--ibm-ink-muted)', fontSize: 20, cursor: 'pointer', padding: 4, lineHeight: 1 }}>&times;</button>
         </div>
-        <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <form onSubmit={handleSubmit} style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Basic Info */}
           <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Name</label>
-            <input style={INPUT_STYLE} value={name} onChange={e => setName(e.target.value)} required />
+            <p style={SECTION_HEADER}>Basic Info</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={LABEL}>Name *</label>
+                <input style={INPUT} value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. No hardcoded secrets" />
+              </div>
+              <div>
+                <label style={LABEL}>Description</label>
+                <input style={INPUT} value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description of what this rule checks" />
+              </div>
+              <div>
+                <label style={LABEL}>Rule text *</label>
+                <textarea style={{ ...INPUT, minHeight: 100, resize: 'vertical' }} value={ruleText} onChange={e => setRuleText(e.target.value)} required placeholder="Detailed instruction for the AI scanner..." />
+              </div>
+            </div>
           </div>
+
+          {/* Classification */}
           <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Description</label>
-            <input style={INPUT_STYLE} value={description} onChange={e => setDescription(e.target.value)} />
+            <p style={SECTION_HEADER}>Classification</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={LABEL}>Type</label>
+                <select style={SELECT} value={type} onChange={e => setType(e.target.value)}>
+                  {Object.entries(TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={LABEL}>Severity</label>
+                <select style={SELECT} value={severity} onChange={e => setSeverity(e.target.value)}>
+                  {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={LABEL}>Category</label>
+                <select style={SELECT} value={category} onChange={e => setCategory(e.target.value)}>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+              <div>
+                <label style={LABEL}>Scope</label>
+                <select style={SELECT} value={scope} onChange={e => setScope(e.target.value)}>
+                  <option value="GLOBAL">Global</option>
+                  <option value="PROJECT">Project</option>
+                </select>
+              </div>
+              <div>
+                <label style={LABEL}>Priority</label>
+                <input type="number" style={INPUT} value={priority} onChange={e => setPriority(Number(e.target.value))} min={0} max={10} />
+              </div>
+            </div>
           </div>
+
+          {/* Matching */}
           <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Rule text</label>
-            <textarea style={{ ...INPUT_STYLE, minHeight: 120, resize: 'vertical' }} value={ruleText} onChange={e => setRuleText(e.target.value)} required />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div>
-              <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Type</label>
-              <select style={SELECT_STYLE} value={type} onChange={e => setType(e.target.value)}>
-                {['SECURITY', 'COMPLIANCE', 'SLA', 'BUSINESS_LOGIC'].map(t => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
-              </select>
+            <p style={SECTION_HEADER}>Matching & Metadata</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={LABEL}>CWE IDs (comma-separated)</label>
+                <input style={INPUT} value={cweInput} onChange={e => setCweInput(e.target.value)} placeholder="e.g. CWE-79, CWE-89" />
+              </div>
+              <div>
+                <label style={LABEL}>OWASP (comma-separated)</label>
+                <input style={INPUT} value={owaspInput} onChange={e => setOwaspInput(e.target.value)} placeholder="e.g. A03:2021, A01:2021" />
+              </div>
             </div>
-            <div>
-              <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Scope</label>
-              <select style={SELECT_STYLE} value={scope} onChange={e => setScope(e.target.value)}>
-                {['GLOBAL', 'PROJECT'].map(s => <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>)}
-              </select>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div>
-              <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Severity</label>
-              <select style={SELECT_STYLE} value={severity} onChange={e => setSeverity(e.target.value)}>
-                {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'].map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Category</label>
-              <select style={SELECT_STYLE} value={category} onChange={e => setCategory(e.target.value)}>
-                {['SAST', 'DAST', 'SCA', 'IAC', 'SECRET', 'COMPOSITION', 'CUSTOM'].map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+              <div>
+                <label style={LABEL}>Languages (comma-separated)</label>
+                <input style={INPUT} value={languagesInput} onChange={e => setLanguagesInput(e.target.value)} placeholder="e.g. typescript, python" />
+              </div>
+              <div>
+                <label style={LABEL}>Tags (comma-separated)</label>
+                <input style={INPUT} value={tagsInput} onChange={e => setTagsInput(e.target.value)} placeholder="e.g. gdpr, pii, payments" />
+              </div>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-            <div>
-              <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Priority</label>
-              <input type="number" style={INPUT_STYLE} value={priority} onChange={e => setPriority(Number(e.target.value))} min={0} />
-            </div>
-            <div>
-              <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>CWE IDs (comma-separated)</label>
-              <input style={INPUT_STYLE} value={cweInput} onChange={e => setCweInput(e.target.value)} placeholder="e.g. CWE-79, CWE-89" />
-            </div>
-            <div>
-              <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>OWASP (comma-separated)</label>
-              <input style={INPUT_STYLE} value={owaspInput} onChange={e => setOwaspInput(e.target.value)} placeholder="e.g. A03:2021, A01:2021" />
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div>
-              <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Languages (comma-separated)</label>
-              <input style={INPUT_STYLE} value={languagesInput} onChange={e => setLanguagesInput(e.target.value)} placeholder="e.g. python, javascript" />
-            </div>
-            <div>
-              <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Tags (comma-separated)</label>
-              <input style={INPUT_STYLE} value={tagsInput} onChange={e => setTagsInput(e.target.value)} placeholder="e.g. auth, xss, injection" />
-            </div>
-          </div>
+
+          {/* SLA */}
           {type === 'SLA' && (
-            <div style={{ padding: 16, background: TYPE_STYLES.SLA.bg, border: '1px solid var(--ibm-semantic-warning)' }}>
-              <p className="ibm-label" style={{ color: 'var(--ibm-semantic-warning)', marginBottom: 12 }}>SLA Configuration</p>
+            <div style={{ background: TYPE_CONFIG.SLA.bg, padding: 20, borderLeft: '4px solid #F1C121' }}>
+              <p style={{ ...SECTION_HEADER, color: '#9A6D00', borderBottomColor: '#F1C121', marginBottom: 12 }}>SLA Configuration</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                 <div>
-                  <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>SLA Severity</label>
-                  <select style={SELECT_STYLE} value={slaSeverity} onChange={e => setSlaSeverity(e.target.value)}>
+                  <label style={LABEL}>SLA Severity</label>
+                  <select style={SELECT} value={slaSeverity} onChange={e => setSlaSeverity(e.target.value)}>
                     {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>SLA Hours</label>
-                  <input type="number" style={INPUT_STYLE} value={slaHours} onChange={e => setSlaHours(Number(e.target.value))} min={1} />
+                  <label style={LABEL}>Hours</label>
+                  <input type="number" style={INPUT} value={slaHours} onChange={e => setSlaHours(Number(e.target.value))} min={1} />
                 </div>
                 <div>
-                  <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>SLA Action</label>
-                  <input style={INPUT_STYLE} value={slaAction} onChange={e => setSlaAction(e.target.value)} placeholder="e.g. notify, escalate" />
+                  <label style={LABEL}>Action on breach</label>
+                  <select style={SELECT} value={slaAction} onChange={e => setSlaAction(e.target.value)}>
+                    <option value="ESCALATE">Escalate</option>
+                    <option value="NOTIFY">Notify</option>
+                    <option value="AUTO_CLOSE">Auto-close</option>
+                  </select>
                 </div>
               </div>
             </div>
           )}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 4 }}>
-            <button type="button" onClick={onClose} style={{ background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)', padding: '12px 16px', fontSize: '14px', color: 'var(--ibm-ink)', cursor: 'pointer', letterSpacing: '0.16px' }}>Cancel</button>
-            <button type="submit" disabled={submitting} style={{ background: 'var(--ibm-primary)', color: 'var(--ibm-on-primary)', border: 'none', padding: '12px 16px', fontSize: '14px', fontWeight: 400, letterSpacing: '0.16px', cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1 }}>Add rule</button>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 4 }}>
+            <button type="button" onClick={onClose} style={{ background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)', padding: '10px 20px', fontSize: '14px', color: 'var(--ibm-ink)', cursor: 'pointer', letterSpacing: '0.16px', borderRadius: 0 }}>Cancel</button>
+            <button type="submit" disabled={submitting} style={{ background: 'var(--ibm-primary)', color: 'var(--ibm-on-primary)', border: 'none', padding: '10px 20px', fontSize: '14px', fontWeight: 400, letterSpacing: '0.16px', cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1, borderRadius: 0 }}>Add rule</button>
           </div>
         </form>
       </div>
@@ -257,7 +315,7 @@ function AddRuleForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
   );
 }
 
-function EditRuleInline({ rule, onSave, onCancel }: { rule: UserRule; onSave: (data: Partial<UserRule>) => void; onCancel: () => void }) {
+function EditRuleModal({ rule, onSave, onClose }: { rule: UserRule; onSave: (data: Partial<UserRule>) => void; onClose: () => void }) {
   const [name, setName] = useState(rule.name);
   const [description, setDescription] = useState(rule.description);
   const [ruleText, setRuleText] = useState(rule.ruleText);
@@ -272,109 +330,56 @@ function EditRuleInline({ rule, onSave, onCancel }: { rule: UserRule; onSave: (d
   const [tagsInput, setTagsInput] = useState((rule.tags ?? []).join(', '));
   const [slaSeverity, setSlaSeverity] = useState(rule.slaSeverity || 'HIGH');
   const [slaHours, setSlaHours] = useState(rule.slaHours ?? 24);
-  const [slaAction, setSlaAction] = useState(rule.slaAction || '');
+  const [slaAction, setSlaAction] = useState(rule.slaAction || 'ESCALATE');
 
   return (
-    <div style={{ padding: 16, background: 'var(--ibm-surface-1)', borderTop: '1px solid var(--ibm-hairline)' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Name</label>
-            <input style={INPUT_STYLE} value={name} onChange={e => setName(e.target.value)} />
-          </div>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Description</label>
-            <input style={INPUT_STYLE} value={description} onChange={e => setDescription(e.target.value)} />
-          </div>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(22,22,22,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(2px)' }} onClick={onClose}>
+      <div style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', width: 720, maxHeight: '90vh', overflow: 'auto', borderRadius: 0 }} onClick={e => e.stopPropagation()}>
+        <div style={{ padding: '24px 28px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--ibm-hairline)', paddingBottom: 16 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 300, color: 'var(--ibm-ink)', margin: 0, fontFamily: "'IBM Plex Sans', sans-serif" }}>Edit rule</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--ibm-ink-muted)', fontSize: 20, cursor: 'pointer', padding: 4, lineHeight: 1 }}>&times;</button>
         </div>
-        <div>
-          <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Rule text</label>
-          <textarea style={{ ...INPUT_STYLE, minHeight: 80, resize: 'vertical' }} value={ruleText} onChange={e => setRuleText(e.target.value)} />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Type</label>
-            <select style={SELECT_STYLE} value={type} onChange={e => setType(e.target.value)}>
-              {['SECURITY', 'COMPLIANCE', 'SLA', 'BUSINESS_LOGIC'].map(t => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
-            </select>
+        <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div><label style={LABEL}>Type</label><select style={SELECT} value={type} onChange={e => setType(e.target.value)}>{Object.entries(TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}</select></div>
+            <div><label style={LABEL}>Severity</label><select style={SELECT} value={severity} onChange={e => setSeverity(e.target.value)}>{['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+            <div><label style={LABEL}>Category</label><select style={SELECT} value={category} onChange={e => setCategory(e.target.value)}>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
           </div>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Scope</label>
-            <select style={SELECT_STYLE} value={scope} onChange={e => setScope(e.target.value)}>
-              {['GLOBAL', 'PROJECT'].map(s => <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>)}
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div><label style={LABEL}>Name</label><input style={INPUT} value={name} onChange={e => setName(e.target.value)} /></div>
+            <div><label style={LABEL}>Scope</label><select style={SELECT} value={scope} onChange={e => setScope(e.target.value)}><option value="GLOBAL">Global</option><option value="PROJECT">Project</option></select></div>
           </div>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Priority</label>
-            <input type="number" style={INPUT_STYLE} value={priority} onChange={e => setPriority(Number(e.target.value))} min={0} />
+          <div><label style={LABEL}>Description</label><input style={INPUT} value={description} onChange={e => setDescription(e.target.value)} /></div>
+          <div><label style={LABEL}>Rule text</label><textarea style={{ ...INPUT, minHeight: 80, resize: 'vertical' }} value={ruleText} onChange={e => setRuleText(e.target.value)} /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div><label style={LABEL}>Priority</label><input type="number" style={INPUT} value={priority} onChange={e => setPriority(Number(e.target.value))} min={0} max={10} /></div>
+            <div><label style={LABEL}>CWE IDs</label><input style={INPUT} value={cweInput} onChange={e => setCweInput(e.target.value)} /></div>
+            <div><label style={LABEL}>OWASP</label><input style={INPUT} value={owaspInput} onChange={e => setOwaspInput(e.target.value)} /></div>
           </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Severity</label>
-            <select style={SELECT_STYLE} value={severity} onChange={e => setSeverity(e.target.value)}>
-              {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'].map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div><label style={LABEL}>Languages</label><input style={INPUT} value={languagesInput} onChange={e => setLanguagesInput(e.target.value)} /></div>
+            <div><label style={LABEL}>Tags</label><input style={INPUT} value={tagsInput} onChange={e => setTagsInput(e.target.value)} /></div>
           </div>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Category</label>
-            <select style={SELECT_STYLE} value={category} onChange={e => setCategory(e.target.value)}>
-              {['SAST', 'DAST', 'SCA', 'IAC', 'SECRET', 'COMPOSITION', 'CUSTOM'].map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>CWE IDs</label>
-            <input style={INPUT_STYLE} value={cweInput} onChange={e => setCweInput(e.target.value)} />
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>OWASP</label>
-            <input style={INPUT_STYLE} value={owaspInput} onChange={e => setOwaspInput(e.target.value)} />
-          </div>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Languages</label>
-            <input style={INPUT_STYLE} value={languagesInput} onChange={e => setLanguagesInput(e.target.value)} />
-          </div>
-          <div>
-            <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>Tags</label>
-            <input style={INPUT_STYLE} value={tagsInput} onChange={e => setTagsInput(e.target.value)} />
-          </div>
-        </div>
-        {type === 'SLA' && (
-          <div style={{ padding: 12, background: TYPE_STYLES.SLA.bg, border: '1px solid var(--ibm-semantic-warning)' }}>
-            <p className="ibm-label" style={{ color: 'var(--ibm-semantic-warning)', marginBottom: 8 }}>SLA Configuration</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-              <div>
-                <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>SLA Severity</label>
-                <select style={SELECT_STYLE} value={slaSeverity} onChange={e => setSlaSeverity(e.target.value)}>
-                  {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>SLA Hours</label>
-                <input type="number" style={INPUT_STYLE} value={slaHours} onChange={e => setSlaHours(Number(e.target.value))} min={1} />
-              </div>
-              <div>
-                <label className="ibm-label" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 4, display: 'block' }}>SLA Action</label>
-                <input style={INPUT_STYLE} value={slaAction} onChange={e => setSlaAction(e.target.value)} />
+          {type === 'SLA' && (
+            <div style={{ background: TYPE_CONFIG.SLA.bg, padding: 20, borderLeft: '4px solid #F1C121' }}>
+              <p style={{ ...SECTION_HEADER, color: '#9A6D00', borderBottomColor: '#F1C121', marginBottom: 12 }}>SLA Configuration</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div><label style={LABEL}>SLA Severity</label><select style={SELECT} value={slaSeverity} onChange={e => setSlaSeverity(e.target.value)}>{['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                <div><label style={LABEL}>Hours</label><input type="number" style={INPUT} value={slaHours} onChange={e => setSlaHours(Number(e.target.value))} min={1} /></div>
+                <div><label style={LABEL}>Action</label><select style={SELECT} value={slaAction} onChange={e => setSlaAction(e.target.value)}><option value="ESCALATE">Escalate</option><option value="NOTIFY">Notify</option><option value="AUTO_CLOSE">Auto-close</option></select></div>
               </div>
             </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+            <button onClick={onClose} style={{ background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)', padding: '10px 20px', fontSize: '14px', color: 'var(--ibm-ink)', cursor: 'pointer', borderRadius: 0 }}>Cancel</button>
+            <button onClick={() => {
+              const cwe = cweInput.split(',').map(s => s.trim()).filter(Boolean);
+              const owasp = owaspInput.split(',').map(s => s.trim()).filter(Boolean);
+              const languages = languagesInput.split(',').map(s => s.trim()).filter(Boolean);
+              const tags = tagsInput.split(',').map(s => s.trim()).filter(Boolean);
+              onSave({ name, description, ruleText, severity, category, cwe, type, scope, priority, owasp, languages, tags, ...(type === 'SLA' ? { slaSeverity, slaHours, slaAction } : {}) });
+            }} style={{ background: 'var(--ibm-primary)', color: 'var(--ibm-on-primary)', border: 'none', padding: '10px 20px', fontSize: '14px', cursor: 'pointer', borderRadius: 0 }}>Save</button>
           </div>
-        )}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          <button onClick={onCancel} style={{ background: 'var(--ibm-surface-2)', border: '1px solid var(--ibm-hairline)', padding: '8px 12px', fontSize: '12px', color: 'var(--ibm-ink)', cursor: 'pointer' }}>Cancel</button>
-          <button onClick={() => {
-            const cwe = cweInput.split(',').map(s => s.trim()).filter(Boolean);
-            const owasp = owaspInput.split(',').map(s => s.trim()).filter(Boolean);
-            const languages = languagesInput.split(',').map(s => s.trim()).filter(Boolean);
-            const tags = tagsInput.split(',').map(s => s.trim()).filter(Boolean);
-            onSave({
-              name, description, ruleText, severity, category, cwe,
-              type, scope, priority, owasp, languages, tags,
-              ...(type === 'SLA' ? { slaSeverity, slaHours, slaAction } : {}),
-            });
-          }} style={{ background: 'var(--ibm-primary)', color: 'var(--ibm-on-primary)', border: 'none', padding: '8px 12px', fontSize: '12px', cursor: 'pointer' }}>Save</button>
         </div>
       </div>
     </div>
@@ -382,198 +387,142 @@ function EditRuleInline({ rule, onSave, onCancel }: { rule: UserRule; onSave: (d
 }
 
 function GlobalRulesTab({ rules, onRefresh }: { rules: UserRule[]; onRefresh: () => void }) {
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('ALL');
+  const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingRule, setEditingRule] = useState<UserRule | null>(null);
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
-    await fetch(`/api/v1/user-rules/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive }),
-    });
+    await fetch(`/api/v1/user-rules/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isActive }) });
     onRefresh();
   };
-
-  const handleDelete = async (id: string) => {
-    await fetch(`/api/v1/user-rules/${id}`, { method: 'DELETE' });
-    onRefresh();
-  };
-
+  const handleDelete = async (id: string) => { await fetch(`/api/v1/user-rules/${id}`, { method: 'DELETE' }); onRefresh(); };
   const handleEditSave = async (id: string, data: Partial<UserRule>) => {
-    await fetch(`/api/v1/user-rules/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    setEditingId(null);
+    await fetch(`/api/v1/user-rules/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    setEditingRule(null);
     onRefresh();
   };
+
+  const filtered = rules.filter(r => {
+    if (typeFilter !== 'ALL' && r.type !== typeFilter) return false;
+    if (search && !r.name.toLowerCase().includes(search.toLowerCase()) && !r.ruleText.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
 
   if (rules.length === 0) {
-    return <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-subtle)', padding: '16px 0' }}>No global rules yet. Create one to apply it across all scans.</p>;
+    return (
+      <div style={{ textAlign: 'center', padding: '48px 0' }}>
+        <p style={{ fontSize: 48, margin: 0, opacity: 0.3 }}>🛡</p>
+        <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-muted)', marginTop: 12 }}>No global rules yet. Create one to enforce it across all scans.</p>
+      </div>
+    );
   }
 
   return (
-    <div style={{ border: '1px solid var(--ibm-hairline)' }}>
-      {rules.map(rule => {
-        const isExpanded = expandedId === rule.id;
-        const isEditing = editingId === rule.id;
+    <div>
+      {/* Filter bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+        {(['ALL', 'SECURITY', 'COMPLIANCE', 'SLA', 'BUSINESS_LOGIC'] as TypeFilter[]).map(f => {
+          const isActive = typeFilter === f;
+          const cfg = f === 'ALL' ? null : TYPE_CONFIG[f];
+          return (
+            <button key={f} onClick={() => setTypeFilter(f)} style={{
+              padding: '6px 14px', fontSize: '12px', fontWeight: isActive ? 600 : 400, letterSpacing: '0.32px',
+              background: isActive ? (cfg ? cfg.color : 'var(--ibm-ink)') : 'var(--ibm-surface-1)',
+              color: isActive ? '#ffffff' : 'var(--ibm-ink-muted)',
+              border: `1px solid ${isActive ? 'transparent' : 'var(--ibm-hairline)'}`,
+              cursor: 'pointer', borderRadius: 0, fontFamily: "'IBM Plex Sans', sans-serif",
+            }}>
+              {f === 'ALL' ? 'All' : cfg?.label ?? f}
+            </button>
+          );
+        })}
+        <div style={{ flex: 1 }} />
+        <input
+          style={{ ...INPUT, width: 220, padding: '8px 14px', fontSize: '13px' }}
+          placeholder="Search rules..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
 
-        return (
-          <div key={rule.id} style={{ borderBottom: '1px solid var(--ibm-hairline)' }}>
-            <div
-              style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}
-              onClick={() => {
-                if (isEditing) return;
-                setExpandedId(isExpanded ? null : rule.id);
-              }}
-            >
-              <span style={{ color: 'var(--ibm-ink-subtle)', fontSize: 10, flexShrink: 0 }}>{isExpanded ? '\u25BC' : '\u25B6'}</span>
-              <span className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {rule.name}
-              </span>
-              <span style={{
-                fontSize: '12px', fontWeight: 600, letterSpacing: '0.32px', textTransform: 'uppercase',
-                padding: '2px 8px',
-                background: (TYPE_STYLES[rule.type] ?? TYPE_STYLES.SECURITY).bg,
-                color: (TYPE_STYLES[rule.type] ?? TYPE_STYLES.SECURITY).color,
-              }}>{TYPE_LABELS[rule.type] ?? rule.type}</span>
-              <SeverityTag severity={rule.severity} />
-              <span style={{
-                fontSize: '12px', fontWeight: 400, letterSpacing: '0.16px',
-                padding: '2px 8px', background: 'var(--ibm-surface-2)', color: 'var(--ibm-ink-muted)',
-              }}>{rule.category}</span>
-              <span style={{
-                fontSize: '12px', fontWeight: 600, letterSpacing: '0.32px', textTransform: 'uppercase',
-                padding: '2px 8px',
-                borderLeft: `3px solid ${rule.isActive ? 'var(--ibm-semantic-success)' : 'var(--ibm-ink-subtle)'}`,
-                color: rule.isActive ? 'var(--ibm-semantic-success)' : 'var(--ibm-ink-subtle)',
-              }}>{rule.isActive ? 'Active' : 'Inactive'}</span>
-            </div>
-            {isExpanded && !isEditing && (
-              <div style={{ padding: '0 16px 16px', background: 'var(--ibm-surface-1)', borderTop: '1px solid var(--ibm-hairline)' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 12 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <div>
-                      <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Type</p>
-                      <span style={{
-                        display: 'inline-flex', fontSize: '12px', fontWeight: 600, letterSpacing: '0.32px', textTransform: 'uppercase',
-                        padding: '2px 8px',
-                        background: (TYPE_STYLES[rule.type] ?? TYPE_STYLES.SECURITY).bg,
-                        color: (TYPE_STYLES[rule.type] ?? TYPE_STYLES.SECURITY).color,
-                      }}>{TYPE_LABELS[rule.type] ?? rule.type}</span>
-                    </div>
-                    <div>
-                      <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Scope</p>
-                      <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)' }}>{rule.scope ? (rule.scope.charAt(0) + rule.scope.slice(1).toLowerCase()) : 'Global'}</p>
-                    </div>
-                  </div>
-                  {rule.description && (
-                    <div>
-                      <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Description</p>
-                      <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)' }}>{rule.description}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Rule text</p>
-                    <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', whiteSpace: 'pre-wrap' }}>{rule.ruleText}</p>
-                  </div>
-                  {rule.cwe.length > 0 && (
-                    <div>
-                      <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>CWE</p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        {rule.cwe.map((c, i) => (
-                          <span key={i} style={{ padding: '4px 8px', background: 'var(--ibm-surface-2)', border: '1px solid var(--ibm-hairline)', fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>{c}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {(rule.owasp ?? []).length > 0 && (
-                    <div>
-                      <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>OWASP</p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        {rule.owasp.map((o, i) => (
-                          <span key={i} style={{ padding: '4px 8px', background: 'var(--ibm-surface-2)', border: '1px solid var(--ibm-hairline)', fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>{o}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {(rule.languages ?? []).length > 0 && (
-                    <div>
-                      <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Languages</p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        {rule.languages.map((lang, i) => (
-                          <span key={i} style={{ padding: '4px 8px', background: 'rgba(15,98,254,0.08)', border: '1px solid var(--ibm-primary)', fontSize: '12px', color: 'var(--ibm-primary)' }}>{lang}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+      {/* Cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {filtered.map(rule => {
+          const isExpanded = expandedId === rule.id;
+          const cfg = TYPE_CONFIG[rule.type] ?? TYPE_CONFIG.SECURITY;
+          return (
+            <div key={rule.id} style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', borderLeft: `4px solid ${cfg.color}` }}>
+              {/* Header */}
+              <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }} onClick={() => setExpandedId(isExpanded ? null : rule.id)}>
+                <TypeBadge type={rule.type} />
+                <span style={{ flex: 1, fontWeight: 400, fontSize: '14px', color: 'var(--ibm-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rule.name}</span>
+                <SevBadge severity={rule.severity} />
+                <span style={{ fontSize: '11px', fontWeight: 400, letterSpacing: '0.16px', padding: '3px 8px', background: 'var(--ibm-surface-1)', color: 'var(--ibm-ink-muted)' }}>{rule.category}</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.32px', textTransform: 'uppercase', padding: '3px 8px', background: rule.isActive ? 'rgba(36,161,72,0.1)' : 'var(--ibm-surface-1)', color: rule.isActive ? '#24A137' : 'var(--ibm-ink-muted)' }}>
+                  {rule.isActive ? 'Active' : 'Inactive'}
+                </span>
+                <span style={{ fontSize: 10, color: 'var(--ibm-ink-subtle)' }}>{isExpanded ? '▲' : '▼'}</span>
+              </div>
+              {/* Body preview */}
+              {!isExpanded && (
+                <div style={{ padding: '0 20px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <p style={{ fontSize: '13px', color: 'var(--ibm-ink-muted)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                    {rule.ruleText}
+                  </p>
                   {(rule.tags ?? []).length > 0 && (
-                    <div>
-                      <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Tags</p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        {rule.tags.map((tag, i) => (
-                          <span key={i} style={{ padding: '4px 8px', background: 'var(--ibm-surface-2)', border: '1px solid var(--ibm-hairline)', fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>{tag}</span>
-                        ))}
-                      </div>
+                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                      {rule.tags.slice(0, 3).map((tag, i) => (
+                        <span key={i} style={{ fontSize: '10px', padding: '2px 6px', background: 'var(--ibm-surface-1)', color: 'var(--ibm-ink-muted)' }}>{tag}</span>
+                      ))}
+                      {rule.tags.length > 3 && <span style={{ fontSize: '10px', color: 'var(--ibm-ink-subtle)' }}>+{rule.tags.length - 3}</span>}
                     </div>
                   )}
-                  {rule.type === 'SLA' && rule.slaSeverity && (
-                    <div style={{ padding: 12, background: TYPE_STYLES.SLA.bg, border: '1px solid var(--ibm-semantic-warning)' }}>
-                      <p className="ibm-label" style={{ color: 'var(--ibm-semantic-warning)', marginBottom: 8 }}>SLA Configuration</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                        <div>
-                          <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-subtle)' }}>Severity</p>
-                          <p className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{rule.slaSeverity}</p>
-                        </div>
-                        <div>
-                          <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-subtle)' }}>Hours</p>
-                          <p className="ibm-body-emphasis tabular-nums" style={{ color: 'var(--ibm-ink)' }}>{rule.slaHours}</p>
-                        </div>
-                        <div>
-                          <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-subtle)' }}>Action</p>
-                          <p className="ibm-body-emphasis" style={{ color: 'var(--ibm-ink)' }}>{rule.slaAction || '--'}</p>
+                </div>
+              )}
+              {/* Expanded details */}
+              {isExpanded && (
+                <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--ibm-hairline)' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 16 }}>
+                    {rule.description && <div><p style={LABEL}>Description</p><p style={{ fontSize: '13px', color: 'var(--ibm-ink)', margin: 0 }}>{rule.description}</p></div>}
+                    <div><p style={LABEL}>Rule text</p><p style={{ fontSize: '13px', color: 'var(--ibm-ink)', margin: 0, whiteSpace: 'pre-wrap' }}>{rule.ruleText}</p></div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                      <div><p style={LABEL}>Type</p><TypeBadge type={rule.type} /></div>
+                      <div><p style={LABEL}>Scope</p><p style={{ fontSize: '13px', color: 'var(--ibm-ink)', margin: 0 }}>{rule.scope === 'PROJECT' ? `Project${rule.repoUrl ? `: ${rule.repoUrl}` : ''}` : 'Global'}</p></div>
+                      <div><p style={LABEL}>Priority</p><p style={{ fontSize: '13px', color: 'var(--ibm-ink)', margin: 0 }}>{rule.priority}</p></div>
+                    </div>
+                    {rule.cwe.length > 0 && <div><p style={LABEL}>CWE</p><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{rule.cwe.map((c, i) => <span key={i} style={{ padding: '2px 8px', background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)', fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>{c}</span>)}</div></div>}
+                    {(rule.owasp ?? []).length > 0 && <div><p style={LABEL}>OWASP</p><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{rule.owasp.map((o, i) => <span key={i} style={{ padding: '2px 8px', background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)', fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>{o}</span>)}</div></div>}
+                    {(rule.languages ?? []).length > 0 && <div><p style={LABEL}>Languages</p><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{rule.languages.map((l, i) => <span key={i} style={{ padding: '2px 8px', background: 'rgba(15,98,254,0.08)', border: '1px solid rgba(15,98,254,0.3)', fontSize: '12px', color: 'var(--ibm-primary)' }}>{l}</span>)}</div></div>}
+                    {(rule.tags ?? []).length > 0 && <div><p style={LABEL}>Tags</p><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{rule.tags.map((t, i) => <span key={i} style={{ padding: '2px 8px', background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)', fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>{t}</span>)}</div></div>}
+                    {rule.type === 'SLA' && rule.slaSeverity && (
+                      <div style={{ padding: 16, background: TYPE_CONFIG.SLA.bg, borderLeft: '4px solid #F1C121' }}>
+                        <p style={{ ...LABEL, color: '#9A6D00', marginBottom: 8 }}>SLA Configuration</p>
+                        <div style={{ display: 'flex', gap: 24 }}>
+                          <div><span style={{ fontSize: '12px', color: 'var(--ibm-ink-subtle)' }}>Severity</span><br /><span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ibm-ink)' }}>{rule.slaSeverity}</span></div>
+                          <div><span style={{ fontSize: '12px', color: 'var(--ibm-ink-subtle)' }}>Hours</span><br /><span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ibm-ink)' }}>{rule.slaHours}h</span></div>
+                          <div><span style={{ fontSize: '12px', color: 'var(--ibm-ink-subtle)' }}>Action</span><br /><span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ibm-ink)' }}>{rule.slaAction || '—'}</span></div>
                         </div>
                       </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 8, paddingTop: 4 }}>
+                      <button onClick={() => handleToggleActive(rule.id, !rule.isActive)} style={{
+                        background: rule.isActive ? 'var(--ibm-surface-1)' : '#24A137', color: rule.isActive ? 'var(--ibm-ink)' : '#fff',
+                        fontSize: '12px', padding: '6px 12px', border: rule.isActive ? '1px solid var(--ibm-hairline)' : 'none', cursor: 'pointer', borderRadius: 0,
+                      }}>{rule.isActive ? 'Deactivate' : 'Activate'}</button>
+                      <button onClick={() => setEditingRule(rule)} style={{ background: 'var(--ibm-surface-1)', color: 'var(--ibm-ink)', fontSize: '12px', padding: '6px 12px', border: '1px solid var(--ibm-hairline)', cursor: 'pointer', borderRadius: 0 }}>Edit</button>
+                      <button onClick={() => handleDelete(rule.id)} style={{ background: 'var(--ibm-semantic-error)', color: '#fff', fontSize: '12px', padding: '6px 12px', border: 'none', cursor: 'pointer', borderRadius: 0 }}>Delete</button>
                     </div>
-                  )}
-                  <div style={{ display: 'flex', gap: 8, paddingTop: 4 }}>
-                    <button
-                      onClick={e => { e.stopPropagation(); handleToggleActive(rule.id, !rule.isActive); }}
-                      style={{
-                        background: rule.isActive ? 'var(--ibm-surface-2)' : 'var(--ibm-semantic-success)',
-                        color: rule.isActive ? 'var(--ibm-ink)' : '#ffffff',
-                        fontSize: '12px', fontWeight: 400, letterSpacing: '0.16px', padding: '8px 12px', border: '1px solid var(--ibm-hairline)', cursor: 'pointer',
-                      }}
-                    >
-                      {rule.isActive ? 'Deactivate' : 'Activate'}
-                    </button>
-                    <button
-                      onClick={e => { e.stopPropagation(); setEditingId(rule.id); }}
-                      style={{ background: 'var(--ibm-surface-2)', color: 'var(--ibm-ink)', fontSize: '12px', fontWeight: 400, letterSpacing: '0.16px', padding: '8px 12px', border: '1px solid var(--ibm-hairline)', cursor: 'pointer' }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={e => { e.stopPropagation(); handleDelete(rule.id); }}
-                      style={{ background: 'var(--ibm-semantic-error)', color: '#ffffff', fontSize: '12px', fontWeight: 400, letterSpacing: '0.16px', padding: '8px 12px', border: 'none', cursor: 'pointer' }}
-                    >
-                      Delete
-                    </button>
                   </div>
                 </div>
-              </div>
-            )}
-            {isEditing && (
-              <EditRuleInline
-                rule={rule}
-                onSave={data => handleEditSave(rule.id, data)}
-                onCancel={() => setEditingId(null)}
-              />
-            )}
-          </div>
-        );
-      })}
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {filtered.length === 0 && <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-muted)', textAlign: 'center', padding: 32 }}>No rules match the current filter.</p>}
+
+      {editingRule && <EditRuleModal rule={editingRule} onSave={data => handleEditSave(editingRule.id, data)} onClose={() => setEditingRule(null)} />}
     </div>
   );
 }
@@ -595,11 +544,7 @@ function AIInferredTab({ onStatusChange }: { onStatusChange: () => void }) {
   useEffect(() => { fetchRules(); }, [fetchRules]);
 
   const handleStatusUpdate = async (ruleId: string, status: 'CONFIRMED' | 'REJECTED') => {
-    await fetch(`/api/v1/rules/${ruleId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
+    await fetch(`/api/v1/rules/${ruleId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
     fetchRules();
     onStatusChange();
   };
@@ -610,33 +555,19 @@ function AIInferredTab({ onStatusChange }: { onStatusChange: () => void }) {
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
         <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setFilterOpen(!filterOpen)}
-            style={{
-              background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)',
-              padding: '11px 16px', fontSize: '14px', color: 'var(--ibm-ink-muted)', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8,
-            }}
-          >
+          <button onClick={() => setFilterOpen(!filterOpen)} style={{
+            background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)',
+            padding: '11px 16px', fontSize: '14px', color: 'var(--ibm-ink-muted)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 8, borderRadius: 0,
+          }}>
             <span className="ibm-body-sm">Filter: {statusFilter === 'ALL' ? 'All' : statusFilter.charAt(0) + statusFilter.slice(1).toLowerCase()}</span>
-            <span style={{ fontSize: 10 }}>{filterOpen ? '\u25B2' : '\u25BC'}</span>
+            <span style={{ fontSize: 10 }}>{filterOpen ? '▲' : '▼'}</span>
           </button>
           {filterOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', right: 0, zIndex: 50,
-              background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', borderTop: 'none', minWidth: 160,
-            }}>
+            <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 50, background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', borderTop: 'none', minWidth: 160 }}>
               {filterOptions.map(opt => (
-                <div
-                  key={opt}
-                  onClick={() => { setStatusFilter(opt); setFilterOpen(false); }}
-                  style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--ibm-hairline)' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--ibm-surface-1)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <span className="ibm-body-sm" style={{ color: opt === statusFilter ? 'var(--ibm-primary)' : 'var(--ibm-ink)' }}>
-                    {opt === 'ALL' ? 'All' : opt.charAt(0) + opt.slice(1).toLowerCase()}
-                  </span>
+                <div key={opt} onClick={() => { setStatusFilter(opt); setFilterOpen(false); }} style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid var(--ibm-hairline)' }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--ibm-surface-1)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
+                  <span className="ibm-body-sm" style={{ color: opt === statusFilter ? 'var(--ibm-primary)' : 'var(--ibm-ink)' }}>{opt === 'ALL' ? 'All' : opt.charAt(0) + opt.slice(1).toLowerCase()}</span>
                 </div>
               ))}
             </div>
@@ -645,83 +576,37 @@ function AIInferredTab({ onStatusChange }: { onStatusChange: () => void }) {
       </div>
 
       {rules.length === 0 ? (
-        <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-subtle)' }}>No AI-inferred rules found.</p>
+        <div style={{ textAlign: 'center', padding: '48px 0' }}>
+          <p style={{ fontSize: 48, margin: 0, opacity: 0.3 }}>📋</p>
+          <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-muted)', marginTop: 12 }}>No AI-inferred rules found. Rules appear after cross-file analysis completes.</p>
+        </div>
       ) : (
-        <div style={{ border: '1px solid var(--ibm-hairline)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {rules.map(rule => {
             const statusStyle = STATUS_COLORS[rule.status] ?? STATUS_COLORS.CANDIDATE;
             const isOpen = expanded === rule.id;
-
             return (
-              <div key={rule.id} style={{ borderBottom: '1px solid var(--ibm-hairline)' }}>
-                <div
-                  style={{ padding: '12px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}
-                  onClick={() => setExpanded(isOpen ? null : rule.id)}
-                >
-                  <span style={{ color: 'var(--ibm-ink-subtle)', fontSize: 10 }}>{isOpen ? '\u25BC' : '\u25B6'}</span>
-                  <span className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {rule.ruleText.length > 100 ? `${rule.ruleText.substring(0, 100)}...` : rule.ruleText}
-                  </span>
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center',
-                    fontSize: '12px', fontWeight: 600, letterSpacing: '0.32px', textTransform: 'uppercase',
-                    padding: '2px 8px', borderLeft: `3px solid ${statusStyle.border}`, color: statusStyle.color,
-                  }}>
-                    {rule.status}
-                  </span>
-                  <span className="ibm-caption tabular-nums" style={{ color: 'var(--ibm-ink-subtle)' }}>
-                    {(rule.confidence * 100).toFixed(0)}%
-                  </span>
+              <div key={rule.id} style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', borderLeft: `4px solid ${statusStyle.border}` }}>
+                <div style={{ padding: '14px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }} onClick={() => setExpanded(isOpen ? null : rule.id)}>
+                  <span style={{ flex: 1, fontSize: '13px', color: 'var(--ibm-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rule.ruleText.length > 120 ? `${rule.ruleText.substring(0, 120)}...` : rule.ruleText}</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.32px', textTransform: 'uppercase', padding: '3px 10px', borderLeft: `3px solid ${statusStyle.border}`, color: statusStyle.color }}>{rule.status}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--ibm-ink-subtle)' }}>{(rule.confidence * 100).toFixed(0)}%</span>
+                  <span style={{ fontSize: 10, color: 'var(--ibm-ink-subtle)' }}>{isOpen ? '▲' : '▼'}</span>
                 </div>
                 {isOpen && (
-                  <div style={{ padding: '0 16px 16px', background: 'var(--ibm-surface-1)', borderTop: '1px solid var(--ibm-hairline)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 12 }}>
-                      <div>
-                        <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Rule</p>
-                        <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)', whiteSpace: 'pre-wrap' }}>{rule.ruleText}</p>
-                      </div>
+                  <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--ibm-hairline)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 16 }}>
+                      <div><p style={LABEL}>Rule</p><p style={{ fontSize: '13px', color: 'var(--ibm-ink)', whiteSpace: 'pre-wrap', margin: 0 }}>{rule.ruleText}</p></div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                        <div>
-                          <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Confidence</p>
-                          <p className="ibm-body-sm tabular-nums" style={{ color: 'var(--ibm-ink)' }}>{(rule.confidence * 100).toFixed(0)}%</p>
-                        </div>
-                        <div>
-                          <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Status</p>
-                          <span style={{
-                            display: 'inline-flex', alignItems: 'center',
-                            fontSize: '12px', fontWeight: 600, letterSpacing: '0.32px', textTransform: 'uppercase',
-                            padding: '2px 8px', borderLeft: `3px solid ${statusStyle.border}`, color: statusStyle.color,
-                          }}>
-                            {rule.status}
-                          </span>
-                        </div>
+                        <div><p style={LABEL}>Confidence</p><p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--ibm-ink)', margin: 0 }}>{(rule.confidence * 100).toFixed(0)}%</p></div>
+                        <div><p style={LABEL}>Status</p><span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.32px', textTransform: 'uppercase', padding: '3px 10px', borderLeft: `3px solid ${statusStyle.border}`, color: statusStyle.color }}>{rule.status}</span></div>
                       </div>
-                      {rule.violationDescription && (
-                        <div>
-                          <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Violation</p>
-                          <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink)' }}>{rule.violationDescription}</p>
-                        </div>
-                      )}
-                      {rule.evidenceFiles.length > 0 && (
-                        <div>
-                          <p className="ibm-label" style={{ color: 'var(--ibm-primary)', marginBottom: 4 }}>Evidence</p>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                            {rule.evidenceFiles.map((f, i) => (
-                              <span key={i} style={{ padding: '4px 8px', background: 'var(--ibm-surface-2)', border: '1px solid var(--ibm-hairline)', fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>{f}</span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      {rule.violationDescription && <div><p style={LABEL}>Violation</p><p style={{ fontSize: '13px', color: 'var(--ibm-ink)', margin: 0 }}>{rule.violationDescription}</p></div>}
+                      {rule.evidenceFiles.length > 0 && <div><p style={LABEL}>Evidence</p><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{rule.evidenceFiles.map((f, i) => <span key={i} style={{ padding: '2px 8px', background: 'var(--ibm-surface-1)', border: '1px solid var(--ibm-hairline)', fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>{f}</span>)}</div></div>}
                       {rule.status === 'CANDIDATE' && (
                         <div style={{ display: 'flex', gap: 8, paddingTop: 4 }}>
-                          <button
-                            onClick={e => { e.stopPropagation(); handleStatusUpdate(rule.id, 'CONFIRMED'); }}
-                            style={{ background: 'var(--ibm-semantic-success)', color: '#ffffff', fontSize: '14px', fontWeight: 400, letterSpacing: '0.16px', padding: '12px 16px', border: 'none', cursor: 'pointer' }}
-                          >Confirm</button>
-                          <button
-                            onClick={e => { e.stopPropagation(); handleStatusUpdate(rule.id, 'REJECTED'); }}
-                            style={{ background: 'var(--ibm-semantic-error)', color: '#ffffff', fontSize: '14px', fontWeight: 400, letterSpacing: '0.16px', padding: '12px 16px', border: 'none', cursor: 'pointer' }}
-                          >Reject</button>
+                          <button onClick={e => { e.stopPropagation(); handleStatusUpdate(rule.id, 'CONFIRMED'); }} style={{ background: '#24A137', color: '#fff', fontSize: '14px', padding: '8px 16px', border: 'none', cursor: 'pointer', borderRadius: 0 }}>Confirm</button>
+                          <button onClick={e => { e.stopPropagation(); handleStatusUpdate(rule.id, 'REJECTED'); }} style={{ background: '#DA1E28', color: '#fff', fontSize: '14px', padding: '8px 16px', border: 'none', cursor: 'pointer', borderRadius: 0 }}>Reject</button>
                         </div>
                       )}
                     </div>
@@ -758,65 +643,41 @@ export default function RulesPage() {
     <div style={{ maxWidth: 1152, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
         <div>
-          <h1 className="ibm-display-md" style={{ color: 'var(--ibm-ink)', marginBottom: 8 }}>Rules</h1>
-          <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-muted)' }}>
-            Manage global security rules and review AI-inferred business logic.
+          <h1 style={{ fontSize: 32, fontWeight: 300, lineHeight: 1.25, color: 'var(--ibm-ink)', fontFamily: "'IBM Plex Sans', sans-serif", margin: 0 }}>Rules</h1>
+          <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-muted)', marginTop: 4 }}>
+            Manage security rules and review AI-inferred business logic.
           </p>
         </div>
         {activeTab === 'global' && (
-          <button
-            onClick={() => setShowAddForm(true)}
-            style={{
-              background: 'var(--ibm-primary)', color: 'var(--ibm-on-primary)',
-              fontSize: '14px', fontWeight: 400, letterSpacing: '0.16px',
-              padding: '12px 16px', border: 'none', cursor: 'pointer',
-            }}
-          >
-            Add rule
+          <button onClick={() => setShowAddForm(true)} style={{
+            background: 'var(--ibm-primary)', color: 'var(--ibm-on-primary)',
+            fontSize: '14px', fontWeight: 400, letterSpacing: '0.16px',
+            padding: '10px 20px', border: 'none', cursor: 'pointer', borderRadius: 0,
+          }}>
+            + Add rule
           </button>
         )}
       </div>
 
-      <div style={{ borderBottom: '2px solid var(--ibm-hairline)', marginBottom: 32, display: 'flex' }}>
+      <div style={{ borderBottom: '2px solid var(--ibm-hairline)', marginBottom: 28, display: 'flex' }}>
         {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: '12px 20px', fontSize: '14px', fontWeight: activeTab === tab.id ? 600 : 400,
-              letterSpacing: '0.16px', lineHeight: 1.29, border: 'none', cursor: 'pointer',
-              background: 'transparent', color: activeTab === tab.id ? 'var(--ibm-ink)' : 'var(--ibm-ink-muted)',
-              borderBottom: activeTab === tab.id ? '2px solid var(--ibm-primary)' : '2px solid transparent',
-              marginBottom: '-2px', fontFamily: "'IBM Plex Sans', sans-serif",
-              display: 'flex', alignItems: 'center', gap: 8,
-            }}
-          >
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+            padding: '12px 20px', fontSize: '14px', fontWeight: activeTab === tab.id ? 600 : 400,
+            letterSpacing: '0.16px', lineHeight: 1.29, border: 'none', cursor: 'pointer',
+            background: 'transparent', color: activeTab === tab.id ? 'var(--ibm-ink)' : 'var(--ibm-ink-muted)',
+            borderBottom: activeTab === tab.id ? '2px solid var(--ibm-primary)' : '2px solid transparent',
+            marginBottom: '-2px', fontFamily: "'IBM Plex Sans', sans-serif",
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
             {tab.label}
-            {tab.count != null && (
-              <span style={{
-                fontSize: '12px', padding: '1px 6px',
-                background: activeTab === tab.id ? 'var(--ibm-primary)' : 'var(--ibm-surface-2)',
-                color: activeTab === tab.id ? '#ffffff' : 'var(--ibm-ink-muted)',
-              }}>{tab.count}</span>
-            )}
+            {tab.count != null && <span style={{ fontSize: '11px', padding: '1px 6px', background: activeTab === tab.id ? 'var(--ibm-primary)' : 'var(--ibm-surface-2)', color: activeTab === tab.id ? '#fff' : 'var(--ibm-ink-muted)' }}>{tab.count}</span>}
           </button>
         ))}
       </div>
 
-      {activeTab === 'global' && (
-        <GlobalRulesTab rules={userRules} onRefresh={fetchUserRules} />
-      )}
-
-      {activeTab === 'ai-inferred' && (
-        <AIInferredTab onStatusChange={() => {}} />
-      )}
-
-      {showAddForm && (
-        <AddRuleForm
-          onClose={() => setShowAddForm(false)}
-          onCreated={() => { setShowAddForm(false); fetchUserRules(); }}
-        />
-      )}
+      {activeTab === 'global' && <GlobalRulesTab rules={userRules} onRefresh={fetchUserRules} />}
+      {activeTab === 'ai-inferred' && <AIInferredTab onStatusChange={() => {}} />}
+      {showAddForm && <AddRuleForm onClose={() => setShowAddForm(false)} onCreated={() => { setShowAddForm(false); fetchUserRules(); }} />}
     </div>
   );
 }
