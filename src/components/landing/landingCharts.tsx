@@ -1,22 +1,21 @@
 // src/components/landing/landingCharts.tsx
 // Carbon Charts wrappers for the landing page — g100 (dark) theme.
-// Each chart is a self-contained component with its own data + options.
+// Uses next/dynamic to prevent SSR issues with D3-based chart rendering.
 
 'use client';
 
-import {
-  DonutChart,
-  SimpleBarChart,
-  GroupedBarChart,
-  ScaleTypes,
-} from '@carbon/charts-react';
+import dynamic from 'next/dynamic';
 import type {
   DonutChartOptions,
   BarChartOptions,
   ChartTabularData,
 } from '@carbon/charts-react';
+import { ScaleTypes } from '@carbon/charts-react';
 
-import '@carbon/charts/styles.css';
+// ─── Dynamic imports (no SSR) ──────────────────────────────────
+const DonutChart = dynamic(() => import('@carbon/charts-react').then(mod => mod.DonutChart), { ssr: false });
+const SimpleBarChart = dynamic(() => import('@carbon/charts-react').then(mod => mod.SimpleBarChart), { ssr: false });
+const GroupedBarChart = dynamic(() => import('@carbon/charts-react').then(mod => mod.GroupedBarChart), { ssr: false });
 
 // ─── Severity Donut ──────────────────────────────────────────
 const severityData: ChartTabularData = [
