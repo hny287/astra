@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 import { enterpriseFeatures } from './landingData';
 
@@ -9,7 +8,7 @@ import { enterpriseFeatures } from './landingData';
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -22,7 +21,7 @@ function useIsTablet(): boolean {
   useEffect(() => {
     const check = () => {
       const w = window.innerWidth;
-      setTablet(w >= landingTokens.md && w < landingTokens.lg);
+      setTablet(w >= 672 && w < 1056);
     };
     check();
     window.addEventListener('resize', check);
@@ -31,12 +30,12 @@ function useIsTablet(): boolean {
   return tablet;
 }
 
-// ─── Category icons (colored square placeholders) ──────────────────
+// ─── Category accent colors (Carbon palette) ──────────────────────
 const categoryConfig: Record<string, { color: string }> = {
-  access: { color: landingTokens.accentPrimary },
-  security: { color: landingTokens.accentCritical },
-  deployment: { color: landingTokens.accentLow },
-  audit: { color: landingTokens.accentMedium },
+  access: { color: '#0f62fe' },
+  security: { color: '#da1e28' },
+  deployment: { color: '#24a148' },
+  audit: { color: '#f1c21b' },
 };
 
 const categoryKeys = ['access', 'security', 'deployment', 'audit'] as const;
@@ -65,17 +64,19 @@ export default function RbacEnterprise() {
       }}
     >
       {/* Section header */}
-      <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
+      <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '12px', textAlign: 'center' }}>
         Enterprise-grade from day one
       </p>
       <h2
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
           textAlign: 'center',
           fontSize: isMobile ? '32px' : '48px',
           maxWidth: '720px',
           marginLeft: 'auto',
           marginRight: 'auto',
+          marginBottom: '24px',
         }}
       >
         Security, access, and compliance
@@ -97,10 +98,10 @@ export default function RbacEnterprise() {
             <div
               key={key}
               style={{
-                background: landingTokens.bgSurface2,
-                borderRadius: '8px',
+                background: 'var(--ibm-surface-2)',
+                borderRadius: '0',
                 padding: '24px',
-                border: `1px solid ${landingTokens.borderSubtle}`,
+                border: '1px solid var(--ibm-hairline)',
                 transition: `opacity 0.4s ease ${i * 100}ms, transform 0.4s ease ${i * 100}ms, border-color 0.2s ease`,
                 opacity: visible ? 1 : 0,
                 transform: visible ? 'translateY(0)' : 'translateY(16px)',
@@ -109,7 +110,7 @@ export default function RbacEnterprise() {
                 e.currentTarget.style.borderColor = config.color;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = landingTokens.borderSubtle;
+                e.currentTarget.style.borderColor = 'var(--ibm-hairline)';
               }}
             >
               {/* Icon + title */}
@@ -126,8 +127,8 @@ export default function RbacEnterprise() {
                   style={{
                     width: '32px',
                     height: '32px',
-                    borderRadius: '6px',
-                    background: `${config.color}20`,
+                    borderRadius: '0',
+                    background: config.color + '20',
                     border: `1px solid ${config.color}40`,
                     display: 'flex',
                     alignItems: 'center',
@@ -139,7 +140,7 @@ export default function RbacEnterprise() {
                     style={{
                       width: '12px',
                       height: '12px',
-                      borderRadius: '3px',
+                      borderRadius: '2px',
                       background: config.color,
                     }}
                   />
@@ -148,7 +149,7 @@ export default function RbacEnterprise() {
                   style={{
                     fontSize: '16px',
                     fontWeight: 600,
-                    color: landingTokens.inkPrimary,
+                    color: 'var(--ibm-ink)',
                     margin: 0,
                   }}
                 >
@@ -174,15 +175,15 @@ export default function RbacEnterprise() {
                       fontSize: '13px',
                       fontWeight: 300,
                       lineHeight: 1.5,
-                      color: landingTokens.inkSecondary,
+                      color: 'var(--ibm-ink-muted)',
                       paddingLeft: '16px',
-                      position: 'relative',
+                      position: 'relative' as const,
                     }}
                   >
                     {/* Bullet dot */}
                     <span
                       style={{
-                        position: 'absolute',
+                        position: 'absolute' as const,
                         left: 0,
                         top: '7px',
                         width: '5px',

@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 
 // ─── Responsive hook ──────────────────────────────────────────────
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -25,10 +24,10 @@ const pipelineStages = [
 ];
 
 const modelOptions = [
-  { id: 'gpt4', label: 'GPT-4', provider: 'OpenAI', color: landingTokens.accentLow },
-  { id: 'claude', label: 'Claude', provider: 'Anthropic', color: landingTokens.accentPrimary },
-  { id: 'ollama', label: 'Llama 3', provider: 'Ollama', color: landingTokens.accentHigh },
-  { id: 'custom', label: 'Custom', provider: 'Any OpenAI-compatible API', color: landingTokens.accentInfo },
+  { id: 'gpt4', label: 'GPT-4', provider: 'OpenAI', color: '#24a148' },
+  { id: 'claude', label: 'Claude', provider: 'Anthropic', color: '#0f62fe' },
+  { id: 'ollama', label: 'Llama 3', provider: 'Ollama', color: '#f57c00' },
+  { id: 'custom', label: 'Custom', provider: 'Any OpenAI-compatible API', color: '#0093b7' },
 ];
 
 // ─── Messaging items ─────────────────────────────────────────────────
@@ -42,11 +41,11 @@ const messagingPoints = [
     text: 'Per-pipeline-stage model selection — fast model for discovery, powerful model for deep scan',
   },
   {
-    icon: '\U0001F310',
+    icon: '🌐',
     text: 'Supported: OpenAI, Anthropic, Ollama, AWS Bedrock, Azure AI Foundry, LangGraph, any OpenAI-compatible API',
   },
   {
-    icon: '\U0001F512',
+    icon: '🔒',
     text: 'Data never leaves your environment — models run where you choose',
   },
 ];
@@ -67,17 +66,19 @@ export default function BringYourOwnModel() {
       }}
     >
       {/* Section header */}
-      <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
+      <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '12px', textAlign: 'center' }}>
         Bring your own model
       </p>
       <h2
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
           textAlign: 'center',
           fontSize: isMobile ? '32px' : '48px',
           maxWidth: '720px',
           marginLeft: 'auto',
           marginRight: 'auto',
+          marginBottom: '24px',
         }}
       >
         Your data, your model, your choice
@@ -119,11 +120,9 @@ export default function BringYourOwnModel() {
               {point.icon}
             </span>
             <p
+              className="ibm-body-lg"
               style={{
-                fontSize: '14px',
-                fontWeight: 300,
-                lineHeight: 1.6,
-                color: landingTokens.inkSecondary,
+                color: 'var(--ibm-ink-muted)',
                 margin: 0,
               }}
             >
@@ -160,7 +159,7 @@ export default function BringYourOwnModel() {
               fontWeight: 600,
               textTransform: 'uppercase' as const,
               letterSpacing: '0.08em',
-              color: landingTokens.inkMuted,
+              color: 'var(--ibm-ink-subtle)',
               marginBottom: '4px',
             }}
           >
@@ -174,9 +173,9 @@ export default function BringYourOwnModel() {
                 alignItems: 'center',
                 gap: '12px',
                 padding: '10px 16px',
-                background: landingTokens.bgSurface2,
-                borderRadius: '6px',
-                border: `1px solid ${landingTokens.borderSubtle}`,
+                background: 'var(--ibm-surface-2)',
+                borderRadius: '0',
+                border: '1px solid var(--ibm-hairline)',
                 opacity: visible ? 1 : 0,
                 transform: visible ? 'translateX(0)' : 'translateX(-12px)',
                 transition: `opacity 0.3s ease ${i * 120}ms, transform 0.3s ease ${i * 120}ms`,
@@ -188,7 +187,7 @@ export default function BringYourOwnModel() {
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  background: landingTokens.accentPrimary,
+                  background: '#0f62fe',
                   flexShrink: 0,
                 }}
               />
@@ -197,7 +196,7 @@ export default function BringYourOwnModel() {
                   style={{
                     fontSize: '14px',
                     fontWeight: 600,
-                    color: landingTokens.inkPrimary,
+                    color: 'var(--ibm-ink)',
                   }}
                 >
                   {stage.label}
@@ -206,7 +205,7 @@ export default function BringYourOwnModel() {
                   style={{
                     fontSize: '11px',
                     fontWeight: 300,
-                    color: landingTokens.inkMuted,
+                    color: 'var(--ibm-ink-subtle)',
                   }}
                 >
                   {stage.description}
@@ -241,7 +240,6 @@ export default function BringYourOwnModel() {
                   width: '100%',
                 }}
               >
-                {/* Multi-line fan-out pattern */}
                 <div
                   style={{
                     display: 'flex',
@@ -253,14 +251,14 @@ export default function BringYourOwnModel() {
                   <div
                     style={{
                       height: '1px',
-                      background: `linear-gradient(90deg, ${landingTokens.accentPrimary}60, ${landingTokens.accentPrimary}20)`,
+                      background: 'linear-gradient(90deg, rgba(15, 98, 254, 0.6), rgba(15, 98, 254, 0.2))',
                       width: '100%',
                     }}
                   />
                   <div
                     style={{
                       height: '1px',
-                      background: `linear-gradient(90deg, ${landingTokens.accentPrimary}40, ${landingTokens.accentPrimary}10)`,
+                      background: 'linear-gradient(90deg, rgba(15, 98, 254, 0.4), rgba(15, 98, 254, 0.1))',
                       width: '80%',
                       marginLeft: '10%',
                     }}
@@ -272,7 +270,7 @@ export default function BringYourOwnModel() {
             <div
               style={{
                 fontSize: '11px',
-                color: landingTokens.inkMuted,
+                color: 'var(--ibm-ink-subtle)',
                 textAlign: 'center',
                 marginTop: '-8px',
                 fontWeight: 300,
@@ -298,7 +296,7 @@ export default function BringYourOwnModel() {
               fontWeight: 600,
               textTransform: 'uppercase' as const,
               letterSpacing: '0.08em',
-              color: landingTokens.inkMuted,
+              color: 'var(--ibm-ink-subtle)',
               marginBottom: '4px',
             }}
           >
@@ -312,9 +310,9 @@ export default function BringYourOwnModel() {
                 alignItems: 'center',
                 gap: '12px',
                 padding: '10px 16px',
-                background: landingTokens.bgSurface2,
-                borderRadius: '6px',
-                border: `1px solid ${landingTokens.borderSubtle}`,
+                background: 'var(--ibm-surface-2)',
+                borderRadius: '0',
+                border: '1px solid var(--ibm-hairline)',
                 opacity: visible ? 1 : 0,
                 transform: visible ? 'translateX(0)' : 'translateX(12px)',
                 transition: `opacity 0.3s ease ${i * 120 + 200}ms, transform 0.3s ease ${i * 120 + 200}ms, border-color 0.2s ease`,
@@ -323,7 +321,7 @@ export default function BringYourOwnModel() {
                 e.currentTarget.style.borderColor = model.color;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = landingTokens.borderSubtle;
+                e.currentTarget.style.borderColor = 'var(--ibm-hairline)';
               }}
             >
               {/* Model color indicator */}
@@ -331,7 +329,7 @@ export default function BringYourOwnModel() {
                 style={{
                   width: '10px',
                   height: '10px',
-                  borderRadius: '3px',
+                  borderRadius: '2px',
                   background: model.color,
                   flexShrink: 0,
                 }}
@@ -341,7 +339,7 @@ export default function BringYourOwnModel() {
                   style={{
                     fontSize: '14px',
                     fontWeight: 600,
-                    color: landingTokens.inkPrimary,
+                    color: 'var(--ibm-ink)',
                   }}
                 >
                   {model.label}
@@ -350,7 +348,7 @@ export default function BringYourOwnModel() {
                   style={{
                     fontSize: '11px',
                     fontWeight: 300,
-                    color: landingTokens.inkMuted,
+                    color: 'var(--ibm-ink-subtle)',
                   }}
                 >
                   {model.provider}

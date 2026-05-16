@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible, useCountUp } from './landingAnimations';
 import { kpiStats, pricingTiers } from './landingData';
+import { SeverityDonutChart, CategoryBarChart } from './landingCharts';
 
 // ─── Mobile breakpoint hook ────────────────────────────────────────
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -55,9 +55,8 @@ export default function OutcomesKpis() {
               style={{
                 fontSize: isMobile ? '36px' : '48px',
                 fontWeight: 600,
-                color: landingTokens.inkPrimary,
+                color: 'var(--ibm-ink)',
                 lineHeight: 1.1,
-                fontFamily: landingTokens.fontSans,
               }}
             >
               {counts[i].toLocaleString()}
@@ -65,20 +64,17 @@ export default function OutcomesKpis() {
                 style={{
                   fontSize: isMobile ? '24px' : '32px',
                   fontWeight: 600,
-                  color: landingTokens.accentPrimary,
+                  color: '#0f62fe',
                 }}
               >
                 {stat.suffix}
               </span>
             </div>
             <div
+              className="ibm-body-lg"
               style={{
-                fontSize: '14px',
-                fontWeight: 300,
-                lineHeight: 1.5,
-                color: landingTokens.inkSecondary,
+                color: 'var(--ibm-ink-muted)',
                 marginTop: '8px',
-                fontFamily: landingTokens.fontSans,
                 maxWidth: '200px',
                 marginLeft: 'auto',
                 marginRight: 'auto',
@@ -90,13 +86,33 @@ export default function OutcomesKpis() {
         ))}
       </div>
 
+      {/* ─── Charts row ─────────────────────────────────────────── */}
+      <div
+        style={{
+          display: isMobile ? 'flex' : 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '32px',
+          marginBottom: '64px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <SeverityDonutChart />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <CategoryBarChart />
+        </div>
+      </div>
+
       {/* ─── Section Header ─────────────────────────────────────── */}
-      <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
+      <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '12px', textAlign: 'center' }}>
         Pricing
       </p>
       <h2
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
           textAlign: 'center',
           fontSize: isMobile ? '32px' : '48px',
           maxWidth: '640px',
@@ -124,30 +140,30 @@ export default function OutcomesKpis() {
               key={tier.name}
               style={{
                 background: isHighlighted
-                  ? landingTokens.bgSurface2
-                  : landingTokens.bgSurface1,
-                borderRadius: '8px',
+                  ? 'var(--ibm-surface-2)'
+                  : 'var(--ibm-surface-1)',
+                borderRadius: '0',
                 padding: isMobile ? '24px' : '32px',
                 border: `1px solid ${
                   isHighlighted
-                    ? landingTokens.accentPrimary
-                    : landingTokens.borderSubtle
+                    ? '#0f62fe'
+                    : 'var(--ibm-hairline)'
                 }`,
                 position: 'relative',
                 transform: isHighlighted && !isMobile ? 'scale(1.02)' : 'scale(1)',
                 boxShadow: isHighlighted
-                  ? `0 4px 24px ${landingTokens.accentPrimary}20`
+                  ? '0 4px 24px rgba(15, 98, 254, 0.12)'
                   : 'none',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
               }}
               onMouseEnter={(e) => {
                 if (!isHighlighted) {
-                  e.currentTarget.style.borderColor = landingTokens.borderMedium;
+                  e.currentTarget.style.borderColor = 'var(--ibm-hairline-strong)';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isHighlighted) {
-                  e.currentTarget.style.borderColor = landingTokens.borderSubtle;
+                  e.currentTarget.style.borderColor = 'var(--ibm-hairline)';
                 }
               }}
             >
@@ -164,10 +180,9 @@ export default function OutcomesKpis() {
                     textTransform: 'uppercase' as const,
                     letterSpacing: '0.06em',
                     padding: '4px 12px',
-                    borderRadius: '4px',
-                    background: landingTokens.accentPrimary,
+                    borderRadius: '0',
+                    background: '#0f62fe',
                     color: '#ffffff',
-                    fontFamily: landingTokens.fontSans,
                   }}
                 >
                   Most popular
@@ -179,9 +194,8 @@ export default function OutcomesKpis() {
                 style={{
                   fontSize: '18px',
                   fontWeight: 600,
-                  color: landingTokens.inkPrimary,
+                  color: 'var(--ibm-ink)',
                   marginBottom: '16px',
-                  fontFamily: landingTokens.fontSans,
                 }}
               >
                 {tier.name}
@@ -191,14 +205,13 @@ export default function OutcomesKpis() {
               <div
                 style={{
                   marginBottom: '8px',
-                  fontFamily: landingTokens.fontSans,
                 }}
               >
                 <span
                   style={{
                     fontSize: '36px',
                     fontWeight: 600,
-                    color: landingTokens.inkPrimary,
+                    color: 'var(--ibm-ink)',
                     lineHeight: 1,
                   }}
                 >
@@ -209,7 +222,7 @@ export default function OutcomesKpis() {
                     style={{
                       fontSize: '14px',
                       fontWeight: 300,
-                      color: landingTokens.inkMuted,
+                      color: 'var(--ibm-ink-subtle)',
                       marginLeft: '4px',
                     }}
                   >
@@ -238,21 +251,18 @@ export default function OutcomesKpis() {
                       fontSize: '14px',
                       fontWeight: 300,
                       lineHeight: 1.5,
-                      color: landingTokens.inkSecondary,
+                      color: 'var(--ibm-ink-muted)',
                       paddingLeft: '20px',
-                      position: 'relative',
-                      fontFamily: landingTokens.fontSans,
+                      position: 'relative' as const,
                     }}
                   >
                     {/* Check mark */}
                     <span
                       style={{
-                        position: 'absolute',
+                        position: 'absolute' as const,
                         left: 0,
                         top: '3px',
-                        color: isHighlighted
-                          ? landingTokens.accentPrimary
-                          : landingTokens.accentLow,
+                        color: isHighlighted ? '#0f62fe' : '#24a148',
                         fontSize: '14px',
                         fontWeight: 600,
                       }}
@@ -273,38 +283,34 @@ export default function OutcomesKpis() {
                   padding: '12px 24px',
                   fontSize: '14px',
                   fontWeight: 600,
-                  fontFamily: landingTokens.fontSans,
-                  borderRadius: '4px',
+                  borderRadius: '0',
                   textDecoration: 'none',
                   transition: 'background 0.15s ease, border-color 0.15s ease',
                   ...(isHighlighted
                     ? {
-                        background: landingTokens.accentPrimary,
+                        background: '#0f62fe',
                         color: '#ffffff',
                         border: 'none',
                       }
                     : {
                         background: 'transparent',
-                        color: landingTokens.inkPrimary,
-                        border: `1px solid ${landingTokens.borderMedium}`,
+                        color: 'var(--ibm-ink)',
+                        border: '1px solid var(--ibm-hairline-strong)',
                       }),
                 }}
                 onMouseEnter={(e) => {
                   if (isHighlighted) {
-                    e.currentTarget.style.background =
-                      landingTokens.accentPrimaryHover;
+                    e.currentTarget.style.background = '#0552d6';
                   } else {
-                    e.currentTarget.style.borderColor = landingTokens.inkPrimary;
-                    e.currentTarget.style.background = `${landingTokens.inkPrimary}08`;
+                    e.currentTarget.style.borderColor = 'var(--ibm-ink)';
+                    e.currentTarget.style.background = 'rgba(15, 98, 254, 0.05)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (isHighlighted) {
-                    e.currentTarget.style.background =
-                      landingTokens.accentPrimary;
+                    e.currentTarget.style.background = '#0f62fe';
                   } else {
-                    e.currentTarget.style.borderColor =
-                      landingTokens.borderMedium;
+                    e.currentTarget.style.borderColor = 'var(--ibm-hairline-strong)';
                     e.currentTarget.style.background = 'transparent';
                   }
                 }}
@@ -318,13 +324,11 @@ export default function OutcomesKpis() {
 
       {/* Pricing disclaimer */}
       <p
+        className="ibm-body-lg"
         style={{
           textAlign: 'center',
-          fontSize: '13px',
-          fontWeight: 300,
-          color: landingTokens.inkMuted,
+          color: 'var(--ibm-ink-subtle)',
           marginTop: '24px',
-          fontFamily: landingTokens.fontSans,
         }}
       >
         Pricing is approximate. Actual pricing may vary.

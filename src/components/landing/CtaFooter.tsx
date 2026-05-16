@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { APP_NAME } from '@/lib/branding';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 import { footerCols } from './landingData';
 
@@ -11,7 +10,7 @@ import { footerCols } from './landingData';
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -30,7 +29,7 @@ export default function CtaFooter() {
       <section
         ref={ctaRef}
         style={{
-          background: landingTokens.bgCanvas,
+          background: 'var(--ibm-canvas)',
           padding: isMobile ? '64px 24px' : '96px 24px',
           textAlign: 'center',
           opacity: ctaVisible ? 1 : 0,
@@ -38,30 +37,25 @@ export default function CtaFooter() {
           transition: 'opacity 0.5s ease, transform 0.5s ease',
         }}
       >
-        <div style={{ maxWidth: landingTokens.maxWidth, margin: '0 auto' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <h2
+            className="ibm-display-md"
             style={{
+              color: 'var(--ibm-ink)',
               fontSize: isMobile ? '32px' : '48px',
-              fontWeight: 600,
-              lineHeight: 1.15,
-              color: landingTokens.inkPrimary,
               marginBottom: '20px',
-              fontFamily: landingTokens.fontSans,
             }}
           >
             Start finding vulnerabilities today
           </h2>
           <p
+            className="ibm-body-lg"
             style={{
-              fontSize: '18px',
-              fontWeight: 300,
-              lineHeight: 1.5,
-              color: landingTokens.inkSecondary,
+              color: 'var(--ibm-ink-muted)',
               maxWidth: '560px',
               marginLeft: 'auto',
               marginRight: 'auto',
               marginBottom: '32px',
-              fontFamily: landingTokens.fontSans,
             }}
           >
             One pipeline. Every attack surface. AI-enriched findings that tell
@@ -87,20 +81,17 @@ export default function CtaFooter() {
                 padding: '14px 32px',
                 fontSize: '16px',
                 fontWeight: 600,
-                fontFamily: landingTokens.fontSans,
-                background: landingTokens.accentPrimary,
+                background: '#0f62fe',
                 color: '#ffffff',
-                borderRadius: '4px',
+                borderRadius: '0',
                 textDecoration: 'none',
                 transition: 'background 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background =
-                  landingTokens.accentPrimaryHover;
+                e.currentTarget.style.background = '#0552d6';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background =
-                  landingTokens.accentPrimary;
+                e.currentTarget.style.background = '#0f62fe';
               }}
             >
               Get started — free
@@ -114,22 +105,19 @@ export default function CtaFooter() {
                 padding: '14px 32px',
                 fontSize: '16px',
                 fontWeight: 600,
-                fontFamily: landingTokens.fontSans,
                 background: 'transparent',
-                color: landingTokens.inkPrimary,
-                borderRadius: '4px',
+                color: 'var(--ibm-ink)',
+                borderRadius: '0',
                 textDecoration: 'none',
-                border: `1px solid ${landingTokens.borderMedium}`,
+                border: '1px solid var(--ibm-hairline-strong)',
                 transition: 'border-color 0.15s ease, background 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor =
-                  landingTokens.inkPrimary;
-                e.currentTarget.style.background = `${landingTokens.inkPrimary}08`;
+                e.currentTarget.style.borderColor = 'var(--ibm-ink)';
+                e.currentTarget.style.background = 'rgba(15, 98, 254, 0.05)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor =
-                  landingTokens.borderMedium;
+                e.currentTarget.style.borderColor = 'var(--ibm-hairline-strong)';
                 e.currentTarget.style.background = 'transparent';
               }}
             >
@@ -142,8 +130,7 @@ export default function CtaFooter() {
             style={{
               fontSize: '13px',
               fontWeight: 300,
-              color: landingTokens.inkMuted,
-              fontFamily: landingTokens.fontSans,
+              color: 'var(--ibm-ink-subtle)',
             }}
           >
             No credit card. No agent to install.
@@ -154,12 +141,12 @@ export default function CtaFooter() {
       {/* ─── Footer ──────────────────────────────────────────────── */}
       <footer
         style={{
-          background: landingTokens.bgSurface1,
-          borderTop: `1px solid ${landingTokens.borderSubtle}`,
+          background: 'var(--ibm-surface-1)',
+          borderTop: '1px solid var(--ibm-hairline)',
           padding: isMobile ? '48px 24px 32px' : '64px 24px 32px',
         }}
       >
-        <div style={{ maxWidth: landingTokens.maxWidth, margin: '0 auto' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {/* Logo + tagline */}
           <div style={{ marginBottom: '40px' }}>
             <Link
@@ -167,9 +154,8 @@ export default function CtaFooter() {
               style={{
                 fontSize: '20px',
                 fontWeight: 600,
-                color: landingTokens.inkPrimary,
+                color: 'var(--ibm-ink)',
                 textDecoration: 'none',
-                fontFamily: landingTokens.fontSans,
                 letterSpacing: '-0.02em',
               }}
             >
@@ -179,9 +165,8 @@ export default function CtaFooter() {
               style={{
                 fontSize: '14px',
                 fontWeight: 300,
-                color: landingTokens.inkMuted,
+                color: 'var(--ibm-ink-subtle)',
                 marginTop: '8px',
-                fontFamily: landingTokens.fontSans,
               }}
             >
               AI-native security scanning for every attack surface
@@ -207,9 +192,8 @@ export default function CtaFooter() {
                     fontWeight: 600,
                     textTransform: 'uppercase' as const,
                     letterSpacing: '0.06em',
-                    color: landingTokens.inkSecondary,
+                    color: 'var(--ibm-ink-muted)',
                     marginBottom: '16px',
-                    fontFamily: landingTokens.fontSans,
                   }}
                 >
                   {col.title}
@@ -231,18 +215,15 @@ export default function CtaFooter() {
                         style={{
                           fontSize: '14px',
                           fontWeight: 300,
-                          color: landingTokens.inkMuted,
+                          color: 'var(--ibm-ink-subtle)',
                           textDecoration: 'none',
-                          fontFamily: landingTokens.fontSans,
                           transition: 'color 0.15s ease',
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.color =
-                            landingTokens.inkPrimary;
+                          e.currentTarget.style.color = 'var(--ibm-ink)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.color =
-                            landingTokens.inkMuted;
+                          e.currentTarget.style.color = 'var(--ibm-ink-subtle)';
                         }}
                       >
                         {link.label}
@@ -257,7 +238,7 @@ export default function CtaFooter() {
           {/* Bottom bar */}
           <div
             style={{
-              borderTop: `1px solid ${landingTokens.borderSubtle}`,
+              borderTop: '1px solid var(--ibm-hairline)',
               paddingTop: '24px',
               display: 'flex',
               flexDirection: isMobile ? 'column' : 'row',
@@ -270,8 +251,7 @@ export default function CtaFooter() {
               style={{
                 fontSize: '12px',
                 fontWeight: 300,
-                color: landingTokens.inkMuted,
-                fontFamily: landingTokens.fontSans,
+                color: 'var(--ibm-ink-subtle)',
                 margin: 0,
               }}
             >
@@ -290,16 +270,15 @@ export default function CtaFooter() {
                   style={{
                     fontSize: '12px',
                     fontWeight: 300,
-                    color: landingTokens.inkMuted,
+                    color: 'var(--ibm-ink-subtle)',
                     textDecoration: 'none',
-                    fontFamily: landingTokens.fontSans,
                     transition: 'color 0.15s ease',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = landingTokens.inkPrimary;
+                    e.currentTarget.style.color = 'var(--ibm-ink)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = landingTokens.inkMuted;
+                    e.currentTarget.style.color = 'var(--ibm-ink-subtle)';
                   }}
                 >
                   {label}
