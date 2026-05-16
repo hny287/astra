@@ -68,14 +68,17 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const { error } = await requireAuth();
+  const { error, userId, role } = await requireAuth();
   if (error) return error;
 
   const { searchParams } = request.nextUrl;
   const status = searchParams.get('status') ?? undefined;
   const { limit, offset } = parsePagination(request);
 
-  const where = status ? { status: status as any } : {};
+  const where: any = {};
+  if (status) where.status = status;
+  // Non-admin users only see their own scans
+  if (role !== 'ADMIN' && userId) where.userId = userId;
 
   const [scans, total] = await Promise.all([
     prisma.scan.findMany({

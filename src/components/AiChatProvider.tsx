@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, createContext, useContext, useCallback, useMemo } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAppData } from './AppDataProvider';
 
 interface ChatContext {
@@ -376,9 +378,10 @@ export default function AiChatProvider({ children }: { children: React.ReactNode
                     fontSize: 14,
                     lineHeight: 1.5,
                     letterSpacing: '0.16px',
-                    whiteSpace: 'pre-wrap',
                   }}>
-                    {msg.content}
+                    {msg.role === 'assistant'
+                      ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                      : msg.content}
                   </div>
                 </div>
               ))}

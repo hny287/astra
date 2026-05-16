@@ -36,9 +36,10 @@ async function cleanupScanTmpDir(scanId: string): Promise<void> {
     const localDir = output?.localDir as string | undefined;
     if (localDir && localDir.includes(TEMP_DIR_PREFIX)) {
       await fs.rm(localDir, { recursive: true, force: true });
+      logger.info({ scanId, localDir }, 'Cleaned up scan temp directory');
     }
-  } catch {
-    // Best-effort cleanup
+  } catch (err) {
+    logger.warn({ scanId, err: err instanceof Error ? err.message : String(err) }, 'Failed to clean up scan temp directory');
   }
 }
 
@@ -60,6 +61,12 @@ export async function processNextJob(): Promise<boolean> {
     logger.warn({ scanId, jobId, scanStatus: scan.status }, 'Skipping job: scan already terminal');
     await markJobFailed(jobId, `Scan already ${scan.status}`);
     return true;
+  }
+
+  // Mark scan as RUNNING when the first job is processed
+  if (scan.status === 'PENDING') {
+    await prisma.scan.update({ where: { id: scanId }, data: { status: 'RUNNING' } });
+    logger.info({ scanId, repoUrl: scan.repoUrl, branch: scan.branch }, 'Scan started');
   }
 
   try {
@@ -112,7 +119,7 @@ export async function processNextJob(): Promise<boolean> {
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    logger.error({ jobId, err: message }, 'Job failed');
+    logger.error({ jobId, scanId, node, err: message }, 'Job failed');
     await markJobFailed(jobId, message);
     const currentScan = await prisma.scan.findUnique({ where: { id: scanId } });
     if (currentScan && currentScan.status !== 'COMPLETED') {
@@ -200,6 +207,7 @@ let workerRunning = false;
 export async function startWorker(): Promise<void> {
   if (workerRunning) return;
   workerRunning = true;
+  logger.info('Scan worker started');
 
   while (workerRunning) {
     try {
@@ -216,4 +224,5 @@ export async function startWorker(): Promise<void> {
 
 export function stopWorker(): void {
   workerRunning = false;
+  logger.info('Scan worker stopped');
 }

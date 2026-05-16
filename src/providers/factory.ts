@@ -90,7 +90,7 @@ export function createProvider(config: ProviderCreateConfig): AIProvider {
 }
 
 export function createProviderForNode(
-  nodeName: "discover" | "deepScan" | "crossFile",
+  nodeName: "discover" | "deepScan" | "crossFile" | "toolScan",
   config: ScanConfig
 ): AIProvider {
   const nodeConfig = config.scan.nodes[nodeName];

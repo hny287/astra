@@ -1,7 +1,7 @@
 # Platform — Task Tracker
 
 **Created:** 2026-05-07
-**Updated:** 2026-05-08 (session 2)
+**Updated:** 2026-05-15
 
 ---
 
@@ -72,6 +72,16 @@
 | 48 | **Pipeline performance: batch AI calls with dynamic concurrency** | ⚪ | 0m | | Auto-scale concurrency based on provider rate limits and queue depth |
 | 49 | **Pipeline performance: incremental/resumable scans** | ⚪ | 0m | | If scan fails at `cross_file`, resume from there without re-running `deep_scan` |
 | 50 | **Pipeline performance: streaming findings** | ⚪ | 0m | | Emit findings to WebSocket/SSE as they're found, not just at `persist` |
+| 102 | **Scan queue: priority + scheduled scans** | ⚪ | 0m | | Add `priority` (critical/high/normal/low) and `scheduledAt` to Scan model; update `claimNextJob` to respect them; update API |
+| 103 | **Scan queue: worker pool** | ⚪ | 0m | | Replace single worker loop with `MAX_CONCURRENT_SCANS` workers running in parallel |
+| 104 | **Scan queue: cancellation awareness** | ⚪ | 0m | | Check scan status between all pipeline nodes, not just deep-scan batches |
+| 105 | **Scan queue: stuck job recovery** | ⚪ | 0m | | Time out RUNNING jobs after 10 min; retry with backoff or fail the scan |
+| 106 | **Scan queue: backend abstraction** | ⚪ | 0m | | `ScanQueue` interface (enqueue/dequeue/markRunning/markComplete/markFailed/cancel/getStats); implement `PostgresQueue` |
+| 107 | **Scan queue: Redis/BullMQ backend** | ⚪ | 0m | | Implement `RedisQueue` for multi-server/high-volume deployments |
+| 108 | **Scan queue: external MQ backend** | ⚪ | 0m | | Implement `MQQueue` with Redis state + RabbitMQ/NATS/SQS for enterprise |
+| 109 | **Scan queue: recurring scans** | ⚪ | 0m | | Cron expressions on Scan records; auto-create new scans on schedule; `recurrenceId` linking |
+| 110 | **Scan queue: queue stats API** | ⚪ | 0m | | `/api/v1/queue/stats` for queue depth, active/waiting/completed counts |
+| 111 | **Scan queue: cancel/resume/progress APIs** | ⚪ | 0m | | POST `/scans/:id/cancel`, `/scans/:id/resume`, GET `/scans/:id/progress` |
 
 ---
 
@@ -177,6 +187,123 @@
 | 91 | Fix login failures from corrupted password hashes | ✅ 2026-05-08 | 10m | Earlier seeds wrote to wrong schema; repaired hashes in public.User; rebuilt app so db.ts now targets correct schema |
 | 92 | Sync db-related files local ↔ deployed | ✅ 2026-05-08 | 5m | db.ts, seed.ts, prisma.config.ts identical across /root/astra/astra-app and /var/www/astra-app; deployed app rebuilt |
 | 94 | Branding refactor — centralize all product identity into `branding.ts` with env vars | ✅ 2026-05-09 | 60m | All brand strings (APP_NAME, APP_TITLE, APP_ID, APP_DOMAIN, etc.) read from process.env with defaults; `AstraConfig` → `ScanConfig`; `astra.config.json` → `scan.config.json`; `parseAstraRule` → `parseScanRule`; `.astra` → `.rule` |
+| 95 | Fix deep-scan crash on undefined file path (Trivy IAC misconfigs) | ✅ 2026-05-15 | 15m | f.file.endsWith() crashed on undefined; null guards in deep-scan, cross-file, tool-scan |
+| 96 | Architecture diagram visibility during in-progress scans | ✅ 2026-05-15 | 10m | Read diagram from NodeOutput fallback; Pipeline tab renders Mermaid inline |
+| 97 | GitHub branch pagination (was capped at 100) | ✅ 2026-05-15 | 10m | Follow Link headers; mark default branch |
+| 98 | Deep-scan cancellation check between batches | ✅ 2026-05-15 | 5m | Check scan status === FAILED between batches |
+| 99 | Codegraph file iteration fix (discoveredFiles vs structureData) | ✅ 2026-05-15 | 5m | Was only surfacing 25/71 files |
+| 100 | Fix AI response JSON parsing crash | ✅ 2026-05-15 | 10m | parseAiJson() sanitizer strips invalid \u escapes + trailing commas; deep-scan & cross-file |
+| 101 | Markdown rendering in AI chat | ✅ 2026-05-15 | 5m | react-markdown + remark-gfm; assistant messages render md, user messages stay plain text |
+| 102t | Pipeline logging (queue + worker state transitions) | ✅ 2026-05-15 | 15m | All queue.ts state transitions now logged; worker logs scan PENDING→RUNNING, temp cleanup, start/stop |
+| 103t | Parallel deep-scan with p-limit | ✅ 2026-05-15 | 15m | Replaced sequential batch loop with p-limit concurrency; all files run concurrently gated by config |
+| 104t | Incremental persist (per-file upsert) | ✅ 2026-05-15 | 20m | Findings upserted to DB per-file in deep-scan, per-finding in tool-scan and cross-file |
+| 105t | AI-enriched tool findings | ✅ 2026-05-15 | 20m | Trivy/Gitleaks findings sent to AI for enrichment (aiExplanation, aiFix, exploitScore, etc.) before storage |
+| 106t | Shared findings/persist.ts + findings/normalize.ts | ✅ 2026-05-15 | 10m | Shared upsertFinding() helper and normalizeSeverity/normalizeCategory extracted from persist.ts |
+| 107t | Persist node refactored | ✅ 2026-05-15 | 10m | No longer creates Finding records; only creates Tasks, BusinessRules, and updates scan metadata |
+
+---
+
+## Roadmap
+
+### Phase 1 — Stability & Queue Foundation (Current)
+**Goal:** Make scans reliable, concurrent, and cancellable.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 102 | Priority + scheduled scans | — | Add `priority`/`scheduledAt` to Scan model |
+| 103 | Worker pool (concurrent scans) | 102 | Replace single worker with `MAX_CONCURRENT_SCANS` workers |
+| 104 | Cancellation awareness | 102 | Check scan status between every pipeline node |
+| 105 | Stuck job recovery | — | Timeout RUNNING jobs after 10 min; retry with backoff |
+| 24 | Fix `Finding` PATCH userId | — | Use real user ID, not `'system''` |
+| 22 | Fix cross-file context window bomb | — | Summarize instead of concatenating all file summaries |
+
+### Phase 2 — Queue Abstraction & Config
+**Goal:** Decouple queue from PostgreSQL; give users control over providers and prompts.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 106 | Queue backend abstraction (ScanQueue interface + PostgresQueue) | 102–105 | Interface: enqueue/dequeue/cancel/getStats |
+| 10 | User-scoped config architecture | — | 4-layer: Credentials → Defaults → Presets → Per-Scan |
+| 11–14 | Provider registry + user credentials + user config + user presets | 10 | Per-user API keys (encrypted), defaults, saved presets |
+| 16 | Editable system prompts per node | 10 | Store prompts in Config table, fall back to hardcoded |
+| 78 | DB-backed prompt management UI | 16 | Edit/version/restore prompts per node |
+
+### Phase 3 — Streaming Chat & Real-time
+**Goal:** SSE streaming for chat; real-time scan progress.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 34 | Streaming chat (SSE) | — | Design spec done; implement `sendStream()` on all providers |
+| 50 | Streaming findings via SSE | 103 | Push findings as they arrive, not just at persist |
+| 67 | Toast notifications | — | Real-time feedback for scan events, config saves |
+| 110 | Queue stats API | 106 | `/api/v1/queue/stats` for depth, active, waiting |
+
+### Phase 4 — Multi-backend Queue & Recurring Scans
+**Goal:** Scale beyond single-server; enable scheduled/recurring scans.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 107 | Redis/BullMQ backend | 106 | For multi-server, high-volume deployments |
+| 108 | External MQ backend | 107 | Redis state + RabbitMQ/NATS/SQS for enterprise |
+| 109 | Recurring scans (cron) | 102 | Cron on Scan model; auto-create scans on schedule |
+| 111 | Cancel/resume/progress APIs | 104 | POST cancel, resume; GET progress |
+
+### Phase 5 — Pipeline Performance
+**Goal:** Faster scans, less I/O, smarter batching.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 46 | Parallelize independent nodes | 103 | discover can start before clone finishes |
+| 47 | File content caching | — | Cache reads between discover and deepScan |
+| 48 | Dynamic AI call concurrency | 103 | Auto-scale based on provider rate limits |
+| 49 | Incremental/resumable scans | 105 | Resume from last completed node on failure |
+| 23 | Better token estimation | — | Replace `length/4` with real tokenizer |
+
+### Phase 6 — New Pipeline Nodes
+**Goal:** Expand scanner coverage and post-processing.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 51 | SBOM generation | — | Parse package.json, requirements.txt, Cargo.toml |
+| 52 | Dependency vulnerability scanning | 51 | Check SBOM against OSV, GitHub Advisory |
+| 53 | Dedicated secret scanning | — | Entropy analysis, git history, custom patterns |
+| 54 | IaC scanning | — | Terraform, CloudFormation, K8s YAML |
+| 55 | Compliance rules | — | SOC2, PCI-DSS, GDPR pattern checks |
+| 56 | Finding correlation | — | Merge findings across scanners |
+| 57 | Risk scoring | — | Severity × exploitability × exposure |
+| 58 | Report generation | 57 | SARIF, PDF, HTML reports |
+| 59 | Alert dispatch | 57 | Slack, email, PagerDuty, webhooks |
+
+### Phase 7 — Visualization & UX Polish
+**Goal:** Make the dashboard informative and pleasant to use.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 60 | Interactive pipeline graph | — | Live node status, timing |
+| 61 | Scan timeline (Gantt) | — | Node-by-node execution view |
+| 62 | Finding dependency graph | 56 | Cross-file vulnerability connections |
+| 63 | Dashboard KPI cards | — | Severity counts, scan duration, token usage |
+| 64 | Dark mode | — | System preference + manual toggle |
+| 65 | Command palette (Cmd+K) | — | Search scans, findings, actions |
+| 68 | Loading skeletons | — | Content-aware shimmer placeholders |
+| 69 | Empty states | — | Illustrations + CTAs for empty lists |
+| 70 | Onboarding wizard | 10–14 | Step-by-step: credentials → prefs → first scan |
+
+### Backlog (no phase yet)
+
+| # | Task | Notes |
+|---|------|-------|
+| 15 | Wire Scan.configJson to UI — per-scan override exists in schema |
+| 18 | Provider factory uses user creds instead of env vars |
+| 19 | Remove/hide 3 stub providers (bedrock, azure, langgraph) |
+| 20 | Fix Cloud Ollama URL mismatch |
+| 21 | Fix provider caching hash (include all config fields) |
+| 28 | Hidden ConfigEditor fields (instructions, tools, etc.) |
+| 30 | Merge ScanChat + AiChatProvider into shared component |
+| 31 | Remove/document dead LangGraph code |
+| 32 | ConfigEditor input validation (model exists for provider) |
+| 66 | Keyboard shortcuts |
+| 80 | DB-first context loading for all AI calls |
 
 ---
 

@@ -1,8 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
+import pLimit from 'p-limit';
 import type { ScanState } from '../state';
 import type { UnifiedFinding, FileSummary } from '../../findings/types';
 import { fingerprint } from '../../findings/dedup';
+import { upsertFinding } from '../../findings/persist';
 import { createProviderForNode } from '../../providers/factory';
 import { loadKnowledgeBase } from '../../rules/loader';
 import type { AIRequest } from '../../providers/base';
@@ -11,39 +13,18 @@ import { SCAN_DEPTH_OUTPUT_TOKENS, THINKING_DEPTH_BUDGET } from '../../lib/confi
 import { buildDeepScanPrompt, loadPrompts } from '../prompts/deep-scan';
 import { instrumentedSend } from '@/lib/ai-instrumentation';
 import { prisma } from '@/lib/db';
+import { parseAiJson } from './parse-ai-json';
 import { log } from '../log';
 
-function stripMarkdownCodeBlock(text: string): string {
-  let cleaned = text.trim();
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '');
-  }
-  return cleaned.trim();
-}
-
 function parseFindingsResponse(text: string, filePath: string): { findings: any[]; fileSummary: any } {
-  const cleaned = stripMarkdownCodeBlock(text);
-  try {
-    const parsed = JSON.parse(cleaned);
+  const parsed = parseAiJson<{ findings?: any[]; fileSummary?: any }>(text);
+  if (parsed) {
     return {
       findings: Array.isArray(parsed.findings) ? parsed.findings : [],
       fileSummary: parsed.fileSummary ?? null,
     };
-  } catch {
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          findings: Array.isArray(parsed.findings) ? parsed.findings : [],
-          fileSummary: parsed.fileSummary ?? null,
-        };
-      } catch {
-        return { findings: [], fileSummary: null };
-      }
-    }
-    return { findings: [], fileSummary: null };
   }
+  return { findings: [], fileSummary: null };
 }
 
 function mapToUnifiedFinding(raw: any, filePath: string, language: string): UnifiedFinding {
@@ -236,126 +217,130 @@ export async function deepScanNode(state: ScanState): Promise<Partial<ScanState>
   const files = state.discoveredFiles;
   // Support single-file rescan: if the job input specifies a singleFile, only scan that one
   const singleFile = (state.currentJobInput as any)?.singleFile;
-  const singleFileLanguage = (state.currentJobInput as any)?.singleFileLanguage;
   const filesToScan = singleFile
     ? files.filter(f => f.path === singleFile)
     : files;
-  await log(state.scanId, 'info', 'deep_scan', `Starting deep scan of ${filesToScan.length} file(s) with ${nodeConfig.model} (${nodeConfig.provider})${singleFile ? ` [single-file: ${singleFile}]` : ''}`);
-  const batches: typeof filesToScan[] = [];
-  for (let i = 0; i < filesToScan.length; i += concurrency) {
-    batches.push(filesToScan.slice(i, i + concurrency));
-  }
 
-  for (const batch of batches) {
-    // Check if scan was cancelled between batches
-    const scan = await prisma.scan.findUnique({ where: { id: state.scanId }, select: { status: true } });
-    if (scan?.status === 'FAILED') {
-      await log(state.scanId, 'warn', 'deep_scan', 'Scan cancelled, aborting remaining batches');
-      break;
-    }
+  await log(state.scanId, 'info', 'deep_scan', `Starting deep scan of ${filesToScan.length} file(s) with ${nodeConfig.model} (${nodeConfig.provider}), concurrency=${concurrency}${singleFile ? ` [single-file: ${singleFile}]` : ''}`);
 
-    const batchIdx = batches.indexOf(batch) + 1;
-    await log(state.scanId, 'info', 'deep_scan', `Batch ${batchIdx}/${batches.length} — scanning ${batch.length} files`);
+  // Run all files concurrently with p-limit gating at `concurrency` parallel AI calls
+  const limit = pLimit(concurrency);
 
-    const results = await Promise.allSettled(
-      batch.map(async (fileInfo) => {
-        const fullPath = path.join(state.localDir, fileInfo.path);
-        let content: string;
+  const tasks = filesToScan.map((fileInfo) =>
+    limit(async () => {
+      // Cancellation check before each file
+      const scan = await prisma.scan.findUnique({ where: { id: state.scanId }, select: { status: true } });
+      if (scan?.status === 'FAILED') {
+        return { findings: [], summary: null, error: 'Scan cancelled' };
+      }
+
+      const fullPath = path.join(state.localDir, fileInfo.path);
+      let content: string;
+      try {
+        const stat = await fs.stat(fullPath);
+        if (stat.size > maxFileBytes) {
+          return { findings: [], summary: null, error: `File too large: ${fileInfo.path} (${stat.size} bytes)` };
+        }
+        content = await fs.readFile(fullPath, 'utf-8');
+      } catch (err) {
+        return { findings: [], summary: null, error: `Cannot read file: ${fileInfo.path}: ${err instanceof Error ? err.message : String(err)}` };
+      }
+
+      const estimatedTokens = provider.estimateTokens(content);
+      const modelInfo = provider.getModelInfo();
+      if (estimatedTokens > modelInfo.contextWindow * 0.8) {
+        return { findings: [], summary: null, error: `File too large for context: ${fileInfo.path} (${estimatedTokens} tokens)` };
+      }
+
+      const userPrompt = buildFilePrompt(fileInfo.path, fileInfo.language, content, state.toolFindings, state.repoIntel, state.architectureDiagram);
+
+      const request: AIRequest = {
+        system: systemPrompt,
+        prompt: userPrompt,
+        maxOutputTokens: SCAN_DEPTH_OUTPUT_TOKENS[nodeConfig.scanDepth] ?? nodeConfig.maxOutputTokens,
+        temperature: nodeConfig.temperature,
+        topP: nodeConfig.topP,
+        topK: nodeConfig.topK ?? undefined,
+        frequencyPenalty: nodeConfig.frequencyPenalty,
+        presencePenalty: nodeConfig.presencePenalty,
+        stopSequences: nodeConfig.stopSequences.length > 0 ? nodeConfig.stopSequences : undefined,
+        thinkingDepth: nodeConfig.thinkingDepth,
+        thinkingBudget: nodeConfig.thinkingBudget ?? (nodeConfig.thinkingDepth !== 'none' ? THINKING_DEPTH_BUDGET[nodeConfig.thinkingDepth] : null),
+      };
+
+      let lastError: string | null = null;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-          const stat = await fs.stat(fullPath);
-          if (stat.size > maxFileBytes) {
-            return { findings: [], summary: null, error: `File too large: ${fileInfo.path} (${stat.size} bytes)` };
-          }
-          content = await fs.readFile(fullPath, 'utf-8');
-        } catch (err) {
-          return { findings: [], summary: null, error: `Cannot read file: ${fileInfo.path}: ${err instanceof Error ? err.message : String(err)}` };
-        }
+          const response = await instrumentedSend(provider, request, {
+            scanId: state.scanId,
+            jobId: state.currentJobId,
+            source: 'pipeline',
+            node: 'deep_scan',
+            nodeConfig: nodeConfig as Record<string, unknown>,
+          });
+          totalInputTokens += response.inputTokens;
+          totalOutputTokens += response.outputTokens;
+          totalThinkingTokens += response.thinkingTokens;
 
-        const estimatedTokens = provider.estimateTokens(content);
-        const modelInfo = provider.getModelInfo();
-        if (estimatedTokens > modelInfo.contextWindow * 0.8) {
-          return { findings: [], summary: null, error: `File too large for context: ${fileInfo.path} (${estimatedTokens} tokens)` };
-        }
-
-        const userPrompt = buildFilePrompt(fileInfo.path, fileInfo.language, content, state.toolFindings, state.repoIntel, state.architectureDiagram);
-
-        const request: AIRequest = {
-          system: systemPrompt,
-          prompt: userPrompt,
-          maxOutputTokens: SCAN_DEPTH_OUTPUT_TOKENS[nodeConfig.scanDepth] ?? nodeConfig.maxOutputTokens,
-          temperature: nodeConfig.temperature,
-          topP: nodeConfig.topP,
-          topK: nodeConfig.topK ?? undefined,
-          frequencyPenalty: nodeConfig.frequencyPenalty,
-          presencePenalty: nodeConfig.presencePenalty,
-          stopSequences: nodeConfig.stopSequences.length > 0 ? nodeConfig.stopSequences : undefined,
-          thinkingDepth: nodeConfig.thinkingDepth,
-          thinkingBudget: nodeConfig.thinkingBudget ?? (nodeConfig.thinkingDepth !== 'none' ? THINKING_DEPTH_BUDGET[nodeConfig.thinkingDepth] : null),
-        };
-
-        let lastError: string | null = null;
-        for (let attempt = 0; attempt <= maxRetries; attempt++) {
-          try {
-             const response = await instrumentedSend(provider, request, {
-                scanId: state.scanId,
-                jobId: state.currentJobId,
-                source: 'pipeline',
-                node: 'deep_scan',
-                nodeConfig: nodeConfig as Record<string, unknown>,
-              });
-            totalInputTokens += response.inputTokens;
-            totalOutputTokens += response.outputTokens;
-            totalThinkingTokens += response.thinkingTokens;
-
-            // Detect empty response despite reported output tokens — model hit token limit
-            if (!response.text.trim() && response.outputTokens > 0) {
-              lastError = `Model returned empty response with ${response.outputTokens} output tokens for ${fileInfo.path} (attempt ${attempt + 1})`;
-              await log(state.scanId, 'warn', 'deep_scan', lastError);
-              if (attempt < maxRetries) {
-                await sleep(retryBackoffMs * (attempt + 1));
-                continue;
-              }
-              return { findings: [], summary: null, error: lastError, inputTokens: response.inputTokens, outputTokens: response.outputTokens, thinkingTokens: response.thinkingTokens };
-            }
-
-            const parsed = parseFindingsResponse(response.text, fileInfo.path);
-            const findings = parsed.findings.map((raw: any) => mapToUnifiedFinding(raw, fileInfo.path, fileInfo.language));
-            const summary = parsed.fileSummary ? mapToFileSummary(parsed.fileSummary, fileInfo.path, fileInfo.language) : null;
-
-            return { findings, summary, error: null, inputTokens: response.inputTokens, outputTokens: response.outputTokens, thinkingTokens: response.thinkingTokens };
-          } catch (err) {
-            lastError = err instanceof Error ? err.message : String(err);
+          // Detect empty response despite reported output tokens — model hit token limit
+          if (!response.text.trim() && response.outputTokens > 0) {
+            lastError = `Model returned empty response with ${response.outputTokens} output tokens for ${fileInfo.path} (attempt ${attempt + 1})`;
+            await log(state.scanId, 'warn', 'deep_scan', lastError);
             if (attempt < maxRetries) {
               await sleep(retryBackoffMs * (attempt + 1));
+              continue;
+            }
+            return { findings: [], summary: null, error: lastError, inputTokens: response.inputTokens, outputTokens: response.outputTokens, thinkingTokens: response.thinkingTokens };
+          }
+
+          const parsed = parseFindingsResponse(response.text, fileInfo.path);
+          const findings = parsed.findings.map((raw: any) => mapToUnifiedFinding(raw, fileInfo.path, fileInfo.language));
+          const summary = parsed.fileSummary ? mapToFileSummary(parsed.fileSummary, fileInfo.path, fileInfo.language) : null;
+
+          // Incremental persist: upsert findings to DB as each file completes
+          for (const finding of findings) {
+            try {
+              await upsertFinding(finding, state.scanId);
+            } catch (err) {
+              await log(state.scanId, 'warn', 'deep_scan', `Failed to upsert finding for ${finding.file}: ${err instanceof Error ? err.message : String(err)}`);
             }
           }
-        }
-        return { findings: [], summary: null, error: `AI call failed for ${fileInfo.path} after ${maxRetries + 1} attempts: ${lastError}` };
-      })
-    );
 
-    for (const result of results) {
-      if (result.status === 'fulfilled') {
-        const { findings, summary, error } = result.value;
-        if (error) {
-          errors.push(error);
-          await log(state.scanId, 'warn', 'deep_scan', error);
+          return { findings, summary, error: null, inputTokens: response.inputTokens, outputTokens: response.outputTokens, thinkingTokens: response.thinkingTokens };
+        } catch (err) {
+          lastError = err instanceof Error ? err.message : String(err);
+          if (attempt < maxRetries) {
+            await sleep(retryBackoffMs * (attempt + 1));
+          }
         }
-        if (findings.length > 0) {
-          const filePath = findings[0].file;
-          findingsPerFile[filePath] = findings;
-          allFindings.push(...findings);
-          await log(state.scanId, 'success', 'deep_scan', `Found ${findings.length} finding(s) in ${filePath}`, { severity: findings.map(f => f.severity) });
-        }
-        if (summary) {
-          fileSummaries.push(summary);
-          await log(state.scanId, 'info', 'deep_scan', `Summary: ${summary.path} — ${summary.purpose || 'no purpose'}`);
-        }
-      } else {
-        const errMsg = result.reason?.message || 'Unknown error in batch processing';
-        errors.push(errMsg);
-        await log(state.scanId, 'error', 'deep_scan', errMsg);
       }
+      return { findings: [], summary: null, error: `AI call failed for ${fileInfo.path} after ${maxRetries + 1} attempts: ${lastError}` };
+    })
+  );
+
+  const results = await Promise.allSettled(tasks);
+
+  for (const result of results) {
+    if (result.status === 'fulfilled') {
+      const { findings, summary, error } = result.value;
+      if (error) {
+        errors.push(error);
+        await log(state.scanId, 'warn', 'deep_scan', error);
+      }
+      if (findings.length > 0) {
+        const filePath = findings[0].file;
+        findingsPerFile[filePath] = findings;
+        allFindings.push(...findings);
+        await log(state.scanId, 'success', 'deep_scan', `Found ${findings.length} finding(s) in ${filePath}`, { severity: findings.map(f => f.severity) });
+      }
+      if (summary) {
+        fileSummaries.push(summary);
+        await log(state.scanId, 'info', 'deep_scan', `Summary: ${summary.path} — ${summary.purpose || 'no purpose'}`);
+      }
+    } else {
+      const errMsg = result.reason?.message || 'Unknown error in deep-scan processing';
+      errors.push(errMsg);
+      await log(state.scanId, 'error', 'deep_scan', errMsg);
     }
   }
 

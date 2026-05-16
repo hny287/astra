@@ -16,9 +16,7 @@ const NAV_LINKS: { href: string; label: string; external?: boolean }[] = [
   { href: '/observability', label: 'Observability' },
   { href: '/config', label: 'Configuration' },
   { href: '/rules', label: 'Rules' },
-  { href: '/glossary', label: 'Glossary' },
-  { href: '/changelog', label: 'Changelog' },
-  { href: '/unified-spec.html', label: 'Spec', external: true },
+  { href: '/knowledge', label: 'Knowledge' },
 ];
 
 export default function AppShell({ children }: { children: ReactNode }) {

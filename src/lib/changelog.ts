@@ -11,6 +11,42 @@ export interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.24.0',
+    date: '2026-05-15',
+    title: 'Parallel deep-scan, incremental persist, and AI-enriched tool findings',
+    description: 'Deep-scan now runs all files concurrently (p-limit) instead of sequential batches. Findings appear in the UI as they are discovered (incremental DB upsert per file). Tool findings (Trivy/Gitleaks) are enriched by AI before storage. Persist node refactored to only create tasks and save metadata.',
+    categories: [
+      { label: 'Added', items: [
+        'Parallel deep-scan: p-limit replaces sequential batch loop, all files run concurrently gated by concurrency config',
+        'Incremental persist: findings upserted to DB per-file in deep-scan, per-finding in tool-scan, per-finding in cross-file',
+        'AI enrichment for tool findings: Trivy and Gitleaks findings sent to AI for aiExplanation, aiFix, exploitScore, cvssVector, remediation',
+        'Shared findings/persist.ts helper for incremental upsert across pipeline nodes',
+        'Shared findings/normalize.ts for severity and category normalization',
+        'toolScan added as AI provider node (uses deepScan config by default)',
+        'p-limit dependency for concurrency control',
+      ]},
+      { label: 'Changed', items: [
+        'persist node no longer creates Finding records — only creates Tasks, BusinessRules, and updates scan metadata',
+        'deep-scan cancellation check moved from between-batches to per-file (more granular)',
+        'queue.ts: added structured logging to all state transitions (enqueue, claim, complete, fail, pipeline start/stop)',
+        'worker.ts: added logging for scan PENDING→RUNNING transition, temp dir cleanup, worker start/stop',
+      ]},
+    ],
+  },
+  {
+    version: '2.23.2',
+    date: '2026-05-15',
+    title: 'Fix AI JSON parse crash + markdown rendering in chat',
+    description: 'AI models can return JSON with invalid Unicode escape sequences that crash JSON.parse(), killing deep_scan. Also, AI chat responses were rendered as plain text — code blocks, lists, and tables were invisible.',
+    categories: [
+      { label: 'Fixed', items: [
+        'deep-scan/cross-file: JSON.parse crash on invalid \\u escape sequences in AI model output',
+        'Created shared parseAiJson() utility that sanitizes AI JSON before parsing',
+        'AiChatProvider + ScanChat: assistant messages now render markdown via react-markdown + remark-gfm',
+      ]},
+    ],
+  },
+  {
     version: '2.23.1',
     date: '2026-05-15',
     title: 'Fix deep-scan crash on findings with undefined file path; show architecture diagram in Pipeline and during in-progress scans',

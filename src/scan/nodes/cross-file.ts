@@ -2,6 +2,7 @@ import path from 'path';
 import type { ScanState } from '../state';
 import type { UnifiedFinding, BusinessLogicRule } from '../../findings/types';
 import { fingerprint } from '../../findings/dedup';
+import { upsertFinding } from '../../findings/persist';
 import { createProviderForNode } from '../../providers/factory';
 import { loadKnowledgeBase } from '../../rules/loader';
 import type { AIRequest } from '../../providers/base';
@@ -11,38 +12,17 @@ import { buildCrossFilePrompt, loadPrompts } from '../prompts/deep-scan';
 import { instrumentedSend } from '@/lib/ai-instrumentation';
 import { prisma } from '@/lib/db';
 import { log } from '../log';
-
-function stripMarkdownCodeBlock(text: string): string {
-  let cleaned = text.trim();
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '');
-  }
-  return cleaned.trim();
-}
+import { parseAiJson } from './parse-ai-json';
 
 function parseCrossFileResponse(text: string): { findings: any[]; rules: any[] } {
-  const cleaned = stripMarkdownCodeBlock(text);
-  try {
-    const parsed = JSON.parse(cleaned);
+  const parsed = parseAiJson<{ findings?: any[]; rules?: any[] }>(text);
+  if (parsed) {
     return {
       findings: Array.isArray(parsed.findings) ? parsed.findings : [],
       rules: Array.isArray(parsed.rules) ? parsed.rules : [],
     };
-  } catch {
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          findings: Array.isArray(parsed.findings) ? parsed.findings : [],
-          rules: Array.isArray(parsed.rules) ? parsed.rules : [],
-        };
-      } catch {
-        return { findings: [], rules: [] };
-      }
-    }
-    return { findings: [], rules: [] };
   }
+  return { findings: [], rules: [] };
 }
 
 function mapToUnifiedFinding(raw: any): UnifiedFinding {
@@ -345,6 +325,15 @@ Summary: ${s.summary}`;
   }
 
   await log(state.scanId, 'success', 'cross_file', `Cross-file analysis: ${crossFileFindings.length} findings, ${businessRules.length} business rules`);
+
+  // Incremental persist: upsert cross-file findings to DB
+  for (const finding of crossFileFindings) {
+    try {
+      await upsertFinding(finding, state.scanId);
+    } catch (err) {
+      errors.push(`Failed to persist cross-file finding: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
 
   return {
     crossFileFindings,

@@ -1,128 +1,26 @@
 import type { ScanState } from '../state';
 import { prisma } from '@/lib/db';
-import { createTaskFromFinding, syncFindingFieldsToTask } from '@/lib/task-sync';
-
-const VALID_CATEGORIES = ['SAST', 'SCA', 'SECRETS', 'IAC', 'DATA_FLOW', 'BUSINESS_LOGIC'] as const;
-type ValidCategory = typeof VALID_CATEGORIES[number];
-
-const CATEGORY_MAP: Record<string, ValidCategory> = {
-  SAST: 'SAST',
-  SCA: 'SCA',
-  SECRETS: 'SECRETS',
-  IAC: 'IAC',
-  DATA_FLOW: 'DATA_FLOW',
-  BUSINESS_LOGIC: 'BUSINESS_LOGIC',
-  CONFIGURATION: 'IAC',
-  MISCONFIGURATION: 'IAC',
-  INSECURE_DESIGN: 'SAST',
-  INJECTION: 'SAST',
-  BROKEN_ACCESS_CONTROL: 'BUSINESS_LOGIC',
-  CRYPTO: 'SAST',
-  CRYPTOGRAPHY: 'SAST',
-  XSS: 'SAST',
-  SQL_INJECTION: 'SAST',
-  AUTH: 'BUSINESS_LOGIC',
-  AUTHENTICATION: 'BUSINESS_LOGIC',
-  AUTHORIZATION: 'BUSINESS_LOGIC',
-  VULNERABILITY: 'SAST',
-  DEPENDENCY: 'SCA',
-  DEPENDENCIES: 'SCA',
-  SECRET: 'SECRETS',
-  HARDCODED_SECRET: 'SECRETS',
-  LEAK: 'SECRETS',
-  COMPLIANCE: 'IAC',
-  INFRASTRUCTURE: 'IAC',
-  DATA_EXPOSURE: 'DATA_FLOW',
-  PRIVACY: 'DATA_FLOW',
-  LOGIC: 'BUSINESS_LOGIC',
-};
-
-function normalizeCategory(raw: string): ValidCategory {
-  const upper = (raw || 'SAST').toUpperCase().replace(/[^A-Z_]/g, '_');
-  if ((VALID_CATEGORIES as readonly string[]).includes(upper)) return upper as ValidCategory;
-  return CATEGORY_MAP[upper] ?? 'SAST';
-}
-
-const VALID_SEVERITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'] as const;
-type ValidSeverity = typeof VALID_SEVERITIES[number];
-
-function normalizeSeverity(raw: string): ValidSeverity {
-  const upper = (raw || 'MEDIUM').toUpperCase();
-  if ((VALID_SEVERITIES as readonly string[]).includes(upper)) return upper as ValidSeverity;
-  return 'MEDIUM';
-}
+import { createTaskFromFinding } from '@/lib/task-sync';
 
 export async function persistNode(state: ScanState): Promise<Partial<ScanState>> {
   const errors: string[] = [];
 
   try {
-    for (const finding of state.deduplicatedFindings) {
-      const existing = await prisma.finding.findFirst({
-        where: { fingerprint: finding.fingerprint, scanId: state.scanId },
-      });
-      if (existing) {
-        await prisma.finding.update({
-          where: { id: existing.id },
-          data: {
-            title: finding.title,
-            description: finding.description,
-            severity: normalizeSeverity(finding.severity),
-            category: normalizeCategory(finding.category),
-            aiExplanation: finding.aiExplanation,
-            aiFix: finding.aiFix,
-            exploitationScenario: finding.exploitationScenario,
-            exploitScore: finding.exploitScore,
-            cvssScore: finding.cvssScore,
-            cvssVector: finding.cvssVector || null,
-            confidence: finding.confidence,
-          },
-        });
-        // Sync updated fields to any linked Task
-        await syncFindingFieldsToTask(existing.id).catch(() => {});
-      } else {
-        await prisma.finding.create({
-          data: {
-            fingerprint: finding.fingerprint,
-            scanId: state.scanId,
-            scanner: finding.scanner,
-            ruleId: finding.ruleId,
-            title: finding.title,
-            description: finding.description,
-            severity: normalizeSeverity(finding.severity),
-            category: normalizeCategory(finding.category),
-            file: finding.file,
-            lineStart: finding.lineStart,
-            lineEnd: finding.lineEnd,
-            codeSnippet: finding.codeSnippet,
-            language: finding.language,
-            cwe: finding.cwe,
-            owasp: finding.owasp,
-            aiExplanation: finding.aiExplanation,
-            aiFix: finding.aiFix,
-            exploitationScenario: finding.exploitationScenario,
-            exploitScore: finding.exploitScore,
-            cvssScore: finding.cvssScore,
-            cvssVector: finding.cvssVector || null,
-            confidence: finding.confidence,
-            remediation: finding.remediation,
-            rawJson: finding.raw as any,
-          },
-        });
-      }
-    }
+    // Findings are persisted incrementally by deep-scan, tool-scan, and cross-file.
+    // Here we create tasks for high-severity findings and save business rules + scan metadata.
 
+    const findings = await prisma.finding.findMany({
+      where: { scanId: state.scanId },
+      select: { id: true, fingerprint: true, severity: true },
+    });
+
+    // Create tasks for CRITICAL/HIGH/MEDIUM findings
     const taskCreationErrors: string[] = [];
-    for (const finding of state.deduplicatedFindings) {
-      const severity = finding.severity?.toUpperCase() || 'MEDIUM';
+    for (const finding of findings) {
+      const severity = finding.severity.toUpperCase();
       if (severity === 'CRITICAL' || severity === 'HIGH' || severity === 'MEDIUM') {
         try {
-          const existing = await prisma.finding.findFirst({
-            where: { fingerprint: finding.fingerprint, scanId: state.scanId },
-            select: { id: true },
-          });
-          if (existing) {
-            await createTaskFromFinding(existing.id, state.scanId, state.userId ?? undefined);
-          }
+          await createTaskFromFinding(finding.id, state.scanId, state.userId ?? undefined);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           taskCreationErrors.push(`Task creation failed for ${finding.fingerprint}: ${msg}`);
@@ -133,6 +31,7 @@ export async function persistNode(state: ScanState): Promise<Partial<ScanState>>
       errors.push(...taskCreationErrors);
     }
 
+    // Persist business rules
     for (const rule of state.businessRules) {
       await prisma.businessLogicRule.create({
         data: {
@@ -146,6 +45,7 @@ export async function persistNode(state: ScanState): Promise<Partial<ScanState>>
       });
     }
 
+    // Update scan metadata
     await prisma.scan.update({
       where: { id: state.scanId },
       data: {

@@ -5,6 +5,12 @@ import os from 'os';
 import type { ScanState } from '../state';
 import type { UnifiedFinding, Severity, Category } from '../../findings/types';
 import { fingerprint } from '../../findings/dedup';
+import { upsertFinding } from '../../findings/persist';
+import { createProviderForNode } from '../../providers/factory';
+import type { AIRequest } from '../../providers/base';
+import type { NodeConfig } from '../../lib/config';
+import { instrumentedSend } from '@/lib/ai-instrumentation';
+import { parseAiJson } from './parse-ai-json';
 import { log } from '../log';
 import { prisma } from '@/lib/db';
 
@@ -312,6 +318,102 @@ async function runGitleaks(localDir: string): Promise<{ findings: UnifiedFinding
   }
 }
 
+// ── AI Enrichment ────────────────────────────────────────────────────────
+
+const TOOL_ENRICHMENT_PROMPT = `You are a security expert enriching findings from automated scanners (Trivy, Gitleaks). For each finding, provide:
+- aiExplanation: A detailed technical explanation of why this is a vulnerability, what attack vectors it enables, and the potential impact.
+- aiFix: A specific code fix or configuration change to resolve the issue.
+- exploitationScenario: A step-by-step scenario for how an attacker could exploit this.
+- exploitScore: A score from 0 to 10 indicating exploitability (0 = theoretical, 10 = trivially exploitable).
+- cvssScore: An estimated CVSS v3.1 base score from 0.0 to 10.0.
+- cvssVector: A CVSS v3.1 vector string (e.g., CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N).
+- confidence: Your confidence in this assessment from 0.0 to 1.0.
+- remediation: A clear, actionable remediation step.
+
+Return a JSON object with a "findings" array. Each item must have an "index" matching the original finding index, plus the enrichment fields. Do NOT remove or reject any findings — enhance all of them.`;
+
+async function enrichToolFindings(
+  findings: UnifiedFinding[],
+  nodeConfig: NodeConfig,
+  state: ScanState,
+): Promise<UnifiedFinding[]> {
+  if (findings.length === 0) return findings;
+
+  const provider = createProviderForNode('toolScan', state.config);
+
+  const findingsContext = findings.map((f, i) => ({
+    index: i,
+    scanner: f.scanner,
+    ruleId: f.ruleId,
+    title: f.title,
+    description: f.description?.slice(0, 300),
+    severity: f.severity,
+    category: f.category,
+    file: f.file,
+    lineStart: f.lineStart,
+    lineEnd: f.lineEnd,
+    codeSnippet: f.codeSnippet?.slice(0, 200),
+    language: f.language,
+  }));
+
+  const userPrompt = `Enrich these ${findings.length} scanner findings:\n\n${JSON.stringify(findingsContext, null, 2)}`;
+
+  const request: AIRequest = {
+    system: TOOL_ENRICHMENT_PROMPT,
+    prompt: userPrompt,
+    maxOutputTokens: Math.min(findings.length * 300, 4096),
+    temperature: 0.2,
+    topP: 0.9,
+  };
+
+  try {
+    const response = await instrumentedSend(provider, request, {
+      scanId: state.scanId,
+      jobId: state.currentJobId,
+      source: 'pipeline',
+      node: 'tool_enrichment',
+      nodeConfig: nodeConfig as Record<string, unknown>,
+    });
+
+    const parsed = parseAiJson<{ findings?: Array<{
+      index: number;
+      aiExplanation?: string;
+      aiFix?: string;
+      exploitationScenario?: string;
+      exploitScore?: number;
+      cvssScore?: number;
+      cvssVector?: string;
+      confidence?: number;
+      remediation?: string;
+    }> }>(response.text);
+
+    if (!parsed?.findings) {
+      await log(state.scanId, 'warn', 'tool_scan', 'AI enrichment returned no findings, using original');
+      return findings;
+    }
+
+    const enrichedIndex = new Map(parsed.findings.map(e => [e.index, e]));
+    return findings.map((f, i) => {
+      const enrichment = enrichedIndex.get(i);
+      if (!enrichment) return f;
+      return {
+        ...f,
+        aiExplanation: enrichment.aiExplanation || f.aiExplanation,
+        aiFix: enrichment.aiFix || f.aiFix,
+        exploitationScenario: enrichment.exploitationScenario || f.exploitationScenario,
+        exploitScore: typeof enrichment.exploitScore === 'number' ? enrichment.exploitScore : f.exploitScore,
+        cvssScore: typeof enrichment.cvssScore === 'number' ? enrichment.cvssScore : f.cvssScore,
+        cvssVector: enrichment.cvssVector || f.cvssVector,
+        confidence: typeof enrichment.confidence === 'number' ? enrichment.confidence : f.confidence,
+        remediation: enrichment.remediation || f.remediation,
+      };
+    });
+  } catch (err) {
+    await log(state.scanId, 'warn', 'tool_scan', `AI enrichment failed: ${err instanceof Error ? err.message : String(err)}. Using original findings.`);
+    return findings;
+  }
+}
+
 // ── Main node ──────────────────────────────────────────────────────────
 
 export async function toolScanNode(state: ScanState): Promise<Partial<ScanState>> {
@@ -339,6 +441,22 @@ export async function toolScanNode(state: ScanState): Promise<Partial<ScanState>
   allFindings.push(...gitleaksResult.findings);
 
   await log(state.scanId, 'success', 'tool_scan', `Tool scan complete: ${allFindings.length} findings (Trivy: ${trivyResult.findings.length}, Gitleaks: ${gitleaksResult.findings.length})`);
+
+  // Enrich tool findings with AI
+  const nodeConfig: NodeConfig = state.config.scan.nodes.toolScan;
+  const enrichedFindings = await enrichToolFindings(allFindings, nodeConfig, state);
+  if (enrichedFindings !== allFindings) {
+    await log(state.scanId, 'info', 'tool_scan', `AI enrichment complete: ${enrichedFindings.length} findings enriched`);
+  }
+
+  // Incremental persist: upsert enriched findings to DB immediately
+  for (const finding of enrichedFindings) {
+    try {
+      await upsertFinding(finding, state.scanId);
+    } catch (err) {
+      errors.push(`Failed to persist tool finding ${finding.fingerprint}: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
 
   try {
     await prisma.nodeOutput.create({

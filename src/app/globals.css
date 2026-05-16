@@ -339,3 +339,145 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
+
+/* Knowledge page markdown rendering */
+.knowledge-markdown {
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.knowledge-markdown h1 {
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1.25;
+  margin: 0 0 16px;
+  color: var(--ibm-ink);
+}
+.knowledge-markdown h2 {
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.33;
+  margin: 40px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ibm-hairline);
+  color: var(--ibm-ink);
+}
+.knowledge-markdown h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 28px 0 12px;
+  color: var(--ibm-ink);
+}
+.knowledge-markdown h4 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 20px 0 8px;
+  color: var(--ibm-ink);
+}
+.knowledge-markdown p {
+  margin: 0 0 16px;
+  color: var(--ibm-ink);
+}
+.knowledge-markdown strong {
+  font-weight: 600;
+  color: var(--ibm-ink);
+}
+.knowledge-markdown ul, .knowledge-markdown ol {
+  margin: 0 0 16px;
+  padding-left: 24px;
+}
+.knowledge-markdown ul {
+  list-style: disc;
+}
+.knowledge-markdown ol {
+  list-style: decimal;
+}
+.knowledge-markdown li {
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.knowledge-markdown li > ul, .knowledge-markdown li > ol {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+.knowledge-markdown code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  background: var(--ibm-surface-1);
+  padding: 2px 6px;
+  border: 1px solid var(--ibm-hairline);
+  color: var(--ibm-ink);
+}
+.knowledge-markdown pre {
+  background: var(--ibm-surface-1);
+  border: 1px solid var(--ibm-hairline);
+  padding: 16px;
+  margin: 0 0 16px;
+  overflow-x: auto;
+}
+.knowledge-markdown pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.knowledge-markdown blockquote {
+  border-left: 3px solid var(--ibm-primary);
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: var(--ibm-blue-10);
+  color: var(--ibm-ink-muted);
+}
+.knowledge-markdown blockquote p:last-child {
+  margin-bottom: 0;
+}
+.knowledge-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 20px;
+  font-size: 14px;
+  overflow-x: auto;
+  display: block;
+}
+.knowledge-markdown thead {
+  border-bottom: 2px solid var(--ibm-hairline);
+}
+.knowledge-markdown th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.32px;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  color: var(--ibm-ink-muted);
+  white-space: nowrap;
+  background: var(--ibm-surface-1);
+}
+.knowledge-markdown td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ibm-hairline);
+  color: var(--ibm-ink);
+  vertical-align: top;
+}
+.knowledge-markdown tbody tr:hover td {
+  background: var(--ibm-surface-1);
+}
+.knowledge-markdown hr {
+  border: none;
+  border-top: 1px solid var(--ibm-hairline);
+  margin: 32px 0;
+}
+.knowledge-markdown a {
+  color: var(--ibm-primary);
+  text-decoration: none;
+}
+.knowledge-markdown a:hover {
+  text-decoration: underline;
+}
+.knowledge-markdown img {
+  max-width: 100%;
+  height: auto;
+}

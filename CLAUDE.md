@@ -297,6 +297,9 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 
 | Date | Change |
 |------|--------|
+| 2026-05-16 | v2.24.1: **User-scoped scan listing + Knowledge page + markdown formatting** — Non-admin users now see only their own scans (GET /api/v1/scans filtered by userId); unified Knowledge page at /knowledge with 6 tabs (Changelog, Roadmap, Docs, Specs, Plans, How-to); Knowledge API serves filesystem content with section-based path resolution; full-width layout; IBM Carbon markdown styling for rendered docs/roadmap; `--ibm-*` CSS variables for all markdown elements (tables, headings, code, blockquotes) |
+| 2026-05-15 | v2.24.0: **Parallel deep-scan, incremental persist, AI-enriched tool findings** — p-limit replaces sequential batches; findings upserted to DB per-file; Trivy/Gitleaks findings enriched by AI; persist node only creates tasks + metadata; shared `findings/persist.ts` and `findings/normalize.ts` |
+| 2026-05-15 | v2.23.2: **Fix AI JSON parse crash + markdown chat rendering** — AI models can return JSON with invalid `\u` escapes that crash `JSON.parse()`, killing deep_scan; shared `parseAiJson()` sanitizer strips bad escapes; AiChatProvider + ScanChat now render assistant messages as markdown via react-markdown + remark-gfm |
 | 2026-05-15 | v2.23.1: **Fix deep-scan crash on findings with undefined file path + architecture diagram visibility** — Trivy IAC misconfig findings had no Filename, producing file=undefined; deep-scan f.file.endsWith() crashed on every file, producing 0 AI findings; fixed null guards in deep-scan, cross-file, and tool-scan (fallback to Target when Filename is absent); Architecture tab now reads diagram from NodeOutput during in-progress scans; Pipeline tab renders Mermaid diagram inline for git_diagram node |
 | 2026-05-14 | v2.23.0: **DeepWiki-style code intelligence via @optave/codegraph** — git_ingest runs codegraph buildGraph() for AST-derived CodeIntel (per-file exports/imports/roles, import edges, API routes, data models, call chains, dead exports); git_diagram uses real codegraph Mermaid export; deep-scan/cross-file/chat prompts inject structured CodeIntel; Architecture tab shows Code Structure card; graceful fallback to git-only on failure; @optave/codegraph Apache-2.0 dependency added |
 | 2026-05-14 | v2.22.0: **Full pipeline visibility and AI context enrichment** — ScanProgress shows all 9 nodes (was 6); rerun-node API accepts git_ingest/git_diagram/tool_scan; deep-scan AI prompt now includes repoIntel + architectureDiagram (matches cross-file); scan-level AI chat injects repo context in system prompt; git_ingest/git_diagram/tool_scan create NodeOutput records (visible in Pipeline tab); Architecture tab renders Mermaid diagram visually; landing pages show all 9 pipeline steps |
@@ -339,6 +342,7 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 ## Deployment Notes
 
 - **Deployed app:** `/var/www/astra-app` — production build (`next start -p 2306`), custom domain `astra.nerdlogics.cloud`
+- **NEVER touch production** (`/var/www/astra-app`, port 2306, `astra.nerdlogics.cloud`) unless the user explicitly asks. No builds, no file copies, no curl, no deploys — even if changes seem ready.
 - **DB schema:** Deployed env uses `?schema=astra01` in `DATABASE_URL`; local dev uses `?schema=public`. `db.ts` and `seed.ts` both parse the schema from the URL and pass it as the second arg to `PrismaPg`.
 - **PrismaPg schema quirk:** `new PrismaPg(config, { schema })` — schema MUST be the second argument. Passing it inside the first config object has no effect.
 - **Seed:** `npx prisma db seed` in either env. Reads env via `import 'dotenv/config'`. Config registered in `prisma.config.ts` under `migrations.seed`.
@@ -356,6 +360,16 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 - **End-to-end Docker test** not yet verified.
 - **MermaidDiagram component** created but not integrated into visualization page.
 - **public schema leftover data** — earlier failed seed runs wrote 3 User rows + 1 Config row to `public` schema. Not harmful but can be cleaned up: `DELETE FROM public."User"; DELETE FROM public."Config";`
+- **Separate /changelog route** — still exists as standalone page; could redirect to `/knowledge` or remove
+
+## How-To Guides
+
+| Guide | Location | Purpose |
+|-------|----------|---------|
+| **Pipeline Nodes & Scanners** | [`docs/how-to/add-or-update-node-or-tool.md`](../docs/how-to/add-or-update-node-or-tool.md) | Step-by-step process for adding/updating pipeline nodes (16 steps) or scanner tools (10 steps), with full file change matrix and 38-item verification checklist |
+| **Pipeline Quick Ref** | [`KNOWLEDGE/docs/how-to-add-or-update-pipeline-nodes.md`](KNOWLEDGE/docs/how-to-add-or-update-pipeline-nodes.md) | Summary reference for the above guide |
+
+**When adding or updating any pipeline node or scanner tool, follow the guide at `docs/how-to/add-or-update-node-or-tool.md`.**
 
 ## Key File Paths
 
@@ -370,8 +384,11 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 | `astra-app/src/scan/worker.ts` | Background job worker (9-node pipeline) |
 | `astra-app/src/scan/nodes/git-ingest.ts` | Git metadata extraction (commits, contributors, hotspots, languages) |
 | `astra-app/src/scan/nodes/git-diagram.ts` | Mermaid architecture diagram generation |
-| `astra-app/src/scan/nodes/tool-scan.ts` | Trivy + Gitleaks runner and normalizer |
-| `astra-app/src/scan/queue.ts` | Job queue (claimNextJob, markJobFailed, etc.) |
+| `astra-app/src/scan/nodes/tool-scan.ts` | Trivy + Gitleaks runner, normalizer, AI enrichment |
+| `astra-app/src/scan/nodes/parse-ai-json.ts` | Shared AI JSON sanitizer (handles invalid unicode escapes, trailing commas) |
+| `astra-app/src/findings/normalize.ts` | Shared `normalizeSeverity()` and `normalizeCategory()` |
+| `astra-app/src/findings/persist.ts` | Shared `upsertFinding()` and `upsertFindings()` for incremental DB writes |
+| `astra-app/src/scan/queue.ts` | Job queue (claimNextJob, markJobFailed, etc.) — structured logging on all transitions |
 | `astra-app/src/lib/config.ts` | Zod config schema, `loadConfigFromDb`, `saveConfigToDb` |
 | `astra-app/src/lib/ai-chat.ts` | Chat orchestration (provider resolution, system prompt building) |
 | `astra-app/src/lib/ai-instrumentation.ts` | AI call observability (`instrumentedSend`) |
@@ -384,6 +401,8 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 | `astra-app/src/providers/cloud-ollama.ts` | Cloud Ollama provider |
 | `astra-app/src/providers/factory.ts` | Provider factory (`createProvider`) |
 | `astra-app/src/app/(app)/glossary/page.tsx` | File glossary page (full-width accordion tree) |
+| `astra-app/src/app/(app)/knowledge/page.tsx` | Knowledge page — 6 tabs: Changelog, Roadmap, Docs, Specs, Plans, How-to |
+| `astra-app/src/app/api/v1/knowledge/route.ts` | Knowledge API — serves filesystem content for docs/specs/plans/how-to; section-based path resolution |
 | `astra-app/src/lib/file-tree.ts` | File tree data for glossary (FileEntry interface + FILE_TREE) |
 | `astra-app/src/components/AiChatProvider.tsx` | Global slide-out chat panel |
 | `astra-app/src/components/ScanChat.tsx` | Inline scan chat widget |

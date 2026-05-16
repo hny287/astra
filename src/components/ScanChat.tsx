@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -70,7 +72,9 @@ export default function ScanChat({ scanId }: ScanChatProps) {
               lineHeight: 1.5,
               border: msg.role === 'assistant' ? '1px solid var(--ibm-hairline)' : 'none',
             }}>
-              {msg.content}
+              {msg.role === 'assistant'
+                ? <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                : msg.content}
             </div>
           </div>
         ))}

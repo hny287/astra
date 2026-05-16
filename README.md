@@ -1,15 +1,15 @@
 # Security Platform
 
-**AI-native application security scanning. v1.0 — Initial Release.**
+**AI-native application security scanning. v2.24.0**
 
-Astra combines industry-standard scanner engines (Trivy, Semgrep, Gitleaks, Bearer) with a multi-stage AI pipeline to surface vulnerabilities, business logic flaws, and misconfigurations that pattern-matching alone will never find. Raw source code never leaves your environment.
+Combines industry-standard scanner engines (Trivy, Semgrep, Gitleaks, Bearer) with a multi-stage AI pipeline to surface vulnerabilities, business logic flaws, and misconfigurations that pattern-matching alone will never find. Raw source code never leaves your environment.
 
 ---
 
 ## What it does
 
 ```
-Clone → Discover → Deep Scan → Cross-File → Aggregate → Persist
+Clone → Discover → Git Ingest → Git Diagram → Tool Scan → Deep Scan → Cross-File → Aggregate → Persist
 ```
 
 Each stage runs independently with its own AI model, concurrency, and timeout:
@@ -18,10 +18,13 @@ Each stage runs independently with its own AI model, concurrency, and timeout:
 |-------|-------------|
 | **Clone** | Git clone to secure temp dir, maps repo structure and languages |
 | **Discover** | AI ranks files by security relevance before scanning begins |
-| **Deep Scan** | Per-file parallel AI analysis — SAST, secrets, data flow, exploit scoring |
+| **Git Ingest** | Extracts commit history, contributors, hotspots, languages, dependencies; builds AST-derived code intelligence |
+| **Git Diagram** | Generates Mermaid architecture diagram from codegraph |
+| **Tool Scan** | Runs Trivy (SCA/IaC/Secrets) and Gitleaks (Secrets); normalizes and AI-enriches findings |
+| **Deep Scan** | Per-file parallel AI analysis — SAST, secrets, data flow, exploit scoring (p-limit concurrency) |
 | **Cross-File** | Business logic inference across module boundaries |
 | **Aggregate** | SHA-256 deduplication and fingerprinting across all scanner sources |
-| **Persist** | Saves findings, creates triage tasks, stores AI conversation context |
+| **Persist** | Creates triage tasks, stores business rules, updates scan metadata |
 
 ---
 
@@ -30,11 +33,13 @@ Each stage runs independently with its own AI model, concurrency, and timeout:
 | Scanner | Category | Coverage |
 |---------|----------|----------|
 | **Trivy** | SCA · IaC · Secrets | CVEs, Dockerfile misconfigs, exposed secrets |
-| **Semgrep** | SAST | OWASP Top 10, injection flaws, 3,000+ rules |
 | **Gitleaks** | Secrets | API keys, tokens, credentials across git history |
-| **Bearer** | Data Flow | PII/PHI leaking to logs, responses, third parties |
-| **AI Deep Scan** | SAST · Logic | Context-aware per-file vulnerability analysis |
+| **AI Deep Scan** | SAST · Logic | Context-aware per-file vulnerability analysis (parallel, p-limit) |
 | **AI Cross-File** | Business Logic | Cross-module security invariant detection |
+| **AI Tool Enrichment** | All | Trivy/Gitleaks findings enriched with AI explanations, fixes, exploit scores |
+| **@optave/codegraph** | Code Intel | AST-derived exports, imports, call chains, dead exports, API routes |
+| **Semgrep** | SAST | OWASP Top 10, injection flaws (installed, not yet wired) |
+| **Bearer** | Data Flow | PII/PHI leaking (installed, not yet wired) |
 
 ---
 
@@ -117,10 +122,16 @@ NEXTAUTH_URL=https://astra.example.com npm start -- -p 2306
 
 ## Features
 
-- **Alert triage** — OPEN → CONFIRMED → REMEDIATED workflow, assignment, comments, history timeline
-- **Task management** — auto-generated tasks from HIGH/CRITICAL findings, full lifecycle, AI assist
-- **AI chat** — context-aware chat at global, scan, and per-finding level; multi-turn memory; model selector
+- **9-node scan pipeline** — clone → discover → git_ingest → git_diagram → tool_scan → deep_scan → cross_file → aggregate → persist
+- **Parallel deep-scan** — p-limit concurrency replaces sequential batches; all files run concurrently
+- **Incremental persist** — findings appear in DB as each file completes, not just at the end
+- **AI-enriched tool findings** — Trivy/Gitleaks findings get AI explanations, fixes, exploit scores before storage
+- **Code intelligence** — AST-derived CodeIntel via @optave/codegraph (imports, exports, call chains, dead exports)
+- **Alert triage** — unified status workflow (OPEN → IN_PROGRESS → IN_REVIEW → COMPLETED / FALSE_POSITIVE / ACCEPTED_RISK), assignment, comments, history
+- **Task management** — auto-generated tasks from HIGH/CRITICAL findings, bidirectional Finding ↔ Task sync, AI assist
+- **AI chat** — context-aware chat at global, scan, and per-finding level; multi-turn memory; model selector; markdown rendering
 - **Observability** — every AI call logged with tokens, latency, full prompt/response, per-call retry from UI
+- **Knowledge page** — unified changelog, roadmap, docs, specs, plans, how-to with file browser and markdown rendering
 - **GitHub integration** — connect via PAT, browse repos and branches directly in UI; tokens encrypted at rest
 - **Export** — JSON, CSV, SARIF, HTML, Markdown; executive summary report page
 - **Custom rules** — organization-specific rules blended with AI inference
@@ -135,7 +146,7 @@ NEXTAUTH_URL=https://astra.example.com npm start -- -p 2306
 - **RBAC** — ADMIN / ANALYST / VIEWER enforced on every API route
 - **Data sovereignty** — raw source code never transmitted; only normalized finding JSON stored
 - **Encryption** — GitHub tokens encrypted at rest with AES-256-GCM
-- **Scan ownership** — non-admin users see only their own scans and findings
+- **Scan ownership** — non-admin users see only their own scans and findings (scoped by userId)
 - **Audit trail** — every status change, assignment, and comment logged with actor and timestamp
 - **Rate limiting** — 10/min login, 5/min signup (IP-based sliding window)
 - **Auth middleware** — all routes require authentication except `/`, `/auth/*`, `/api/auth/*`, `/api/v1/health`
@@ -199,16 +210,23 @@ astra-app/
 │   │   ├── azure-ai-foundry.ts # Azure AI Foundry (stub)
 │   │   ├── langgraph.ts        # LangGraph (stub)
 │   │   └── factory.ts          # Provider factory (createProvider)
-│   └── scan/
-│       ├── worker.ts           # Background job worker (event-driven)
-│       ├── queue.ts            # Job queue management (claimNextJob, markJobFailed, etc.)
-│       └── nodes/              # Pipeline node implementations
-│           ├── clone.ts        # Git clone with PAT injection for private repos
-│           ├── discover.ts     # AI-guided file prioritization
-│           ├── deep-scan.ts    # Per-file AI vulnerability analysis
-│           ├── cross-file.ts   # Cross-file business logic inference
-│           ├── aggregate.ts    # SHA-256 deduplication and fingerprinting
-│           └── persist.ts      # Save findings and create triage tasks
+│   ├── scan/
+│   │   ├── worker.ts           # Background job worker (event-driven)
+│   │   ├── queue.ts            # Job queue management (claimNextJob, markJobFailed, etc.)
+│   │   └── nodes/              # Pipeline node implementations
+│   │       ├── clone.ts        # Git clone with PAT injection for private repos
+│   │       ├── discover.ts     # AI-guided file prioritization
+│   │       ├── git-ingest.ts   # Repo metadata + codegraph AST intelligence
+│   │       ├── git-diagram.ts  # Mermaid architecture diagram generation
+│   │       ├── tool-scan.ts    # Trivy + Gitleaks runner, normalizer, AI enrichment
+│   │       ├── deep-scan.ts    # Per-file parallel AI analysis (p-limit concurrency)
+│   │       ├── cross-file.ts   # Cross-file business logic inference
+│   │       ├── aggregate.ts    # SHA-256 deduplication and fingerprinting
+│   │       ├── persist.ts      # Create tasks, business rules, update scan metadata
+│   │       └── parse-ai-json.ts # Shared AI JSON sanitizer
+│   ├── findings/
+│   │   ├── normalize.ts        # Shared severity/category normalization
+│   │   └── persist.ts           # Shared upsertFinding for incremental DB writes
 ├── prisma/
 │   ├── schema.prisma          # PostgreSQL schema (Scan, Finding, Job, AiConversation, Config, etc.)
 │   └── seed.ts                # Idempotent seed: 3 users, config, presets, rules
@@ -311,9 +329,23 @@ Key models:
 
 ## Changelog
 
-See [/changelog](/changelog) in the app, or [`src/lib/changelog.ts`](src/lib/changelog.ts).
+See [/knowledge](/knowledge) in the app (Changelog tab), or [`src/lib/changelog.ts`](src/lib/changelog.ts).
 
-Current: **v2.16.0** — Homepage v2 redesign (May 2026)
+Current: **v2.24.0** — Parallel deep-scan, incremental persist, AI-enriched tool findings (May 2026)
+
+Key versions:
+- **v2.24.0** — Parallel deep-scan (p-limit), incremental persist per-file, AI-enriched tool findings, structured logging, user-scoped scan listing
+- **v2.23.2** — Fix AI JSON parse crash, markdown rendering in chat
+- **v2.23.1** — Fix deep-scan crash on undefined file path, architecture diagram visibility
+- **v2.23.0** — DeepWiki-style code intelligence via @optave/codegraph
+- **v2.22.0** — Full pipeline visibility (9 nodes), AI context enrichment
+- **v2.21.0** — Pipeline expansion: git_ingest, git_diagram, tool_scan nodes
+- **v2.20.0** — Bidirectional field sync between Tasks & Alerts
+- **v2.19.0** — Unified Tasks & Alerts (ItemStatus, severity, rich scanner fields)
+- **v2.17.0** — Branding refactor (env-driven product identity)
+- **v2.5.0** — Security hardening, event-driven worker, rate limiting
+- **v2.0.0** — Platform redesign (IBM Carbon, auth, alert triage, landing page)
+- **v1.0.0** — Initial release
 
 ---
 

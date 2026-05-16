@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { logger } from '@/lib/structured-logger';
 
 const NODE_PIPELINE = ['clone', 'discover', 'git_ingest', 'git_diagram', 'tool_scan', 'deep_scan', 'cross_file', 'aggregate', 'persist'] as const;
 
@@ -27,6 +28,7 @@ export async function enqueueJob(
       inputJson: inputJson as any,
     },
   });
+  logger.info({ scanId, node, jobId: job.id }, 'Job enqueued');
   return job.id;
 }
 
@@ -47,6 +49,7 @@ export async function claimNextJob(): Promise<{
     data: { status: 'RUNNING', startedAt: new Date(), attempts: { increment: 1 } },
   });
 
+  logger.info({ scanId: claimed.scanId, node: claimed.node, jobId: claimed.id, attempt: claimed.attempts }, 'Job claimed');
   return {
     id: claimed.id,
     scanId: claimed.scanId,
@@ -56,6 +59,7 @@ export async function claimNextJob(): Promise<{
 }
 
 export async function markJobComplete(jobId: string, outputJson: Record<string, unknown>): Promise<void> {
+  const job = await prisma.job.findUnique({ where: { id: jobId } });
   await prisma.job.update({
     where: { id: jobId },
     data: {
@@ -64,6 +68,8 @@ export async function markJobComplete(jobId: string, outputJson: Record<string, 
       completedAt: new Date(),
     },
   });
+  const durationMs = job?.startedAt ? Date.now() - job.startedAt.getTime() : null;
+  logger.info({ jobId, scanId: job?.scanId, node: job?.node, durationMs }, 'Job completed');
 }
 
 export async function markJobFailed(jobId: string, error: string): Promise<void> {
@@ -75,11 +81,13 @@ export async function markJobFailed(jobId: string, error: string): Promise<void>
       where: { id: jobId },
       data: { status: 'FAILED', error, completedAt: new Date() },
     });
+    logger.error({ jobId, scanId: job.scanId, node: job.node, error, attempts: job.attempts }, 'Job failed permanently');
   } else {
     await prisma.job.update({
       where: { id: jobId },
       data: { status: 'PENDING', error },
     });
+    logger.warn({ jobId, scanId: job.scanId, node: job.node, error, attempts: job.attempts }, 'Job failed, re-enqueued for retry');
   }
 }
 
@@ -110,19 +118,28 @@ export async function getLastCompletedJob(scanId: string): Promise<{
 }
 
 export async function enqueuePipeline(scanId: string, initialInput: Record<string, unknown> = {}): Promise<void> {
+  logger.info({ scanId }, 'Pipeline started: enqueuing clone job');
   await enqueueJob(scanId, 'clone', initialInput);
 }
 
 export async function enqueueNextJob(scanId: string, completedNode: NodeName, outputJson: Record<string, unknown>): Promise<string | null> {
   const nextNode = getNextNode(completedNode);
-  if (!nextNode) return null;
+  if (!nextNode) {
+    logger.info({ scanId, completedNode }, 'Pipeline complete: no next node after persist');
+    return null;
+  }
 
   const existingPending = await prisma.job.findFirst({
     where: { scanId, node: nextNode, status: { in: ['PENDING', 'RUNNING'] } },
   });
-  if (existingPending) return existingPending.id;
+  if (existingPending) {
+    logger.info({ scanId, completedNode, nextNode, jobId: existingPending.id }, 'Next job already exists, skipping enqueue');
+    return existingPending.id;
+  }
 
-  return enqueueJob(scanId, nextNode, outputJson);
+  const jobId = await enqueueJob(scanId, nextNode, outputJson);
+  logger.info({ scanId, completedNode, nextNode, jobId }, 'Enqueued next job');
+  return jobId;
 }
 
 export async function markScanCompletedIfNeeded(scanId: string): Promise<boolean> {
@@ -146,7 +163,10 @@ export async function markScanCompletedIfNeeded(scanId: string): Promise<boolean
       break;
     }
   }
-  if (hasUnrecoveredFailure) return false;
+  if (hasUnrecoveredFailure) {
+    logger.warn({ scanId }, 'Persist completed but unrecovered failures exist, not marking scan complete');
+    return false;
+  }
 
   const durationSeconds = scan.createdAt
     ? Math.round((persistJob.completedAt!.getTime() - scan.createdAt.getTime()) / 1000)
@@ -159,6 +179,7 @@ export async function markScanCompletedIfNeeded(scanId: string): Promise<boolean
       ...(durationSeconds != null ? { durationSeconds } : {}),
     },
   });
+  logger.info({ scanId, durationSeconds }, 'Scan completed');
   return true;
 }
 
@@ -167,6 +188,7 @@ export async function markScanFailed(scanId: string): Promise<void> {
     where: { id: scanId },
     data: { status: 'FAILED' },
   });
+  logger.error({ scanId }, 'Scan marked as FAILED');
 }
 
 export async function cleanupStuckJobs(): Promise<number> {
@@ -176,18 +198,23 @@ export async function cleanupStuckJobs(): Promise<number> {
       startedAt: { lt: new Date(Date.now() - 10 * 60 * 1000) },
     },
   });
+  if (stuck.length === 0) return 0;
+
   for (const job of stuck) {
     if (job.attempts >= job.maxAttempts) {
       await prisma.job.update({
         where: { id: job.id },
         data: { status: 'FAILED', error: 'Timed out', completedAt: new Date() },
       });
+      logger.warn({ jobId: job.id, scanId: job.scanId, node: job.node }, 'Stuck job timed out, marked FAILED');
     } else {
       await prisma.job.update({
         where: { id: job.id },
         data: { status: 'PENDING', startedAt: null },
       });
+      logger.warn({ jobId: job.id, scanId: job.scanId, node: job.node }, 'Stuck job reset to PENDING for retry');
     }
   }
+  logger.info({ count: stuck.length }, 'Stuck jobs cleaned up');
   return stuck.length;
 }
