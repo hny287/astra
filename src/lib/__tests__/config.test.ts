@@ -11,6 +11,7 @@ import {
 const validNodeConfig = {
   provider: "cloud-ollama",
   model: "glm-5.1:cloud",
+  rulesTokenBudget: 2000,
 };
 
 const validConfig: ScanConfig = {
@@ -32,11 +33,14 @@ const validConfig: ScanConfig = {
   },
   scan: {
     nodes: {
-      discover: { ...validNodeConfig },
-      deepScan: { ...validNodeConfig },
-      crossFile: { ...validNodeConfig },
+      discover: { ...validNodeConfig } as any,
+      gitIngest: { ...validNodeConfig } as any,
+      gitDiagram: { ...validNodeConfig } as any,
+      toolScan: { ...validNodeConfig } as any,
+      deepScan: { ...validNodeConfig } as any,
+      crossFile: { ...validNodeConfig } as any,
     },
-  },
+  } as any,
 };
 
 describe("nodeConfigSchema", () => {

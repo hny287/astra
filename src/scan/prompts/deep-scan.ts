@@ -168,7 +168,7 @@ export function buildDiscoverPrompt(basePrompt: string, knowledgeTags: string[])
   return `${basePrompt}${tagsSection}`;
 }
 
-export function buildDeepScanPrompt(scanDepth: string, knowledgeContext: string, basePrompt?: string): string {
+export function buildDeepScanPrompt(scanDepth: string, knowledgeContext: string, rulesText?: string, basePrompt?: string): string {
   const prompt = basePrompt ?? DEFAULT_DEEP_SCAN_PROMPT;
   const depthDesc = DEPTH_DESCRIPTIONS[scanDepth] ?? DEPTH_DESCRIPTIONS.standard;
   const knowledgeSection = knowledgeContext.trim()
@@ -179,10 +179,14 @@ export function buildDeepScanPrompt(scanDepth: string, knowledgeContext: string,
     ? '\n\nAdditional checks for deep/exhaustive mode:\n- Race conditions and concurrency issues\n- Insecure defaults and deprecated APIs\n- Complex data flow vulnerabilities'
     : '';
 
-  return `${depthDesc}\n\n${prompt}${depthAdditions}${knowledgeSection}`;
+  const rulesSection = rulesText?.trim()
+    ? `\n\n## Applicable Rules and Policies\n\nYou MUST check for and enforce these rules during your analysis. Treat each rule as a mandatory check:\n\n${rulesText}`
+    : '';
+
+  return `${depthDesc}\n\n${prompt}${depthAdditions}${knowledgeSection}${rulesSection}`;
 }
 
-export function buildCrossFilePrompt(scanDepth: string, knowledgeContext: string, basePrompt?: string): string {
+export function buildCrossFilePrompt(scanDepth: string, knowledgeContext: string, rulesText?: string, basePrompt?: string): string {
   const prompt = basePrompt ?? DEFAULT_CROSS_FILE_PROMPT;
   const depthNote = scanDepth === 'deep' || scanDepth === 'exhaustive'
     ? '\n\nSince this is a deep/exhaustive scan, also consider: race conditions across components, distributed system vulnerabilities, subtle trust boundary violations, and complex multi-step attack chains.'
@@ -192,7 +196,11 @@ export function buildCrossFilePrompt(scanDepth: string, knowledgeContext: string
     ? `\n\nKnown vulnerability patterns and security rules:\n${knowledgeContext}`
     : '';
 
-  return `${prompt}${depthNote}${knowledgeSection}`;
+  const rulesSection = rulesText?.trim()
+    ? `\n\n## Applicable Rules and Policies\n\nYou MUST check for and enforce these rules during your analysis. Treat each rule as a mandatory check:\n\n${rulesText}`
+    : '';
+
+  return `${prompt}${depthNote}${knowledgeSection}${rulesSection}`;
 }
 
 export async function loadPrompts(): Promise<{ discover: string; deepScan: string; crossFile: string; chat: string }> {

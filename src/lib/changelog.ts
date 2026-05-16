@@ -11,6 +11,34 @@ export interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.26.0',
+    date: '2026-05-16',
+    title: 'Rule Engine: security, compliance, SLA, and business logic rules',
+    description: 'Extended UserRule model with 4 rule types (SECURITY, COMPLIANCE, SLA, BUSINESS_LOGIC), project scoping, language/path filtering, Semgrep-inspired match patterns, SLA enforcement fields, and lifecycle status. Unified rule loader (loadRulesForContext) injects active rules + confirmed business logic rules + filesystem patterns/guidelines into deep-scan, cross-file, and chat AI prompts with severity-prioritized token budgets. Rules page UI updated with type badges, SLA configuration, languages, tags, and scope. Persist node sets SLA deadlines on matching findings.',
+    categories: [
+      { label: 'Added', items: [
+        'RuleType enum: SECURITY, COMPLIANCE, SLA, BUSINESS_LOGIC',
+        'RuleScope enum: GLOBAL, PROJECT (rules can target specific repos)',
+        'RuleScopeStatus enum: ACTIVE, DRAFT, DEPRECATED (lifecycle management)',
+        'Extended UserRule model with 20+ new fields: type, scope, repoUrl, languages, paths, excludePaths, matchPattern, owasp, priority, fixSuggestion, references, tags, codeRule, source, slaSeverity, slaHours, slaAction, status, enabledAt, lastUsedAt',
+        'slaDeadline field on Finding model — set by SLA enforcement during persist',
+        'Rule formatter module (src/rules/formatter.ts) — formats rules for AI prompt injection with type-grouped sections and severity/priority sorting',
+        'Unified rule loader loadRulesForContext() — gathers active UserRules, confirmed BusinessLogicRules, filesystem patterns/guidelines, enforces token budget',
+        'Rules injected into deep-scan, cross-file, and chat AI prompts',
+        'rulesTokenBudget config (2000 for scan nodes, 1500 for chat)',
+        'SLA enforcement in persist node — sets slaDeadline on findings matching SLA rules',
+        '3 new builtin demo rules: Critical SLA (4hr response), PII encryption at rest, Payment flow integrity',
+        'Rules page UI: type badges, scope indicator, language chips, tag chips, SLA configuration section',
+        'API filtering: GET /api/v1/user-rules supports type, scope, status query params',
+      ]},
+      { label: 'Changed', items: [
+        'Updated 5 existing builtin rules with type field (4 SECURITY, 1 COMPLIANCE)',
+        'buildDeepScanPrompt() and buildCrossFilePrompt() accept rulesText parameter',
+        'UserRule API POST/PATCH accept all new fields',
+      ]},
+    ],
+  },
+  {
     version: '2.24.0',
     date: '2026-05-15',
     title: 'Parallel deep-scan, incremental persist, and AI-enriched tool findings',

@@ -6,7 +6,7 @@ import type { UnifiedFinding, FileSummary } from '../../findings/types';
 import { fingerprint } from '../../findings/dedup';
 import { upsertFinding } from '../../findings/persist';
 import { createProviderForNode } from '../../providers/factory';
-import { loadKnowledgeBase } from '../../rules/loader';
+import { loadKnowledgeBase, loadRulesForContext } from '../../rules/loader';
 import type { AIRequest } from '../../providers/base';
 import type { NodeConfig } from '../../lib/config';
 import { SCAN_DEPTH_OUTPUT_TOKENS, THINKING_DEPTH_BUDGET } from '../../lib/config';
@@ -196,9 +196,16 @@ export async function deepScanNode(state: ScanState): Promise<Partial<ScanState>
   }));
 
   const dbPrompts = await loadPrompts();
+  const rulesContext = await loadRulesForContext({
+    scanId: state.scanId,
+    repoUrl: state.repoUrl,
+    languages: state.repoIntel?.languages?.map(l => l.language),
+    tokenBudget: nodeConfig.rulesTokenBudget ?? 2000,
+  });
   const systemPrompt = dbPrompts.deepScan || knowledgeBase.prompts.deepScan || buildDeepScanPrompt(
     nodeConfig.scanDepth,
-    knowledgeBase.patterns.join('\n')
+    knowledgeBase.patterns.join('\n'),
+    rulesContext.rulesText
   );
 
   const concurrency = nodeConfig.concurrency ?? 5;

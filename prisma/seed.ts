@@ -356,41 +356,102 @@ const BUILTIN_RULES = [
     name: 'No hardcoded secrets',
     description: 'Flag any hardcoded API keys, passwords, tokens, or credentials in source files.',
     ruleText: 'Report any string literals that appear to be API keys, passwords, connection strings, or authentication tokens. Look for patterns like "password =", "api_key =", "secret =", connection string formats, and bearer token assignments.',
+    type: 'SECURITY',
     severity: 'CRITICAL',
     category: 'SECRETS',
     cwe: ['CWE-798'],
+    scope: 'GLOBAL',
+    priority: 10,
   },
   {
     name: 'SQL injection risk',
     description: 'Detect unsanitized user input concatenated into SQL queries.',
     ruleText: 'Identify database queries that concatenate user-controlled input directly without parameterization or prepared statements. Flag string formatting, concatenation, or template literal usage in SQL context.',
+    type: 'SECURITY',
     severity: 'CRITICAL',
     category: 'SAST',
     cwe: ['CWE-89'],
+    scope: 'GLOBAL',
+    priority: 10,
   },
   {
     name: 'Missing authentication check',
     description: 'Flag API endpoints or routes that process sensitive operations without verifying authentication.',
     ruleText: 'Look for request handlers, route definitions, or API endpoints that perform privileged actions (data mutation, admin operations, user management) without a visible auth check, session validation, or middleware guard.',
+    type: 'SECURITY',
     severity: 'HIGH',
     category: 'BUSINESS_LOGIC',
     cwe: ['CWE-306'],
+    scope: 'GLOBAL',
+    priority: 8,
   },
   {
     name: 'Insecure direct object reference',
     description: 'Detect cases where user-supplied IDs access objects without ownership verification.',
     ruleText: 'Flag code that uses a user-supplied identifier (from URL params, query string, or request body) to look up a database record without verifying the requesting user owns or has permission to access that record.',
+    type: 'SECURITY',
     severity: 'HIGH',
     category: 'SAST',
     cwe: ['CWE-639'],
+    scope: 'GLOBAL',
+    priority: 7,
   },
   {
     name: 'Sensitive data in logs',
     description: 'Detect PII, credentials, or sensitive values being written to logs.',
     ruleText: 'Identify logging statements (console.log, logger.info, print, etc.) that include sensitive fields such as passwords, tokens, credit card numbers, SSNs, email addresses, or any field labeled as private or confidential.',
+    type: 'COMPLIANCE',
     severity: 'MEDIUM',
     category: 'DATA_FLOW',
     cwe: ['CWE-532'],
+    scope: 'GLOBAL',
+    priority: 5,
+    tags: ['gdpr', 'logging', 'pii'],
+  },
+];
+
+// ─── Extra demo rules ──────────────────────────────────────────────────────
+
+const EXTRA_RULES = [
+  {
+    name: 'Critical SLA: 4-hour response',
+    description: 'CRITICAL severity findings must be triaged within 4 hours. Escalate to security lead on breach.',
+    ruleText: 'CRITICAL findings must be triaged within 4 hours. Escalate to security lead on breach.',
+    type: 'SLA',
+    severity: 'CRITICAL',
+    category: 'SAST',
+    scope: 'GLOBAL',
+    priority: 10,
+    slaSeverity: 'CRITICAL',
+    slaHours: 4,
+    slaAction: 'ESCALATE',
+    tags: ['sla', 'critical-response'],
+  },
+  {
+    name: 'PII encryption at rest',
+    description: 'All personally identifiable information must be encrypted at rest. Check for unencrypted columns storing names, emails, SSNs, or financial data.',
+    ruleText: 'All personally identifiable information (PII) must be encrypted at rest. Check for unencrypted database columns storing names, emails, SSNs, or financial data. Flag any model or schema that stores PII in plaintext.',
+    type: 'COMPLIANCE',
+    severity: 'HIGH',
+    category: 'DATA_FLOW',
+    scope: 'GLOBAL',
+    priority: 7,
+    cwe: ['CWE-312'],
+    owasp: ['A02:2021'],
+    tags: ['gdpr', 'soc2', 'pii', 'encryption'],
+    fixSuggestion: 'Use AES-256-GCM or similar encryption for PII columns. Consider column-level encryption or application-level encryption before storage.',
+  },
+  {
+    name: 'Payment flow integrity',
+    description: 'All payment processing must go through a dedicated PaymentService. Check for price manipulation, race conditions, and missing idempotency keys.',
+    ruleText: 'All payment processing must go through a dedicated PaymentService or equivalent abstraction. Direct database access from payment routes is a violation. Check for: (1) price manipulation via client-side price parameters, (2) race conditions in checkout flows, (3) missing idempotency keys on payment endpoints, (4) bypassing payment gateway validation.',
+    type: 'BUSINESS_LOGIC',
+    severity: 'HIGH',
+    category: 'BUSINESS_LOGIC',
+    scope: 'GLOBAL',
+    priority: 8,
+    paths: ['**/payment/**', '**/checkout/**', '**/order/**', '**/stripe/**'],
+    tags: ['payments', 'business-logic', 'fraud'],
   },
 ];
 
@@ -458,18 +519,37 @@ async function main() {
   console.log(`  ✓ Presets: ${BUILTIN_PRESETS.map(p => p.name).join(' · ')}`);
 
   // ── Builtin rules ──────────────────────────────────────────────────────────
-  for (const rule of BUILTIN_RULES) {
+  const ALL_RULES = [...BUILTIN_RULES, ...EXTRA_RULES];
+
+  for (const rule of ALL_RULES) {
     const existing = await prisma.userRule.findFirst({
       where: { name: rule.name, isBuiltin: true },
     });
     if (!existing) {
       await prisma.userRule.create({
-        data: { ...rule, isBuiltin: true, isActive: true },
+        data: { ...rule, isBuiltin: true, isActive: true } as any,
+      });
+    } else {
+      // Update existing builtin rules with new fields
+      await prisma.userRule.update({
+        where: { id: existing.id },
+        data: {
+          type: rule.type as any,
+          scope: (rule.scope ?? 'GLOBAL') as any,
+          priority: rule.priority ?? 0,
+          tags: rule.tags ?? [],
+          owasp: (rule as any).owasp ?? [],
+          paths: (rule as any).paths ?? [],
+          fixSuggestion: (rule as any).fixSuggestion,
+          slaSeverity: (rule as any).slaSeverity,
+          slaHours: (rule as any).slaHours,
+          slaAction: (rule as any).slaAction,
+        },
       });
     }
   }
 
-  console.log(`  ✓ Rules: ${BUILTIN_RULES.map(r => r.name).join(' · ')}`);
+  console.log(`  ✓ Rules: ${ALL_RULES.map(r => r.name).join(' · ')}`);
 
   console.log('\n✅ Seed complete.\n');
   console.log('  Sign in at /auth/signin with any seeded account:');

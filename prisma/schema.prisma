@@ -77,6 +77,24 @@ enum TaskType {
   AI_GENERATED
 }
 
+enum RuleType {
+  SECURITY
+  COMPLIANCE
+  SLA
+  BUSINESS_LOGIC
+}
+
+enum RuleScope {
+  GLOBAL
+  PROJECT
+}
+
+enum RuleScopeStatus {
+  ACTIVE
+  DRAFT
+  DEPRECATED
+}
+
 
 model User {
   id           String   @id @default(cuid())
@@ -100,6 +118,7 @@ model User {
   chatMessages      AiConversation[]
   githubProfile     GithubProfile?
   presets           Preset[]
+  rules             UserRule[]
 
   @@index([email])
   @@index([role])
@@ -176,6 +195,7 @@ model Finding {
   exploitScore         Float?
   cvssScore            Float?
   cvssVector           String?
+  slaDeadline          DateTime?
   confidence           Float     @default(0.5)
   remediation          String    @default("")
   rawJson              Json      @default("{}")
@@ -318,23 +338,62 @@ model ScanLog {
 }
 
 model UserRule {
-  id          String   @id @default(cuid())
-  name        String
-  description String   @default("")
-  ruleText    String
-  severity    String   @default("MEDIUM")
-  category    String   @default("SAST")
-  cwe         String[] @default([])
-  isActive   Boolean  @default(true)
-  isBuiltin  Boolean  @default(false)
-  scanId     String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String         @id @default(cuid())
+  name           String
+  description    String         @default("")
+  ruleText       String
 
-  scan Scan? @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  // Type & scope
+  type           RuleType       @default(SECURITY)
+  scope          RuleScope      @default(GLOBAL)
+  repoUrl        String?
+
+  // Matching & filtering
+  severity       String         @default("MEDIUM")
+  category       String         @default("SAST")
+  languages      String[]       @default([])
+  paths          String[]       @default([])
+  excludePaths   String[]       @default([])
+  matchPattern   String?
+
+  // SLA-specific
+  slaSeverity    String?
+  slaHours       Int?
+  slaAction      String?
+
+  // Metadata
+  cwe            String[]       @default([])
+  owasp          String[]      @default([])
+  priority       Int            @default(0)
+  fixSuggestion  String?
+  references     String[]       @default([])
+  tags           String[]       @default([])
+  codeRule       String?
+  source         String         @default("manual")
+
+  // Status & lifecycle
+  isActive       Boolean        @default(true)
+  status         RuleScopeStatus @default(ACTIVE)
+  isBuiltin      Boolean        @default(false)
+  enabledAt      DateTime?
+  lastUsedAt     DateTime?
+
+  // Relationships
+  userId         String?
+  scanId         String?
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  scan           Scan?          @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   @@index([scanId])
   @@index([isActive])
+  @@index([scope])
+  @@index([category])
+  @@index([severity])
+  @@index([priority])
+  @@index([type])
 }
 
 model UserPreference {

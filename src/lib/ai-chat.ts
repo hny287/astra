@@ -5,6 +5,7 @@ import type { ScanConfig, ChatConfig } from './config';
 import { DEFAULT_SYSTEM_PROMPT } from './branding';
 import { instrumentedSend } from '@/lib/ai-instrumentation';
 import { loadPrompts } from '../scan/prompts/deep-scan';
+import { loadRulesForContext } from '../rules/loader';
 import { prisma } from '@/lib/db';
 
 let cachedProvider: AIProvider | null = null;
@@ -27,7 +28,8 @@ function getDefaultChatConfig(config: ScanConfig): ChatConfig {
     maxRetries: 2,
     retryBackoffMs: 1000,
     timeoutMs: 30000,
-    systemPrompt: DEFAULT_SYSTEM_PROMPT
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    rulesTokenBudget: 1500,
   };
 }
 
@@ -273,12 +275,22 @@ export async function sendChatMessage(
 
   const systemPrompt = buildSystemPrompt(chatConfig, dbPrompts.chat, context, scanContext);
 
+  // Inject applicable rules into chat context
+  const rulesContext = await loadRulesForContext({
+    scanId: context?.scanId,
+    repoUrl: scanContext?.repoUrl,
+    tokenBudget: chatConfig.rulesTokenBudget ?? 1500,
+  });
+  const finalSystemPrompt = rulesContext.rulesText
+    ? `${systemPrompt}\n\n${rulesContext.rulesText}`
+    : systemPrompt;
+
   const messages: ChatMessage[] | undefined = context?.conversationHistory?.length
     ? [...context.conversationHistory, { role: 'user' as const, content: userMessage }]
     : undefined;
 
   const request: AIRequest = {
-    system: systemPrompt,
+    system: finalSystemPrompt,
     prompt: userMessage,
     messages,
     maxOutputTokens: chatConfig.maxOutputTokens,

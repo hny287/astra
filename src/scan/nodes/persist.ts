@@ -1,6 +1,7 @@
 import type { ScanState } from '../state';
 import { prisma } from '@/lib/db';
 import { createTaskFromFinding } from '@/lib/task-sync';
+import { log } from '../log';
 
 export async function persistNode(state: ScanState): Promise<Partial<ScanState>> {
   const errors: string[] = [];
@@ -29,6 +30,32 @@ export async function persistNode(state: ScanState): Promise<Partial<ScanState>>
     }
     if (taskCreationErrors.length > 0) {
       errors.push(...taskCreationErrors);
+    }
+
+    // SLA enforcement: check SLA-type rules and set deadlines on matching findings
+    const slaRules = await prisma.userRule.findMany({
+      where: { type: 'SLA', isActive: true },
+    });
+
+    if (slaRules.length > 0) {
+      for (const rule of slaRules) {
+        if (!rule.slaSeverity || !rule.slaHours) continue;
+        const matchingFindings = findings.filter(f => f.severity.toUpperCase() === rule.slaSeverity!.toUpperCase());
+        for (const finding of matchingFindings) {
+          try {
+            await prisma.finding.update({
+              where: { id: finding.id },
+              data: {
+                slaDeadline: new Date(Date.now() + rule.slaHours! * 60 * 60 * 1000),
+              },
+            });
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            errors.push(`SLA deadline update failed for finding ${finding.id}: ${msg}`);
+          }
+        }
+      }
+      await log(state.scanId, 'info', 'persist', `SLA enforcement: checked ${slaRules.length} SLA rule(s) against ${findings.length} finding(s)`);
     }
 
     // Persist business rules

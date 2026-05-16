@@ -35,6 +35,7 @@ export const nodeConfigSchema = z.object({
   retryBackoffMs: z.number().positive().default(2000),
   timeoutMs: z.number().positive().default(120000),
   concurrency: z.number().positive().optional(),
+  rulesTokenBudget: z.number().min(500).max(8000).default(2000),
 });
 
 export const chatConfigSchema = z.object({
@@ -61,6 +62,7 @@ export const chatConfigSchema = z.object({
   retryBackoffMs: z.number().positive().default(1000),
   timeoutMs: z.number().positive().default(30000),
   systemPrompt: z.string().default(DEFAULT_SYSTEM_PROMPT),
+  rulesTokenBudget: z.number().min(500).max(4000).default(1500),
 });
 
 export const providerModelSchema = z.object({
@@ -131,12 +133,12 @@ export function loadConfig(path: string): ScanConfig {
 const CONFIG_DB_KEY_CONST = SCAN_CONFIG_DB_KEY;
 
 const DEFAULT_NODE_CONFIGS: Record<string, z.infer<typeof nodeConfigSchema>> = {
-  discover: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'low', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 2048, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 3, retryBackoffMs: 2000, timeoutMs: 60000, concurrency: 1 },
-  gitIngest: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'none', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 1024, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 2, retryBackoffMs: 1000, timeoutMs: 30000, concurrency: 1 },
-  gitDiagram: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.3, thinkingDepth: 'low', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 2048, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 2, retryBackoffMs: 1000, timeoutMs: 60000, concurrency: 1 },
-  toolScan: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'none', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 1024, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 2, retryBackoffMs: 1000, timeoutMs: 180000, concurrency: 1 },
-  deepScan: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'medium', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 4096, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 3, retryBackoffMs: 2000, timeoutMs: 120000, concurrency: 5 },
-  crossFile: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.3, thinkingDepth: 'medium', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 4096, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 3, retryBackoffMs: 2000, timeoutMs: 180000, concurrency: 1 },
+  discover: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'low', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 2048, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 3, retryBackoffMs: 2000, timeoutMs: 60000, concurrency: 1, rulesTokenBudget: 2000 },
+  gitIngest: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'none', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 1024, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 2, retryBackoffMs: 1000, timeoutMs: 30000, concurrency: 1, rulesTokenBudget: 2000 },
+  gitDiagram: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.3, thinkingDepth: 'low', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 2048, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 2, retryBackoffMs: 1000, timeoutMs: 60000, concurrency: 1, rulesTokenBudget: 2000 },
+  toolScan: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'none', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 1024, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 2, retryBackoffMs: 1000, timeoutMs: 180000, concurrency: 1, rulesTokenBudget: 2000 },
+  deepScan: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.2, thinkingDepth: 'medium', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 4096, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 3, retryBackoffMs: 2000, timeoutMs: 120000, concurrency: 5, rulesTokenBudget: 2000 },
+  crossFile: { provider: 'anthropic', model: 'claude-sonnet-4-6', temperature: 0.3, thinkingDepth: 'medium', thinkingBudget: null, topP: 0.9, topK: null, frequencyPenalty: 0, presencePenalty: 0, stopSequences: [], scanDepth: 'standard', maxFileBytes: 204800, maxOutputTokens: 4096, contextWindowOverride: null, instructions: '', tools: [], knowledge: [], maxRetries: 3, retryBackoffMs: 2000, timeoutMs: 180000, concurrency: 1, rulesTokenBudget: 2000 },
 };
 
 function ensureNodeConfigs(config: Record<string, unknown>): Record<string, unknown> {
