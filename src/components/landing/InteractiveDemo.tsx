@@ -333,6 +333,7 @@ export default function InteractiveDemo() {
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
               flex: 1,
+              minWidth: 0,
             }}
           >
             {f.title}
@@ -347,6 +348,7 @@ export default function InteractiveDemo() {
           >
             {f.file}:{f.line}
           </span>
+          {!isMobile && (
           <span
             style={{
               ...sectionStyles.badge(f.scanner === 'Astra AI' ? landingTokens.accentPrimary : landingTokens.inkMuted),
@@ -356,6 +358,7 @@ export default function InteractiveDemo() {
           >
             {f.scanner}
           </span>
+          )}
         </div>
       ))}
     </div>
@@ -402,6 +405,8 @@ export default function InteractiveDemo() {
             border: `1px solid ${landingTokens.borderSubtle}`,
             padding: '4px',
             gap: '4px',
+            flexWrap: isMobile ? 'wrap' : 'nowrap',
+            justifyContent: 'center',
           }}
         >
           <button

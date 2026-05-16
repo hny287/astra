@@ -56,6 +56,18 @@ const landingPageStyles = `
     opacity: 1;
     transform: translateY(0);
   }
+  @media (max-width: 671px) {
+    .lp-section, .lp-section-dark {
+      padding-top: 48px;
+      padding-bottom: 48px;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    .lp-inner {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+  }
 `;
 
 export default function LandingPage() {
@@ -76,6 +88,7 @@ export default function LandingPage() {
         minHeight: '100vh',
         color: landingTokens.inkPrimary,
         fontFamily: landingTokens.fontSans,
+        overflowX: 'hidden',
       }}
     >
       <style>{landingKeyframes}</style>

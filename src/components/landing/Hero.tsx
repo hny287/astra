@@ -434,6 +434,8 @@ export default function Hero() {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
+                  flex: 1,
+                  minWidth: 0,
                 }}
               >
                 {f.title}

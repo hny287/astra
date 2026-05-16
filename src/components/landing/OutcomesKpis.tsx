@@ -134,7 +134,7 @@ export default function OutcomesKpis() {
                     : landingTokens.borderSubtle
                 }`,
                 position: 'relative',
-                transform: isHighlighted ? 'scale(1.02)' : 'scale(1)',
+                transform: isHighlighted && !isMobile ? 'scale(1.02)' : 'scale(1)',
                 boxShadow: isHighlighted
                   ? `0 4px 24px ${landingTokens.accentPrimary}20`
                   : 'none',

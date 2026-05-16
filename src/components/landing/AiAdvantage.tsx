@@ -337,6 +337,7 @@ export default function AiAdvantage() {
                   fontSize: '12px',
                   lineHeight: 1.6,
                   color: landingTokens.inkSecondary,
+                  overflowX: 'auto',
                 }}
               >
                 <code>
