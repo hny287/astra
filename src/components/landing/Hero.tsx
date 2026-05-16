@@ -3,16 +3,17 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { APP_NAME } from '@/lib/branding';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible, useCountUp } from './landingAnimations';
 import { heroData } from './landingData';
 import { demoFindings } from './demoData';
 
 // ─── Mobile breakpoint hook ────────────────────────────────────────
+const MOBILE_BREAKPOINT = 672;
+
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < MOBILE_BREAKPOINT);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -20,12 +21,12 @@ function useIsMobile(): boolean {
   return mobile;
 }
 
-// ─── Severity color mapping ────────────────────────────────────────
+// ─── Severity color mapping (Carbon semantic tokens) ────────────────
 const severityColor: Record<string, string> = {
-  CRITICAL: landingTokens.accentCritical,
-  HIGH: landingTokens.accentHigh,
-  MEDIUM: landingTokens.accentMedium,
-  LOW: landingTokens.accentLow,
+  CRITICAL: 'var(--ibm-semantic-error)',
+  HIGH: 'var(--ibm-semantic-warning)',
+  MEDIUM: 'var(--ibm-semantic-warning)',
+  LOW: 'var(--ibm-semantic-success)',
 };
 
 // ─── Scan animation phases ────────────────────────────────────────
@@ -125,13 +126,13 @@ export default function Hero() {
         top: 0,
         zIndex: 100,
         height: '48px',
-        background: landingTokens.bgCanvas,
-        borderBottom: `1px solid ${landingTokens.borderSubtle}`,
+        background: 'var(--ibm-canvas)',
+        borderBottom: '1px solid var(--ibm-hairline)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 24px',
-        maxWidth: landingTokens.maxWidth,
+        maxWidth: '1200px',
         margin: '0 auto',
         width: '100%',
         boxSizing: 'border-box',
@@ -143,9 +144,8 @@ export default function Hero() {
         style={{
           fontSize: '18px',
           fontWeight: 600,
-          color: landingTokens.inkPrimary,
+          color: 'var(--ibm-ink)',
           textDecoration: 'none',
-          fontFamily: landingTokens.fontSans,
           letterSpacing: '-0.02em',
         }}
       >
@@ -162,16 +162,15 @@ export default function Hero() {
               style={{
                 fontSize: '14px',
                 fontWeight: 400,
-                color: landingTokens.inkSecondary,
+                color: 'var(--ibm-ink-muted)',
                 textDecoration: 'none',
                 transition: 'color 0.15s ease',
-                fontFamily: landingTokens.fontSans,
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget.style.color = landingTokens.inkPrimary);
+                (e.currentTarget.style.color = 'var(--ibm-ink)');
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget.style.color = landingTokens.inkSecondary);
+                (e.currentTarget.style.color = 'var(--ibm-ink-muted)');
               }}
             >
               {link.label}
@@ -182,19 +181,18 @@ export default function Hero() {
             style={{
               fontSize: '14px',
               fontWeight: 600,
-              color: landingTokens.accentPrimary,
+              color: 'var(--ibm-primary)',
               textDecoration: 'none',
-              fontFamily: landingTokens.fontSans,
               transition: 'color 0.15s ease',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = landingTokens.accentPrimaryHover;
+              e.currentTarget.style.color = 'var(--ibm-primary-hover)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = landingTokens.accentPrimary;
+              e.currentTarget.style.color = 'var(--ibm-primary)';
             }}
           >
             Sign in →
@@ -222,7 +220,7 @@ export default function Hero() {
               display: 'block',
               width: '20px',
               height: '2px',
-              background: landingTokens.inkPrimary,
+              background: 'var(--ibm-ink)',
               borderRadius: '1px',
               transition: 'transform 0.2s ease, opacity 0.2s ease',
               transform: menuOpen ? 'rotate(45deg) translate(3px, 3px)' : 'none',
@@ -234,7 +232,7 @@ export default function Hero() {
               display: 'block',
               width: '20px',
               height: '2px',
-              background: landingTokens.inkPrimary,
+              background: 'var(--ibm-ink)',
               borderRadius: '1px',
               transform: menuOpen ? 'rotate(45deg)' : 'none',
             }}
@@ -244,7 +242,7 @@ export default function Hero() {
               display: 'block',
               width: '20px',
               height: '2px',
-              background: landingTokens.inkPrimary,
+              background: 'var(--ibm-ink)',
               borderRadius: '1px',
               transition: 'transform 0.2s ease, opacity 0.2s ease',
               transform: menuOpen ? 'rotate(-45deg) translate(3px, -3px)' : 'none',
@@ -265,7 +263,7 @@ export default function Hero() {
           position: 'fixed',
           inset: 0,
           zIndex: 200,
-          background: landingTokens.bgCanvas,
+          background: 'var(--ibm-canvas)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -282,9 +280,8 @@ export default function Hero() {
             style={{
               fontSize: '24px',
               fontWeight: 400,
-              color: landingTokens.inkSecondary,
+              color: 'var(--ibm-ink-muted)',
               textDecoration: 'none',
-              fontFamily: landingTokens.fontSans,
               transition: 'color 0.15s ease',
             }}
           >
@@ -297,9 +294,8 @@ export default function Hero() {
           style={{
             fontSize: '24px',
             fontWeight: 600,
-            color: landingTokens.accentPrimary,
+            color: 'var(--ibm-primary)',
             textDecoration: 'none',
-            fontFamily: landingTokens.fontSans,
           }}
         >
           Sign in →
@@ -320,14 +316,14 @@ export default function Hero() {
     return (
       <div
         style={{
-          background: landingTokens.bgSurface1,
-          border: `1px solid ${landingTokens.borderSubtle}`,
-          borderRadius: '12px',
+          background: 'var(--ibm-surface-1)',
+          border: '1px solid var(--ibm-hairline)',
+          borderRadius: '0',
           padding: isMobile ? '20px' : '28px',
-          fontFamily: landingTokens.fontMono,
+          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
           fontSize: '13px',
           lineHeight: 1.6,
-          color: landingTokens.inkSecondary,
+          color: 'var(--ibm-ink-muted)',
           overflow: 'hidden',
           animation: 'lpFadeUp 0.6s ease both',
         }}
@@ -341,15 +337,15 @@ export default function Hero() {
             marginBottom: '16px',
           }}
         >
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: landingTokens.accentCritical }} />
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: landingTokens.accentMedium }} />
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: landingTokens.accentLow }} />
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--ibm-semantic-error)' }} />
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--ibm-semantic-warning)' }} />
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--ibm-semantic-success)' }} />
         </div>
 
         {/* Command line */}
         <div style={{ marginBottom: '16px' }}>
-          <span style={{ color: landingTokens.accentPrimary }}>$</span>{' '}
-          <span style={{ color: landingTokens.inkPrimary }}>
+          <span style={{ color: 'var(--ibm-primary)' }}>$</span>{' '}
+          <span style={{ color: 'var(--ibm-ink)' }}>
             {APP_NAME.toLowerCase()} scan https://github.com/acme/api
           </span>
         </div>
@@ -371,15 +367,15 @@ export default function Hero() {
                 <div
                   style={{
                     padding: '3px 10px',
-                    borderRadius: '4px',
+                    borderRadius: '0',
                     fontSize: '11px',
                     fontWeight: 600,
-                    fontFamily: landingTokens.fontMono,
+                    fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
                     letterSpacing: '0.04em',
                     transition: 'all 0.3s ease',
-                    background: isActive ? `${landingTokens.accentPrimary}20` : landingTokens.bgSurface2,
-                    color: isActive ? landingTokens.accentPrimary : landingTokens.inkMuted,
-                    border: `1px solid ${isActive ? landingTokens.accentPrimary : landingTokens.borderSubtle}`,
+                    background: isActive ? 'var(--ibm-blue-10)' : 'var(--ibm-surface-2)',
+                    color: isActive ? 'var(--ibm-primary)' : 'var(--ibm-ink-subtle)',
+                    border: `1px solid ${isActive ? 'var(--ibm-primary)' : 'var(--ibm-hairline)'}`,
                   }}
                 >
                   {node.label}
@@ -387,7 +383,7 @@ export default function Hero() {
                 {i < pipelineNodes.length - 1 && (
                   <span
                     style={{
-                      color: isActive && i < activeNodes - 1 ? landingTokens.accentPrimary : landingTokens.borderMedium,
+                      color: isActive && i < activeNodes - 1 ? 'var(--ibm-primary)' : 'var(--ibm-hairline-strong)',
                       fontSize: '10px',
                       transition: 'color 0.3s ease',
                     }}
@@ -410,26 +406,36 @@ export default function Hero() {
                 alignItems: 'center',
                 gap: '10px',
                 padding: '8px 12px',
-                background: landingTokens.bgSurface2,
-                borderRadius: '6px',
-                border: `1px solid ${landingTokens.borderSubtle}`,
+                background: 'var(--ibm-surface-2)',
+                borderRadius: '0',
+                border: '1px solid var(--ibm-hairline)',
                 animation: 'lpSlideIn 0.35s ease both',
                 animationDelay: `${i * 60}ms`,
               }}
             >
               <span
                 style={{
-                  ...sectionStyles.badge(severityColor[f.severity] || landingTokens.inkMuted),
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+                  textTransform: 'uppercase' as const,
+                  letterSpacing: '0.04em',
+                  padding: '2px 8px',
+                  borderRadius: '0',
                   flexShrink: 0,
+                  background: severityColor[f.severity]
+                    ? `color-mix(in srgb, ${severityColor[f.severity]} 15%, transparent)`
+                    : 'var(--ibm-surface-2)',
+                  color: severityColor[f.severity] || 'var(--ibm-ink-subtle)',
+                  border: `1px solid ${severityColor[f.severity] ? `color-mix(in srgb, ${severityColor[f.severity]} 40%, transparent)` : 'var(--ibm-hairline)'}`,
                 }}
               >
                 {f.severity}
               </span>
               <span
                 style={{
-                  color: landingTokens.inkPrimary,
+                  color: 'var(--ibm-ink)',
                   fontSize: '12px',
-                  fontFamily: landingTokens.fontSans,
                   fontWeight: 400,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -444,7 +450,7 @@ export default function Hero() {
                 style={{
                   marginLeft: 'auto',
                   fontSize: '11px',
-                  color: landingTokens.inkMuted,
+                  color: 'var(--ibm-ink-subtle)',
                   flexShrink: 0,
                 }}
               >
@@ -459,9 +465,9 @@ export default function Hero() {
           style={{
             marginTop: '16px',
             paddingTop: '12px',
-            borderTop: `1px solid ${landingTokens.borderSubtle}`,
+            borderTop: '1px solid var(--ibm-hairline)',
             fontSize: '12px',
-            color: scanPhase === 'findings' ? landingTokens.accentLow : landingTokens.inkSecondary,
+            color: scanPhase === 'findings' ? 'var(--ibm-semantic-success)' : 'var(--ibm-ink-muted)',
             transition: 'color 0.3s ease',
           }}
         >
@@ -476,7 +482,7 @@ export default function Hero() {
     <div
       ref={statRef}
       style={{
-        maxWidth: landingTokens.maxWidth,
+        maxWidth: '1200px',
         margin: '0 auto',
         padding: isMobile ? '40px 24px' : '48px 24px',
         display: 'flex',
@@ -495,11 +501,11 @@ export default function Hero() {
           }}
         >
           <div
+            className="ibm-display-md"
             style={{
               fontSize: isMobile ? '36px' : '48px',
               fontWeight: 600,
-              color: landingTokens.inkPrimary,
-              fontFamily: landingTokens.fontSans,
+              color: 'var(--ibm-ink)',
               lineHeight: 1.1,
             }}
           >
@@ -507,12 +513,10 @@ export default function Hero() {
             {stat.suffix}
           </div>
           <div
+            className="ibm-body-sm"
             style={{
-              fontSize: '14px',
-              fontWeight: 300,
-              color: landingTokens.inkSecondary,
+              color: 'var(--ibm-ink-muted)',
               marginTop: '8px',
-              fontFamily: landingTokens.fontSans,
             }}
           >
             {stat.label}
@@ -528,15 +532,16 @@ export default function Hero() {
     const parts = headline.split(headlineAccent);
     return (
       <h1
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
           fontSize: isMobile ? '36px' : '56px',
           marginBottom: '20px',
           maxWidth: '640px',
         }}
       >
         {parts[0]}
-        <span style={{ color: landingTokens.accentPrimary }}>{headlineAccent}</span>
+        <span style={{ color: 'var(--ibm-primary)' }}>{headlineAccent}</span>
         {parts[1]}
       </h1>
     );
@@ -551,7 +556,7 @@ export default function Hero() {
       {/* Hero section */}
       <section
         style={{
-          maxWidth: landingTokens.maxWidth,
+          maxWidth: '1200px',
           margin: '0 auto',
           padding: isMobile ? '48px 24px 0' : '80px 24px 0',
           display: 'flex',
@@ -568,7 +573,7 @@ export default function Hero() {
           }}
         >
           {/* Eyebrow */}
-          <p style={{ ...sectionStyles.eyebrow, marginBottom: '16px' }}>
+          <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '16px' }}>
             {heroData.eyebrow}
           </p>
 
@@ -577,8 +582,9 @@ export default function Hero() {
 
           {/* Subhead */}
           <p
+            className="ibm-body-lg"
             style={{
-              ...sectionStyles.subhead,
+              color: 'var(--ibm-ink-muted)',
               marginBottom: '32px',
             }}
           >
@@ -603,18 +609,17 @@ export default function Hero() {
                 padding: '12px 24px',
                 fontSize: '14px',
                 fontWeight: 600,
-                fontFamily: landingTokens.fontSans,
-                background: landingTokens.accentPrimary,
-                color: '#ffffff',
-                borderRadius: '4px',
+                background: 'var(--ibm-primary)',
+                color: 'var(--ibm-on-primary)',
+                borderRadius: '0',
                 textDecoration: 'none',
                 transition: 'background 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = landingTokens.accentPrimaryHover;
+                e.currentTarget.style.background = 'var(--ibm-primary-hover)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = landingTokens.accentPrimary;
+                e.currentTarget.style.background = 'var(--ibm-primary)';
               }}
             >
               {heroData.ctaPrimary}
@@ -628,20 +633,19 @@ export default function Hero() {
                 padding: '12px 24px',
                 fontSize: '14px',
                 fontWeight: 600,
-                fontFamily: landingTokens.fontSans,
                 background: 'transparent',
-                color: landingTokens.inkPrimary,
-                borderRadius: '4px',
+                color: 'var(--ibm-ink)',
+                borderRadius: '0',
                 textDecoration: 'none',
-                border: `1px solid ${landingTokens.borderMedium}`,
+                border: '1px solid var(--ibm-hairline-strong)',
                 transition: 'border-color 0.15s ease, background 0.15s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = landingTokens.inkPrimary;
-                e.currentTarget.style.background = `${landingTokens.inkPrimary}08`;
+                e.currentTarget.style.borderColor = 'var(--ibm-ink)';
+                e.currentTarget.style.background = 'color-mix(in srgb, var(--ibm-ink) 4%, transparent)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = landingTokens.borderMedium;
+                e.currentTarget.style.borderColor = 'var(--ibm-hairline-strong)';
                 e.currentTarget.style.background = 'transparent';
               }}
             >
@@ -660,17 +664,13 @@ export default function Hero() {
             {heroData.tags.map((tag) => (
               <span
                 key={tag}
+                className="ibm-label"
                 style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  fontFamily: landingTokens.fontSans,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
+                  color: 'var(--ibm-primary)',
                   padding: '4px 10px',
-                  borderRadius: '4px',
-                  background: `${landingTokens.accentPrimary}15`,
-                  color: landingTokens.accentPrimary,
-                  border: `1px solid ${landingTokens.accentPrimary}30`,
+                  borderRadius: '0',
+                  background: 'var(--ibm-blue-10)',
+                  border: '1px solid var(--ibm-blue-20)',
                 }}
               >
                 {tag}

@@ -20,29 +20,28 @@ import Competition from '@/components/landing/Competition';
 import OutcomesKpis from '@/components/landing/OutcomesKpis';
 import CtaFooter from '@/components/landing/CtaFooter';
 
-/* ─── Shared style primitives ──────────────────────────────── */
+/* ─── Shared animation keyframes ─────────────────────────── */
 import { landingKeyframes } from '@/components/landing/landingAnimations';
-import { landingTokens } from '@/components/landing/landingStyles';
 
-/* ─── Landing page base styles ────────────────────────────── */
+/* ─── Landing page base styles (Carbon tokens) ────────────── */
 const landingPageStyles = `
   .lp-section {
-    padding: ${landingTokens.sectionPadding};
-    max-width: ${landingTokens.maxWidth};
+    padding: 96px 24px;
+    max-width: 1200px;
     margin: 0 auto;
     padding-left: 24px;
     padding-right: 24px;
   }
   .lp-section-dark {
-    padding: ${landingTokens.sectionPadding};
-    max-width: ${landingTokens.maxWidth};
+    padding: 96px 24px;
+    max-width: 1200px;
     margin: 0 auto;
     padding-left: 24px;
     padding-right: 24px;
-    background: ${landingTokens.bgCanvas};
+    background: var(--ibm-canvas);
   }
   .lp-inner {
-    max-width: ${landingTokens.maxWidth};
+    max-width: 1200px;
     margin: 0 auto;
     padding-left: 24px;
     padding-right: 24px;
@@ -84,10 +83,9 @@ export default function LandingPage() {
   return (
     <div
       style={{
-        background: landingTokens.bgCanvas,
+        background: 'var(--ibm-canvas)',
         minHeight: '100vh',
-        color: landingTokens.inkPrimary,
-        fontFamily: landingTokens.fontSans,
+        color: 'var(--ibm-ink)',
         overflowX: 'hidden',
       }}
     >
