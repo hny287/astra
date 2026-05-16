@@ -565,6 +565,11 @@ graphify update .                          # rebuild after code changes (AST-onl
 - Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
 - If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
 - After modifying code files in this session, run `graphify update .` to keep the graph current
+- **For any knowledge/reference question**, use these three sources IN ORDER:
+  1. `graphify query` / `graphify explain` — fastest, has cross-module context
+  2. `KNOWLEDGE/` directory — specs, design docs, competitive analysis, pipeline reference
+  3. `docs/` directory — how-to guides, tutorials, reference docs, superpowers specs/plans
+  Do NOT grep raw source files when one of these can answer the question.
 
 ## Housekeeping
 
