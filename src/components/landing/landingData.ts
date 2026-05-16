@@ -3,6 +3,7 @@
 // Single source of truth for all text content.
 
 import { APP_NAME, APP_DOMAIN } from '@/lib/branding';
+import { landingTokens } from './landingStyles';
 
 // ─── Hero ───────────────────────────────────────────────
 export const heroData = {
@@ -26,7 +27,7 @@ export const findingCategories = [
     id: 'sast',
     title: 'Code vulnerabilities',
     tag: 'SAST',
-    color: '#da1e28',
+    color: landingTokens.accentCritical,
     examples: [
       'SQL injection in auth/login.ts:47',
       'XSS in components/Comment.tsx:112',
@@ -37,7 +38,7 @@ export const findingCategories = [
     id: 'sca',
     title: 'Dependency risks',
     tag: 'SCA',
-    color: '#f57c00',
+    color: landingTokens.accentHigh,
     examples: [
       'CVE-2024-1234 in lodash@4.17.21',
       'Outdated express@4.18.2',
@@ -48,7 +49,7 @@ export const findingCategories = [
     id: 'secrets',
     title: 'Secrets & credentials',
     tag: 'Secrets',
-    color: '#da1e28',
+    color: landingTokens.accentCritical,
     examples: [
       'AWS access key in .env:5',
       'GitHub token in config/defaults.ts:12',
@@ -59,7 +60,7 @@ export const findingCategories = [
     id: 'iac',
     title: 'Infrastructure misconfigs',
     tag: 'IaC',
-    color: '#f1c21b',
+    color: landingTokens.accentMedium,
     examples: [
       'Open S3 bucket in terraform/main.tf:34',
       'Permissive IAM role in terraform/iam.tf:89',
@@ -70,7 +71,7 @@ export const findingCategories = [
     id: 'business-logic',
     title: 'Business logic flaws',
     tag: 'Business Logic',
-    color: '#da1e28',
+    color: landingTokens.accentCritical,
     examples: [
       'Missing auth middleware on /api/admin/*',
       'Privilege escalation via /api/users/:id/role',
@@ -81,7 +82,7 @@ export const findingCategories = [
     id: 'cloud',
     title: 'Cloud misconfigs',
     tag: 'Cloud',
-    color: '#f57c00',
+    color: landingTokens.accentHigh,
     examples: [
       'Public S3 bucket (AWS)',
       'Open network security group (Azure)',
@@ -106,56 +107,56 @@ export const platformModules = [
     title: 'Code Scan',
     description: 'SAST, SCA, secrets, IaC — Trivy, Semgrep, Gitleaks, Bearer, AI deep scan',
     tier: 'Free',
-    color: '#0f62fe',
+    color: landingTokens.accentPrimary,
   },
   {
     id: 'cloud-scan',
     title: 'Cloud Scan',
     description: 'AWS, Azure, GCP — Prowler, ScoutSuite, kube-bench misconfig detection',
     tier: 'Enterprise',
-    color: '#0093b7',
+    color: landingTokens.accentInfo,
   },
   {
     id: 'compliance',
     title: 'Compliance',
     description: '43 frameworks — CIS, PCI-DSS, NIST 800-53, SOC2, HIPAA, ISO 27001, GDPR, FedRAMP',
     tier: 'Pro',
-    color: '#24a148',
+    color: landingTokens.accentLow,
   },
   {
     id: 'pci-dss',
     title: 'PCI DSS',
     description: 'ASV integration, internal scanning, attestation workflow',
     tier: 'Enterprise',
-    color: '#da1e28',
+    color: landingTokens.accentCritical,
   },
   {
     id: 'network-scan',
     title: 'Network Scan',
     description: 'Nmap port scanning, OpenVAS vulnerability detection, service fingerprinting',
     tier: 'Enterprise',
-    color: '#6f6f6f',
+    color: landingTokens.inkMuted,
   },
   {
     id: 'sbom',
     title: 'SBOM',
     description: 'Syft + Grype — software bill of materials, license conflict detection, reachability analysis',
     tier: 'Pro',
-    color: '#f1c21b',
+    color: landingTokens.accentMedium,
   },
   {
     id: 'runtime',
     title: 'Runtime Security',
     description: 'Falco — real-time event detection, runtime anomaly correlation, alert dispatch',
     tier: 'Enterprise',
-    color: '#f57c00',
+    color: landingTokens.accentHigh,
   },
   {
     id: 'iac-scan',
     title: 'IaC Scan',
     description: 'Checkov + Trivy IaC — Terraform, K8s, CloudFormation, custom Rego policies',
     tier: 'Pro',
-    color: '#a8a8a8',
+    color: landingTokens.inkSecondary,
   },
 ];
 
