@@ -150,7 +150,7 @@ export default function InteractiveDemo() {
         >
           <code>
             {fixLines.map((line, i) => {
-              let lineColor = landingTokens.inkSecondary;
+              let lineColor: string = landingTokens.inkSecondary;
               if (line.startsWith('+') || line.startsWith('```+')) {
                 lineColor = landingTokens.accentLow;
               } else if (line.startsWith('-') || line.startsWith('```-')) {

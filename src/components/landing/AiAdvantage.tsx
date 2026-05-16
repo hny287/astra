@@ -341,7 +341,7 @@ export default function AiAdvantage() {
               >
                 <code>
                   <div style={{ color: landingTokens.accentCritical }}>
-                    - const query = `SELECT * FROM users WHERE username = &apos;${username}&apos;`
+                    - const query = {"`SELECT * FROM users WHERE username = '${username}'`"}
                   </div>
                   <div style={{ color: landingTokens.accentLow }}>
                     + const query = &apos;SELECT * FROM users WHERE username = $1&apos;;
