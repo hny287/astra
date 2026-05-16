@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 import { demoFindings, rawOutputExample, enrichedOutputExample } from './demoData';
+import { APP_NAME } from '@/lib/branding';
 
 // ─── Severity color mapping ────────────────────────────────────────
 const severityColor: Record<string, string> = {
@@ -351,7 +352,7 @@ export default function InteractiveDemo() {
           {!isMobile && (
           <span
             style={{
-              ...sectionStyles.badge(f.scanner === 'Astra AI' ? landingTokens.accentPrimary : landingTokens.inkMuted),
+              ...sectionStyles.badge(f.scanner === `${APP_NAME} AI` ? landingTokens.accentPrimary : landingTokens.inkMuted),
               fontSize: '10px',
               flexShrink: 0,
             }}
@@ -441,7 +442,7 @@ export default function InteractiveDemo() {
               transition: 'all 0.15s ease',
             }}
           >
-            Astra AI-enriched
+            {APP_NAME} AI-enriched
           </button>
         </div>
       </div>

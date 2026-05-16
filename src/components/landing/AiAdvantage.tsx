@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
+import { APP_NAME } from '@/lib/branding';
 
 // ─── Mobile breakpoint hook ────────────────────────────────────────
 function useIsMobile(): boolean {
@@ -202,7 +203,7 @@ export default function AiAdvantage() {
           </div>
         </div>
 
-        {/* Right: What Astra gives you */}
+        {/* Right: What APP_NAME gives you */}
         <div
           style={{
             background: landingTokens.bgSurface1,
@@ -251,7 +252,7 @@ export default function AiAdvantage() {
                 color: landingTokens.accentPrimary,
               }}
             >
-              What Astra gives you
+              What {APP_NAME} gives you
             </span>
           </div>
 

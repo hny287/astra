@@ -401,6 +401,7 @@ runtime-scan ──────────────────────�
 
 | Date | Change |
 |------|--------|
+| 2026-05-16 | v2.28.0: **Frontpage redesign** — 14-section dark-themed landing page with interactive demo, AI advantage comparison, 8 scan modules, BYO model messaging, competition section, pricing tiers, RBAC/enterprise features; independent visual identity (no IBM Carbon); component-based architecture in `src/components/landing/`; all brand strings from `branding.ts`; deleted v2/page.tsx |
 | 2026-05-16 | v2.27.0: **Password management** — Self-service password change (PATCH /api/v1/auth/me with current+new password, bcrypt verify+hash); admin password reset (PATCH /api/v1/users/[id] accepts password field); Change Password card on Profile page; Reset PW modal on User Management page; Knowledge page unified spec link on Specs tab |
 | 2026-05-16 | v2.26.0: **Rule Engine** — Extended UserRule with 4 types (SECURITY/COMPLIANCE/SLA/BUSINESS_LOGIC), project scoping (GLOBAL/PROJECT), language/path filtering, SLA enforcement fields, lifecycle status; unified rule loader (loadRulesForContext) injects into deep-scan, cross-file, chat AI prompts with token budget; persist node sets SLA deadlines; Rules page UI with type badges and SLA config; additive migration safe for production |
 | 2026-05-16 | v2.25.0: **Modular scan architecture design** — 8 pipeline modules (code-scan, cloud-scan, compliance, pci-dss, network-scan, sbom, runtime-scan, iac-scan) + 4 service modules (ai-chat, rbac, multitenancy, payments); each module has independent DAG, Data Plane image, feature gate, API routes; new categories (CLOUD_MISCONFIG, COMPLIANCE, VULNERABILITY, RUNTIME, LICENSE); CloudAccount model for AWS/Azure/GCP credentials; compliance framework mapping (43 frameworks); PCI DSS ASV import; SBOM pipeline with license conflict detection; spec at `docs/superpowers/specs/2026-05-16-modular-scan-architecture-design.md` |
@@ -519,6 +520,11 @@ runtime-scan ──────────────────────�
 | `astra-app/src/lib/auth.ts` | NextAuth v5 config — Credentials provider, JWT, RBAC callbacks, `trustHost: true` |
 | `astra-app/src/lib/browser-store.ts` | localStorage TTL cache — `bsGet/bsSet/bsDel/bsClear` with `astra:v1:` namespace |
 | `astra-app/src/components/AppDataProvider.tsx` | React context — shared users, preferences, chatConfig, currentUser; stale-while-revalidate |
+| `astra-app/src/components/landing/*.tsx` | 14-section landing page components (Hero, InteractiveDemo, AiAdvantage, etc.) — independent visual identity, no IBM Carbon |
+| `astra-app/src/components/landing/landingStyles.ts` | Landing page design tokens (dark theme colors, typography, spacing) |
+| `astra-app/src/components/landing/landingAnimations.ts` | Shared animation hooks (useVisible, useCountUp) and CSS keyframes |
+| `astra-app/src/components/landing/landingData.ts` | All landing page content data (sections, modules, features, pricing) |
+| `astra-app/src/components/landing/demoData.ts` | Mock findings and raw/enriched output for interactive demo |
 | `astra-app/src/components/AppShell.tsx` | App shell — wraps all authenticated pages; mounts AppDataProvider + AiChatProvider |
 
 ### Data Plane PoC (`astra-poc/`)

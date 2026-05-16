@@ -11,6 +11,39 @@ export interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.28.0',
+    date: '2026-05-16',
+    title: 'Frontpage redesign',
+    description: '14-section dark-themed landing page with independent visual identity, interactive demo, AI advantage comparison, module coverage, competition section, pricing tiers, and BYO model messaging.',
+    categories: [
+      {
+        label: 'Landing page',
+        items: [
+          'New 14-section landing page replacing 691-line monolithic page.tsx',
+          'Dark theme with independent visual identity (no IBM Carbon dependency)',
+          'Animated scan walkthrough in Hero section',
+          'Interactive demo with raw-vs-AI-enriched toggle',
+          'AI Advantage before/after comparison',
+          '6 vulnerability category cards with real examples',
+          'Language/framework/cloud/IaC stack coverage',
+          '8 scan module cards (Code, Cloud, Compliance, PCI, Network, SBOM, Runtime, IaC)',
+          'Cloud & Infrastructure section (Cloud Scan, Compliance, IaC)',
+          'Network & Runtime section (Network, SBOM, Runtime)',
+          '12-feature breakdown grid',
+          'Bring Your Own Model messaging (not provider listing)',
+          'RBAC & Enterprise features (4-column: Access, Security, Deployment, Audit)',
+          'Competition section with 5 differentiators',
+          'Outcomes & KPIs with pricing tiers (Free/Pro/Enterprise)',
+          'CTA + footer with brand-aware links',
+          'Component-based architecture: 14 section components in src/components/landing/',
+          'All brand strings use branding.ts constants (APP_NAME, APP_DOMAIN)',
+          'Scroll-reveal animations via IntersectionObserver',
+          'Responsive design with mobile breakpoints',
+        ],
+      },
+    ],
+  },
+  {
     version: '2.27.0',
     date: '2026-05-16',
     title: 'Password management: self-service change and admin reset',

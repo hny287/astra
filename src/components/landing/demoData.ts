@@ -2,6 +2,8 @@
 // Mock findings and output examples for the interactive demo section.
 // Includes both raw scanner output and AI-enriched output for comparison.
 
+import { APP_NAME } from '@/lib/branding';
+
 export interface DemoFinding {
   id: string;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
@@ -19,7 +21,7 @@ export const demoFindings: DemoFinding[] = [
     title: 'SQL injection in authentication query',
     file: 'auth/login.ts',
     line: 47,
-    scanner: 'Astra AI',
+    scanner: `${APP_NAME} AI`,
     category: 'SAST',
   },
   {
@@ -46,7 +48,7 @@ export const demoFindings: DemoFinding[] = [
     title: 'Missing authentication middleware on admin endpoints',
     file: 'routes/admin.ts',
     line: 12,
-    scanner: 'Astra AI',
+    scanner: `${APP_NAME} AI`,
     category: 'Business Logic',
   },
   {

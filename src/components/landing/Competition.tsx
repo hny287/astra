@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible, useStagger } from './landingAnimations';
+import { APP_NAME } from '@/lib/branding';
 import { differentiators } from './landingData';
 
 // ─── Mobile breakpoint hook ────────────────────────────────────────
@@ -36,7 +37,7 @@ export default function Competition() {
     >
       {/* Section header */}
       <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
-        Why Astra
+        Why {APP_NAME}
       </p>
       <h2
         style={{

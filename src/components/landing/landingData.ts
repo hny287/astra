@@ -181,32 +181,32 @@ export const differentiators = [
   {
     id: 'business-logic',
     title: 'Business-logic detection that others miss',
-    description: '49% of critical bug-bounty findings are IDOR, BOLA, BFLA. Pattern-matching scanners cannot find these. Astra\'s hybrid deterministic+LLM engine does.',
-    comparison: 'Snyk: SCA only. Semgrep: pattern-matching only. Astra: hybrid deterministic+LLM.',
+    description: `49% of critical bug-bounty findings are IDOR, BOLA, BFLA. Pattern-matching scanners cannot find these. ${APP_NAME}'s hybrid deterministic+LLM engine does.`,
+    comparison: `Snyk: SCA only. Semgrep: pattern-matching only. ${APP_NAME}: hybrid deterministic+LLM.`,
   },
   {
     id: 'unified',
     title: 'Unified platform, not point tools',
     description: 'AI SAST + reachability SCA + secrets + IaC + cloud + network + SBOM + runtime + compliance in one product. Replace 4-6 separate tools.',
-    comparison: 'Most teams run Snyk + Semgrep + Gitleaks + a compliance tool. Astra replaces all of them.',
+    comparison: `Most teams run Snyk + Semgrep + Gitleaks + a compliance tool. ${APP_NAME} replaces all of them.`,
   },
   {
     id: 'pricing',
     title: 'Transparent pricing',
     description: 'No enterprise sales calls under $2K/month. Self-serve Free/Pro/Enterprise tiers. No pricing cliff at 11 developers.',
-    comparison: 'Snyk jumps from $25 to $105/dev at 11 seats. Astra stays predictable.',
+    comparison: `Snyk jumps from $25 to $105/dev at 11 seats. ${APP_NAME} stays predictable.`,
   },
   {
     id: 'ai-aware',
     title: 'AI-generated code awareness',
-    description: 'Astra tags AI-generated files during analysis and applies detection patterns tuned for vibe-coded vulnerabilities.',
+    description: `${APP_NAME} tags AI-generated files during analysis and applies detection patterns tuned for vibe-coded vulnerabilities.`,
     comparison: 'Other scanners treat AI-generated code the same as human-written code.',
   },
   {
     id: 'cross-repo',
     title: 'Cross-repo reasoning',
     description: 'Multi-repo and cross-service data flow analysis. No one else does this at production scale.',
-    comparison: 'CodeRabbit launched limited multi-repo in March 2026. Astra targets cross-service graph analysis.',
+    comparison: `CodeRabbit launched limited multi-repo in March 2026. ${APP_NAME} targets cross-service graph analysis.`,
   },
 ];
 
