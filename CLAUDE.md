@@ -84,7 +84,7 @@ interface UnifiedFinding {
   title: string;
   description: string;
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
-  category: 'SAST' | 'SCA' | 'SECRETS' | 'IAC' | 'DATA_FLOW' | 'BUSINESS_LOGIC';
+  category: 'SAST' | 'SCA' | 'SECRETS' | 'IAC' | 'DATA_FLOW' | 'BUSINESS_LOGIC' | 'CLOUD_MISCONFIG' | 'COMPLIANCE' | 'VULNERABILITY' | 'RUNTIME' | 'LICENSE';
   file: string;
   lineStart: number;
   lineEnd: number;
@@ -266,6 +266,110 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 | Integrations | /v1/integrations/* | Jira, Slack, PagerDuty, webhook dispatch |
 | Dashboard | /v1/dashboard/* | REST + WebSocket, real-time push |
 
+## Scan Pipeline Modules
+
+Each module is an independent pipeline with its own DAG, Data Plane image, feature gate, and API routes. Modules are enabled/disabled via `NEXT_PUBLIC_FEATURES` env var + org plan + project config.
+
+### Code Scan (existing)
+- **Feature gate:** `code_scan`
+- **DAG:** clone → discover → git_ingest → git_diagram → tool_scan → deep_scan → cross_file → aggregate → persist
+- **Data Plane:** `astra-code-scan` (Trivy, Semgrep, Gitleaks, Bearer, Checkov, Bandit)
+- **Categories:** SAST, SCA, SECRETS, IAC, DATA_FLOW, BUSINESS_LOGIC
+
+### Cloud Scan
+- **Feature gate:** `cloud_scan`
+- **DAG:** auth → discover → connect → scan → normalize → compliance_map → enrich → persist
+- **Data Plane:** `astra-cloud-scan` (Prowler AWS/Azure/GCP, ScoutSuite AWS/Azure/GCP, kube-bench)
+- **API prefix:** `/v1/cloud-scans`, `/v1/cloud-accounts`
+- **Categories:** CLOUD_MISCONFIG, COMPLIANCE
+- **Auth:** API key / access token per cloud account (AWS Access Key, Azure SPN, GCP Service Account)
+
+### Compliance
+- **Feature gate:** `compliance`
+- **DAG:** ingest → map → score → report → persist
+- **Data Plane:** Control Plane only (reads existing findings)
+- **API prefix:** `/v1/compliance`
+- **Frameworks:** CIS, PCI-DSS, NIST 800-53, SOC2, HIPAA, ISO 27001, GDPR, FedRAMP (43 frameworks via Prowler)
+- **Depends on:** cloud_scan OR iac_scan OR code_scan (needs findings from at least one scan source)
+
+### PCI DSS / ASV
+- **Feature gate:** `pci_dss`
+- **DAG:** internal_scan → asv_import → merge → attest → persist
+- **Data Plane:** `astra-pci-dss` (Prowler PCI profile, OpenSCAP)
+- **API prefix:** `/v1/pci-dss`
+- **ASV integrations:** Qualys, Rapid7, Tenable (import external ASV reports)
+- **Depends on:** compliance module
+
+### Network Scan
+- **Feature gate:** `network_scan`
+- **DAG:** target_discover → port_scan → vuln_scan → service_detect → normalize → enrich → persist
+- **Data Plane:** `astra-network-scan` (Nmap, OpenVAS)
+- **API prefix:** `/v1/network-scans`, `/v1/network-targets`
+- **Categories:** VULNERABILITY
+
+### SBOM
+- **Feature gate:** `sbom`
+- **DAG:** discover → inventory → vulnerability → license → enrich → persist
+- **Data Plane:** `astra-sbom` (Syft, Grype, Trivy)
+- **API prefix:** `/v1/sbom`
+- **Categories:** SCA, LICENSE
+
+### Runtime Security
+- **Feature gate:** `runtime_scan`
+- **DAG:** deploy_agent → collect → detect → correlate → alert → persist
+- **Data Plane:** `astra-runtime` (Falco, falcosidekick)
+- **API prefix:** `/v1/runtime`
+- **Categories:** RUNTIME
+- **Note:** Event-driven (continuous stream), not scan-based
+
+### IaC Scan
+- **Feature gate:** `iac_scan`
+- **DAG:** discover → validate → policy_check → enrich → persist
+- **Data Plane:** `astra-code-scan` (shared — Checkov, Trivy IaC)
+- **API prefix:** `/v1/iac-scans`
+- **Categories:** IAC
+
+### Service Modules (not pipelines)
+
+| Module | Feature Gate | Purpose |
+|---|---|---|
+| ai-chat | `ai_chat` | Multi-provider AI chat |
+| rbac | `rbac` | Role-based access control with composable permissions |
+| multitenancy | `multitenancy` | Org/tenant isolation with PostgreSQL RLS |
+| payments | `payments` | Stripe (SaaS) + license keys (Self-Hosted) billing |
+
+### Module Dependency Graph
+```
+code-scan ──────────────────────────────┐
+cloud-scan ──────┐                     │
+iac-scan ─────────┼──→ compliance ──→ pci-dss
+sbom ──────────────────────────────────────┤
+network-scan ───────────────────────────┤
+runtime-scan ──────────────────────────┤
+                                        │
+               findings store (UnifiedFinding)
+                                        │
+                   rbac / multitenancy / payments
+                                        │
+                                  project model
+```
+
+### Plan Tier Gating
+
+| Module | Free | Pro | Enterprise |
+|--------|------|-----|------------|
+| code-scan | 3 scanners, no AI | All + AI | All + AI + custom rules |
+| cloud-scan | — | AWS only | AWS + Azure + GCP |
+| compliance | — | CIS only | All 43 frameworks |
+| pci-dss | — | — | Full ASV + attestation |
+| network-scan | — | — | Full |
+| sbom | — | Generate only | Full (license + vuln correlation) |
+| runtime-scan | — | — | Full |
+| iac-scan | — | Terraform + K8s | All IaC + custom policies |
+| ai-chat | — | 100 msg/mo | Unlimited |
+| rbac | Viewer only | 3 roles | Custom roles + permissions |
+| projects | 1 project | 10 projects | Unlimited |
+
 ## Business Rules
 
 - Raw source code must NEVER leave the customer environment
@@ -297,6 +401,7 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 
 | Date | Change |
 |------|--------|
+| 2026-05-16 | v2.25.0: **Modular scan architecture design** — 8 pipeline modules (code-scan, cloud-scan, compliance, pci-dss, network-scan, sbom, runtime-scan, iac-scan) + 4 service modules (ai-chat, rbac, multitenancy, payments); each module has independent DAG, Data Plane image, feature gate, API routes; new categories (CLOUD_MISCONFIG, COMPLIANCE, VULNERABILITY, RUNTIME, LICENSE); CloudAccount model for AWS/Azure/GCP credentials; compliance framework mapping (43 frameworks); PCI DSS ASV import; SBOM pipeline with license conflict detection; spec at `docs/superpowers/specs/2026-05-16-modular-scan-architecture-design.md` |
 | 2026-05-16 | v2.24.1: **User-scoped scan listing + Knowledge page + markdown formatting** — Non-admin users now see only their own scans (GET /api/v1/scans filtered by userId); unified Knowledge page at /knowledge with 6 tabs (Changelog, Roadmap, Docs, Specs, Plans, How-to); Knowledge API serves filesystem content with section-based path resolution; full-width layout; IBM Carbon markdown styling for rendered docs/roadmap; `--ibm-*` CSS variables for all markdown elements (tables, headings, code, blockquotes) |
 | 2026-05-15 | v2.24.0: **Parallel deep-scan, incremental persist, AI-enriched tool findings** — p-limit replaces sequential batches; findings upserted to DB per-file; Trivy/Gitleaks findings enriched by AI; persist node only creates tasks + metadata; shared `findings/persist.ts` and `findings/normalize.ts` |
 | 2026-05-15 | v2.23.2: **Fix AI JSON parse crash + markdown chat rendering** — AI models can return JSON with invalid `\u` escapes that crash `JSON.parse()`, killing deep_scan; shared `parseAiJson()` sanitizer strips bad escapes; AiChatProvider + ScanChat now render assistant messages as markdown via react-markdown + remark-gfm |
@@ -431,6 +536,7 @@ The user explicitly requested using cloud models via API key, NOT pulling models
 | `context/architecture.html` | Complete project reference (BRD/PRD/TRD, diagrams, changelog, glossary) |
 | `context/superpowers-reference.md` | Superpowers 5.1.0 all 14 skills |
 | `docs/superpowers/specs/2026-05-07-streaming-chat-design.md` | Streaming chat design spec |
+| `docs/superpowers/specs/2026-05-16-modular-scan-architecture-design.md` | Modular scan architecture — 8 pipeline modules, feature gates, plan tiers, cloud/PCI/network/SBOM/runtime/IaC |
 | `docs/superpowers/specs/2026-04-29-astra-security-platform-design.md` | Full design specification |
 | `docs/diagrams/01-architecture-overview.md` through `08-security-model.md` | Architecture diagram sources |
 | `astra-scanner-design.md` | Scanner architecture summary |

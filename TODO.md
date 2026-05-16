@@ -115,6 +115,7 @@
 | 78 | **DB-backed prompt management** — retrieve all system prompts (discover, deepScan, crossFile, chat) from DB; UI to edit/version/restore prompts per node | ⚪ | 0m | | Store prompts in Config table under `prompts.*` keys; fall back to hardcoded defaults; every AI call reads from DB, not code |
 | 79 | **Astra-app file system glossary** — complete catalogue of every file in `astra-app/src/`: purpose, exported functions/types, API routes mapped, DB tables touched, providers used | 🟢 | 0m | | Auto-generated + hand-curated; rendered as searchable page in UI and as `docs/glossary/astra-app-files.md`; updated on each code change |
 | 80 | **DB-first context loading for all AI calls** — every AI call (chat, deepScan, crossFile) must load its context (finding, scan, conversation history, config, prompts) from DB; no in-memory shortcuts | ⚪ | 0m | | Audit all `sendChatMessage`/node calls; replace any in-memory state with fresh DB queries; fixes chat memory (task 17) |
+| 112 | **Wire DB rules into AI prompts** — `UserRule` (active) + `BusinessLogicRule` (confirmed) + `guidelines/*.md` never reach AI; only filesystem `patterns/*.json` does | ⚪ | 0m | | Load from DB in deepScanNode, crossFileNode, sendChatMessage; inject alongside patterns; respect isActive/status filters |
 
 ---
 
@@ -288,6 +289,150 @@
 | 68 | Loading skeletons | — | Content-aware shimmer placeholders |
 | 69 | Empty states | — | Illustrations + CTAs for empty lists |
 | 70 | Onboarding wizard | 10–14 | Step-by-step: credentials → prefs → first scan |
+
+---
+
+### Phase 9 — Cloud Scan Pipeline
+**Goal:** Multi-cloud infrastructure security scanning (AWS, Azure, GCP).
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 200 | **CloudScan pipeline DAG** | 128, 130 | New pipeline: auth → discover → connect → scan → normalize → compliance_map → enrich → persist. Separate from code-scan pipeline. |
+| 201 | **CloudAccount model + credentials** | 200 | Store cloud account credentials (AWS Access Key, Azure SPN, GCP Service Account) encrypted in DB. Validate connectivity. Status: pending/connected/error/scanning. |
+| 202 | **Prowler integration (AWS)** | 200 | Run Prowler AWS as subprocess in `astra-cloud-scan` Docker. Parse JSON output. Map to UnifiedFinding with category CLOUD_MISCONFIG / COMPLIANCE. |
+| 203 | **Prowler integration (Azure)** | 200 | Prowler Azure. Same normalize path. |
+| 204 | **Prowler integration (GCP)** | 200 | Prowler GCP. Same normalize path. |
+| 205 | **ScoutSuite integration (AWS)** | 200 | Run ScoutSuite AWS. Parse JSON. Map findings. |
+| 206 | **ScoutSuite integration (Azure)** | 200 | ScoutSuite Azure. |
+| 207 | **ScoutSuite integration (GCP)** | 200 | ScoutSuite GCP. |
+| 208 | **kube-bench integration** | 200 | CIS Kubernetes Benchmark scanning. |
+| 209 | **Cloud scan API routes** | 200 | `/v1/cloud-accounts` CRUD, `/v1/cloud-scans` trigger+list, `/v1/cloud-resources` inventory |
+| 210 | **Cloud scan UI** | 200 | Cloud accounts list, add/edit account, scan trigger, scan results, findings by cloud provider |
+| 211 | **Compliance mapping pipeline** | 200 | Ingest → map → score → report → persist. Map findings to 43 compliance frameworks. |
+| 212 | **Compliance framework seeding** | 211 | Seed ComplianceFramework + ComplianceControl tables with CIS, PCI-DSS, NIST, SOC2, HIPAA, ISO 27001, GDPR controls |
+| 213 | **Compliance report generation** | 211 | PDF, HTML, SARIF report generation per framework per project |
+| 214 | **Compliance API + UI** | 211 | `/v1/compliance` framework listing, control mapping, score dashboard, report download |
+
+### Phase 10 — Network Scan Pipeline
+**Goal:** Network vulnerability scanning (port audit, service detection, CVE identification).
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 220 | **NetworkScan pipeline DAG** | 128 | target_discover → port_scan → vuln_scan → service_detect → normalize → enrich → persist |
+| 221 | **NetworkScanTarget model** | 220 | Store scan targets (IPs, CIDRs, hostnames, excluded ranges). Per-project. |
+| 222 | **Nmap integration** | 220 | Port scanning, service detection, OS fingerprinting. XML/JSON output. |
+| 223 | **OpenVAS integration** | 220 | Vulnerability scanning (open-source Nessus fork). XML output. |
+| 224 | **Network scan API routes** | 220 | `/v1/network-targets` CRUD, `/v1/network-scans` trigger+list, `/v1/network-hosts` results |
+| 225 | **Network scan UI** | 220 | Target management, scan trigger, host results, port/service table |
+
+### Phase 11 — SBOM Pipeline
+**Goal:** Software Bill of Materials generation, vulnerability correlation, license scanning.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 230 | **SBOM pipeline DAG** | 128 | discover → inventory → vulnerability → license → enrich → persist |
+| 231 | **Syft integration** | 230 | Generate SBOM from package manifests (all languages). CycloneDX + SPDX output. |
+| 232 | **Grype integration** | 230 | Vulnerability scanning from SBOM. Match CVEs to dependencies. |
+| 233 | **License conflict detection** | 230 | Scan dependency licenses (SPDX). Flag GPL/copyleft conflicts in proprietary projects. |
+| 234 | **SBOM API routes** | 230 | `/v1/sbom` list/generate, `/v1/sbom/:id/export?format=`, `/v1/sbom/:id/vulnerabilities`, `/v1/sbom/:id/licenses` |
+| 235 | **SBOM UI** | 230 | Dependency inventory table, vulnerability list, license conflict warnings, export buttons |
+
+### Phase 12 — PCI DSS / ASV Module
+**Goal:** Internal PCI compliance + external ASV report import + attestation workflow.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 240 | **PCI DSS internal scanning** | 211, 214 | Prowler PCI-DSS profile + OpenSCAP for OS-level compliance. Continuous, not quarterly. |
+| 241 | **ASV report import API** | — | Import external ASV scan results from Qualys, Rapid7, Tenable. Parse XML/CSV. Map to UnifiedFinding. |
+| 242 | **ASV report merge + dedup** | 240, 241 | Merge internal findings with ASV findings by fingerprint. Track internal-only / ASV-only / both. |
+| 243 | **Attestation workflow** | 242 | Quarterly attestation tracking. Remediation status per finding. Rescan workflow. Generate attestation-ready reports. |
+| 244 | **PCI DSS dashboard + API** | 240, 243 | `/v1/pci-dss/scans`, `/v1/pci-dss/attestations`, `/v1/pci-dss/asv-imports`. Dashboard: compliance score, requirement status, remediation tracking. |
+
+### Phase 13 — Runtime Security
+**Goal:** Container/K8s runtime threat detection via Falco agents.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 250 | **Falco agent deployment** | — | Helm chart for Falco + falcosidekick. Config management per project. |
+| 251 | **Event collection webhook** | 250 | falcosidekick webhook endpoint in Control Plane. Parse Falco JSON events. Store as UnifiedFinding (category: RUNTIME). |
+| 252 | **Runtime event correlation** | 251 | Correlate Falco events with code-scan/cloud-scan findings. Link to existing vulnerabilities. |
+| 253 | **Runtime rule management** | 250 | Custom Falco rules per project. UI rule editor. Push rules to agents. |
+| 254 | **Alert dispatch** | 251 | Real-time alerts for high-severity runtime events (Slack, PagerDuty, webhook). |
+
+### Phase 14 — IaC Scan Pipeline (Separate from Code Scan)
+**Goal:** Standalone IaC policy scanning pipeline with custom Rego support.
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 260 | **IaC scan pipeline DAG** | 128 | discover → validate → policy_check → enrich → persist. Separate from code-scan. |
+| 261 | **Checkov standalone integration** | 260 | Run Checkov as standalone scanner (not in code-scan tool_scan node). |
+| 262 | **Custom Rego policy support** | 260 | User-defined Rego policies (OPA). Per-project policy files. Run as policy_check node. |
+| 263 | **IaC scan API + UI** | 260 | `/v1/iac-scans`, `/v1/policies/rules`. Scan trigger, results, policy editor. |
+
+### Phase 8 — Enterprise Architecture: RBAC, Multitenancy & Modular Platform
+
+**Goal:** Enterprise-grade RBAC, org-level isolation with deployment-model-aware separation, modular feature gates that respect Control Plane / Data Plane / Cloud boundaries, and billing.
+
+---
+
+#### 8A — RBAC: Role-Based Access Control
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 120 | **RBAC: Permission model & roles** | — | 4 roles per deployment model: **SuperAdmin** (platform-wide, SaaS only), **OrgAdmin** (org-level, all models), **SecOps** (scan/findings r/w), **Engineer** (scan r/w, findings r), **Viewer** (read-only). Permission matrix: 40+ granular permissions (scans:trigger, scans:cancel, findings:edit, config:write, users:invite, billing:manage, etc.). Stored in `RolePermission` table. Roles are composable — orgs can create custom roles from permission set |
+| 121 | **RBAC: Middleware & enforcement** | 120 | `requirePermission('scans:trigger')` middleware on every API route; permission checked before data access; `requireRole()` as shorthand for role-level checks; permissions derived from role + org overrides; audit trail on every denied access |
+| 122 | **RBAC: UI gating** | 120 | `<RequirePermission scans:trigger>` component; nav items filtered by permission; action buttons hidden/disabled per role; Admin-only pages (user management, org settings, billing); Viewer sees read-only dashboard; role-aware sidebar, breadcrumbs, CTAs |
+| 123 | **RBAC: API key scopes** | 120 | API keys with scoped permissions (granular, not just r/w/admin); `ApiKey.scope` = JSON array of permissions; separate from user auth; keys belong to org, not user; rotate without downtime; enforce on all API routes alongside user auth |
+| 124 | **RBAC: Audit logging** | 121 | `AuditLog` table: actor (user or API key), action, resource type+id, before/after JSON diff, IP, user_agent, org_id; append-only, immutable; queryable via REST API with filters; 7-year retention policy; real-time streaming to SIEM via webhook; RLS ensures orgs see only their own logs |
+| 125 | **RBAC: Cross-model role mapping** | 120 | Role definitions differ by deployment model: SaaS (SuperAdmin exists), Self-Hosted (no SuperAdmin — OrgAdmin is top), Hybrid (SuperAdmin in cloud CP only). `resolvePermissions(userId, orgId, deploymentModel)` returns effective permissions accounting for model constraints |
+
+#### 8B — Project-Based Scanning & Per-Project/Per-Scan Configuration
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 126 | **Project model & hierarchy** | 130 | `Project` model: id, name, slug, description, orgId, ownerId, defaultBranch, repoUrl, configJson (project-level scan defaults), rulesJson (project-level AI/business-logic rules), features (JSONB — per-project feature overrides), createdAt, updatedAt. Hierarchy: **Org → Project → Scan → Findings**. Users can be members of multiple projects. Project-level RBAC (owner, admin, member, viewer) independent of org-level roles. `/v1/projects` CRUD API. Projects list view in UI with create/edit modal. |
+| 127 | **Project-scanned repos & branch management** | 126 | `ProjectRepo` join table: projectId, repoUrl, defaultBranch, lastScanCommitSha, lastScanAt, scanCount. A project can track 1+ repos (monorepo support). Branch picker per project (persisted). Auto-scan on push (webhook integration). Repo URL + branch defaults inherited by scans. |
+| 128 | **Project-level configuration** | 126 | `Project.configJson` stores project-level scan defaults: which scanners to enable, AI provider/model/temperature per node, concurrency limits, custom system prompts, ignore patterns, severity thresholds, custom rules (UserRule[] scoped to project). Scan creation inherits project config as baseline, per-scan config overrides project defaults. Resolution: **scan.configJson → project.configJson → org defaults → system defaults** (4-layer cascade). |
+| 129 | **Project-level rules (business logic + patterns)** | 126 | `UserRule` gains `projectId` FK. Rules scoped to project (inherited by scans in that project). `BusinessLogicRule` gains `projectId` FK. Project rules page: create/edit/activate/deactivate rules per project. Rules injected into deepScan/crossFile AI prompts per-project. Confirmed rules persist across scans within the project. |
+| 130p | **Per-scan configuration overrides** | 126, 128 | `Scan.configJson` already exists; wire it as a **merge-over-project-config**: scan config deep-merged onto project config, project config deep-merged onto org defaults. Scan creation UI shows project defaults with per-scan override toggles. Scan detail shows effective config (merged). API: `GET /v1/projects/:id/scans/:scanId/config` returns merged config with source annotations. |
+| 131p | **Project dashboard & navigation** | 126 | New `/projects/:id` page: project overview (last scan, total findings by severity, active rules, repo info), scan history list, project settings tab (config, rules, members), findings across all scans (deduplicated by fingerprint). Sidebar shows project switcher. Breadcrumbs: Org > Project > Scan. |
+| 132p | **Project-scoped findings aggregation** | 126 | Findings deduplicated across scans within a project (same fingerprint = same finding, new scan updates it). `Finding.projectId` FK. Project findings view: aggregated across all project scans, filterable by scan, severity, category, scanner. Trend view: new vs. resolved findings over time per project. |
+
+#### 8C — Multitenancy: Org Isolation with Deployment-Model Awareness
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 140 | **Multi-tenant: Org & Tenant models** | — | `Org` model (name, slug, logo, settings JSON, deploymentModel: `saas`/`self_hosted`/`hybrid`); `Tenant` model (sub-group within org — e.g., teams, business units); `OrgMember` join table (userId, orgId, roleId, invitedAt, acceptedAt); `TenantMember` join table; org-level feature flags; tenant-level feature overrides |
+| 141 | **Multi-tenant: PostgreSQL RLS policies** | 140 | Row-level security on every table (Scan, Finding, Task, Config, AiConversation, AuditLog, etc.); `SET app.current_org_id` on every connection/session; RLS policy: ` USING (org_id = current_setting('app.current_org_id')::uuid)` ; super-admin bypasses RLS with `app.bypass_rls = true`; migration tool applies policies automatically; test suite proves cross-org data leakage impossible |
+| 142 | **Multi-tenant: Org provisioning API** | 140 | `POST /v1/orgs` (SaaS SuperAdmin creates org); `PUT /v1/orgs/:id` (OrgAdmin updates settings); org onboarding: create org → set plan → invite users → configure scanners; org-level config overrides (scanner defaults, AI provider, custom prompts); org slug-based routing (`/org/:slug/...`); org switcher in UI header |
+| 143 | **Multi-tenant: Deployment-model-aware architecture** | 140 | **SaaS:** Control Plane in Astra Cloud, Data Plane in customer CI/CD; findings-only cross boundary; SuperAdmin sees all orgs. **Self-Hosted:** Both planes in customer K8s; no SuperAdmin; OrgAdmin is top role; air-gapped mode (no external calls). **Hybrid:** Control Plane in Astra Cloud, Data Plane in customer infra; SuperAdmin in cloud only; data sovereignty enforced at API level — raw code never leaves customer env |
+| 144 | **Multi-tenant: Data boundary enforcement** | 140, 143 | Control Plane ↔ Data Plane contract: only normalized `UnifiedFinding[]` JSON crosses boundary (no raw source code, no file contents after normalize); Data Plane API signed with org-scoped JWT; Control Plane validates org ownership before accepting findings; network egress controls per deployment model; air-gapped mode: Data Plane runs fully offline, findings written to local store |
+| 145 | **Multi-tenant: Org-scoped data** | 140 | All models gain `orgId` FK; cascading queries scoped to `orgId`; org-level defaults for scan config, AI provider, prompts; cross-org admin dashboard (SaaS SuperAdmin only) with org-list, aggregate stats; per-org rate limits and scan quotas |
+| 146 | **Multi-tenant: Tenant isolation (teams/BUs)** | 140 | Within an org, `Tenant` partitions data further (e.g., Team A sees only their scans); optional — orgs can operate flat without tenants; `TenantMember` controls visibility; tenant-scoped API routes (`/org/:slug/tenant/:id/...`); tenant-level config overrides (AI provider, scanner selection) |
+| 147 | **Multi-tenant: Data isolation verification** | 141 | Integration test suite: (1) RLS policy tests — user A cannot read org B data; (2) API response scoping tests — every endpoint returns only org-scoped data; (3) Data Plane egress tests — no raw code in any network call; (4) Tenant isolation tests — within org, tenant A cannot see tenant B data; (5) Deployment model tests — Hybrid mode rejects Data Plane calls from wrong org |
+| 148 | **Multi-tenant: Migration path for existing data** | 140 | Migration: add `orgId` to all tables with DEFAULT org; assign existing rows to default org; remove DEFAULT after migration; RLS policies activated; API routes updated to require org context; backward-compatible during migration (missing orgId → default org) |
+
+#### 8D — Modular Feature System (Env-Level + Org-Level)
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 150 | **Feature flags: core system** | — | `features.ts`: reads `NEXT_PUBLIC_FEATURES` env var (comma-separated or JSON); merges with org-level `Org.features` (JSONB); resolution: env var sets platform ceiling, org flags set org ceiling, plan sets plan ceiling — effective = min(env, org, plan); `<FeatureGate feature="rbac">` React component; `requireFeature('rbac')` API middleware; `isFeatureEnabled('rbac')` server helper |
+| 151 | **Feature flags: module registry** | 150 | Each module (`rbac`, `multitenancy`, `payments`, `compliance`, `sbom`, `report`, `ai_chat`, `business_logic`, etc.) exports `manifest.ts` with: `{ id, name, routes[], navItems[], permissions[], dependencies[], migrations[], envRequired[] }`. App boot reads enabled features → loads only matching routes, nav, DB migrations. Disabled modules excluded from bundle, nav, API routes, and migrations |
+| 152 | **Feature flags: Control Plane modules** | 150, 143 | Modules segmented by Control Plane responsibilities: **Auth** (`/v1/auth/*`), **Findings** (`/v1/findings/*`), **Scans** (`/v1/scans/*`), **Policies** (`/v1/policies/*`), **AI Orchestration** (`/v1/biz-logic/*`), **Integrations** (`/v1/integrations/*`), **Dashboard** (`/v1/dashboard/*`). Each independently enableable. Self-Hosted may disable Auth (uses internal SSO), Cloud enables all. |
+| 153 | **Feature flags: Data Plane modules** | 150, 144 | Data Plane features toggleable: **scanner nodes** (trivy, semgrep, gitleaks, bearer, checkov, bandit), **AI enrichment** (deepScan, crossFile), **SBOM generation**, **compliance rules**. Data Plane feature config passed as env vars to Docker container; Control Plane sends feature mask with each scan request; Data Plane skips disabled nodes |
+| 154 | **Feature flags: Cloud isolation gating** | 150, 143 | In **Hybrid** mode: Control Plane features (dashboard, org management, billing) run in Astra Cloud; Data Plane features (all scanner binaries, AI enrichment, raw code processing) run in customer infra. Feature system ensures: (1) CP routes don't expose DP-only data, (2) DP never calls home with code, (3) SaaS mode enables everything in single deployment. `deploymentModel` flag determines which module subset is active |
+| 155 | **Feature flags: UI module loader** | 151 | Dynamic `import()` for disabled modules — code-split per feature; nav sidebar shows only enabled modules; settings page shows per-module config only if enabled; module enable/disable triggers DB migration rollback/forward; admin UI for toggling org-level features (plan-gated) |
+
+#### 8E — Payments & Billing
+
+| # | Task | Depends on | Notes |
+|---|------|------------|-------|
+| 160 | **Billing: Plan & subscription models** | 140 | `Plan` model: Free (3 scanners, no AI, 5 scans/mo, 1 user), Pro ($49/user/mo: all scanners + AI, unlimited scans, 10 users), Enterprise ($custom: business logic + compliance + SSO, unlimited everything). `Subscription` linked to Org with billing cycle, status, trial dates. Plan limits enforced at scan-pipeline + API level. Self-Hosted: license key unlocks plan. |
+| 161 | **Billing: Stripe integration** | 160 | Stripe Checkout for new subscriptions; Customer Portal for plan changes, invoices, payment methods; Webhook handlers: `checkout.session.completed`, `invoice.paid`, `customer.subscription.updated`, `customer.subscription.deleted`; org plan state synced from Stripe to DB; SaaS-only — self-hosted uses license keys |
+| 162 | **Billing: Usage metering & enforcement** | 160 | `Usage` table: monthly counters per org (scans, findings, AI tokens, storage GB); metering middleware increments on each action; `/v1/usage` API with current period totals + limits; soft wall at 80% (warning), hard wall at 100% (upgrade CTA); org settings dashboard shows usage; Self-Hosted: local counters, warn in logs |
+| 163 | **Billing: License key system (Self-Hosted)** | 160 | Signed JWT license key: includes plan, expiry, max users, features, orgId; validated on app boot + periodic re-check (24h); offline grace period (7 days without re-validation); feature flags derived from license claims; no phone-home — key validated locally with embedded public key; `/v1/license` API for renewal/upgrade; key rotation without downtime |
+| 164 | **Billing: Deployment-model billing differences** | 160, 143 | **SaaS:** Stripe recurring — per-seat + per-scan overage; billing in Astra Cloud. **Self-Hosted:** License key — annual/perpetual; offline validation; no Stripe. **Hybrid:** Stripe for Control Plane (seat licenses) + license key for Data Plane (scanner entitlements); separate billing surfaces. `BillingService` resolved per `deploymentModel` |
+| 165 | **Billing: Invoice & reporting** | 161 | Invoice generation (PDF); org-level billing history; payment failure handling (grace period → suspension); tax calculation per jurisdiction; cost center allocation for multi-tenant orgs
 
 ### Backlog (no phase yet)
 
