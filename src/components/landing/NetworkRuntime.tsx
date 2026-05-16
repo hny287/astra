@@ -1,19 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 
 // ─── Mobile breakpoint hook ────────────────────────────────────────
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
   return mobile;
+}
+
+// ─── Badge helper ─────────────────────────────────────────────────
+function badgeStyle(color: string): React.CSSProperties {
+  return {
+    fontSize: '11px',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.06em',
+    padding: '3px 8px',
+    borderRadius: '0',
+    background: color + '20',
+    color,
+    border: '1px solid ' + color + '40',
+    display: 'inline-block',
+  };
 }
 
 // ─── Panel data ──────────────────────────────────────────────────
@@ -55,16 +70,11 @@ const panels = [
 
 function tierColor(tier: string): string {
   switch (tier) {
-    case 'Enterprise':
-      return landingTokens.accentCritical;
-    case 'Pro':
-      return landingTokens.accentHigh;
-    case 'Pro/Enterprise':
-      return landingTokens.accentHigh;
-    case 'Free':
-      return landingTokens.accentLow;
-    default:
-      return landingTokens.inkMuted;
+    case 'Enterprise': return '#da1e28';
+    case 'Pro': return '#f57c00';
+    case 'Pro/Enterprise': return '#f57c00';
+    case 'Free': return '#24a148';
+    default: return '#6f6f6f';
   }
 }
 
@@ -84,17 +94,19 @@ export default function NetworkRuntime() {
       }}
     >
       {/* Section header */}
-      <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
+      <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '12px', textAlign: 'center' }}>
         Beyond code
       </p>
       <h2
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
           textAlign: 'center',
           fontSize: isMobile ? '32px' : '48px',
           maxWidth: '640px',
           marginLeft: 'auto',
           marginRight: 'auto',
+          marginBottom: '24px',
         }}
       >
         Network, SBOM, and runtime security
@@ -115,7 +127,10 @@ export default function NetworkRuntime() {
             <div
               key={panel.id}
               style={{
-                ...sectionStyles.card,
+                background: 'var(--ibm-surface-1)',
+                borderRadius: '0',
+                border: '1px solid var(--ibm-hairline)',
+                padding: '24px',
                 flex: 1,
                 opacity: visible ? 1 : 0,
                 transform: visible ? 'translateY(0)' : 'translateY(16px)',
@@ -135,13 +150,13 @@ export default function NetworkRuntime() {
                   style={{
                     fontSize: '18px',
                     fontWeight: 600,
-                    color: landingTokens.inkPrimary,
+                    color: 'var(--ibm-ink)',
                     margin: 0,
                   }}
                 >
                   {panel.title}
                 </h3>
-                <span style={sectionStyles.badge(color)}>
+                <span style={badgeStyle(color)}>
                   {panel.tier}
                 </span>
               </div>
@@ -164,20 +179,20 @@ export default function NetworkRuntime() {
                       fontSize: '14px',
                       fontWeight: 300,
                       lineHeight: 1.5,
-                      color: landingTokens.inkSecondary,
+                      color: 'var(--ibm-ink-muted)',
                       paddingLeft: '18px',
-                      position: 'relative',
+                      position: 'relative' as const,
                     }}
                   >
                     <span
                       style={{
-                        position: 'absolute',
+                        position: 'absolute' as const,
                         left: 0,
                         top: '8px',
                         width: '6px',
                         height: '6px',
                         borderRadius: '50%',
-                        background: landingTokens.accentPrimary,
+                        background: '#0f62fe',
                       }}
                     />
                     {item}

@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 import { features } from './landingData';
+import { FalsePositiveBarChart } from './landingCharts';
 
 // ─── Responsive hooks ───────────────────────────────────────────
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -22,7 +22,7 @@ function useIsTablet(): boolean {
   useEffect(() => {
     const check = () => {
       const w = window.innerWidth;
-      setTablet(w >= landingTokens.md && w < landingTokens.lg);
+      setTablet(w >= 672 && w < 1056);
     };
     check();
     window.addEventListener('resize', check);
@@ -31,14 +31,14 @@ function useIsTablet(): boolean {
   return tablet;
 }
 
-// ─── Feature icon colors (cycle through accent palette) ────────────
-const iconColors = [
-  landingTokens.accentPrimary,
-  landingTokens.accentCritical,
-  landingTokens.accentLow,
-  landingTokens.accentHigh,
-  landingTokens.accentMedium,
-  landingTokens.accentInfo,
+// ─── Feature accent colors (Carbon palette) ─────────────────────
+const accentColors = [
+  '#0f62fe', // blue-60
+  '#da1e28', // red-50
+  '#24a148', // green-50
+  '#f57c00', // orange-40
+  '#f1c21b', // yellow-30
+  '#0093b7', // cyan-50
 ];
 
 // ─── Component ────────────────────────────────────────────────────
@@ -65,17 +65,19 @@ export default function FeatureBreakdown() {
       }}
     >
       {/* Section header */}
-      <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
+      <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '12px', textAlign: 'center' }}>
         Built for security teams
       </p>
       <h2
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
           textAlign: 'center',
           fontSize: isMobile ? '32px' : '48px',
           maxWidth: '720px',
           marginLeft: 'auto',
           marginRight: 'auto',
+          marginBottom: '24px',
         }}
       >
         Every tool you need in one platform
@@ -91,12 +93,15 @@ export default function FeatureBreakdown() {
         }}
       >
         {features.map((feature, i) => {
-          const color = iconColors[i % iconColors.length];
+          const color = accentColors[i % accentColors.length];
           return (
             <div
               key={feature.id}
               style={{
-                ...sectionStyles.card,
+                background: 'var(--ibm-surface-1)',
+                borderRadius: '0',
+                border: '1px solid var(--ibm-hairline)',
+                padding: '24px',
                 opacity: visible ? 1 : 0,
                 transform: visible ? 'translateY(0)' : 'translateY(16px)',
                 transition: `opacity 0.4s ease ${i * 80}ms, transform 0.4s ease ${i * 80}ms, border-color 0.2s ease`,
@@ -105,7 +110,7 @@ export default function FeatureBreakdown() {
                 e.currentTarget.style.borderColor = color;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = landingTokens.borderSubtle;
+                e.currentTarget.style.borderColor = 'var(--ibm-hairline)';
               }}
             >
               {/* Icon placeholder */}
@@ -113,8 +118,8 @@ export default function FeatureBreakdown() {
                 style={{
                   width: '36px',
                   height: '36px',
-                  borderRadius: '8px',
-                  background: `${color}20`,
+                  borderRadius: '0',
+                  background: color + '20',
                   border: `1px solid ${color}40`,
                   display: 'flex',
                   alignItems: 'center',
@@ -126,7 +131,7 @@ export default function FeatureBreakdown() {
                   style={{
                     width: '14px',
                     height: '14px',
-                    borderRadius: '4px',
+                    borderRadius: '2px',
                     background: color,
                   }}
                 />
@@ -137,7 +142,7 @@ export default function FeatureBreakdown() {
                 style={{
                   fontSize: '16px',
                   fontWeight: 600,
-                  color: landingTokens.inkPrimary,
+                  color: 'var(--ibm-ink)',
                   margin: '0 0 8px 0',
                 }}
               >
@@ -146,11 +151,9 @@ export default function FeatureBreakdown() {
 
               {/* Description */}
               <p
+                className="ibm-body-lg"
                 style={{
-                  fontSize: '14px',
-                  fontWeight: 300,
-                  lineHeight: 1.5,
-                  color: landingTokens.inkSecondary,
+                  color: 'var(--ibm-ink-muted)',
                   margin: 0,
                 }}
               >
@@ -159,6 +162,11 @@ export default function FeatureBreakdown() {
             </div>
           );
         })}
+      </div>
+
+      {/* False positive rate chart */}
+      <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'center' }}>
+        <FalsePositiveBarChart />
       </div>
     </section>
   );

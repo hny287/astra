@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 import { platformModules } from './landingData';
 
@@ -9,7 +8,7 @@ import { platformModules } from './landingData';
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -22,7 +21,7 @@ function useIsTablet(): boolean {
   useEffect(() => {
     const check = () => {
       const w = window.innerWidth;
-      setTablet(w >= landingTokens.md && w < landingTokens.lg);
+      setTablet(w >= 672 && w < 1056);
     };
     check();
     window.addEventListener('resize', check);
@@ -31,17 +30,29 @@ function useIsTablet(): boolean {
   return tablet;
 }
 
-// ─── Tier badge color mapping ────────────────────────────────────
+// ─── Badge helper ─────────────────────────────────────────────────
+function badgeStyle(color: string): React.CSSProperties {
+  return {
+    fontSize: '11px',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.06em',
+    padding: '3px 8px',
+    borderRadius: '0',
+    background: color + '20',
+    color,
+    border: '1px solid ' + color + '40',
+    display: 'inline-block',
+  };
+}
+
+// ─── Tier badge color mapping ─────────────────────────────────────
 function tierColor(tier: string): string {
   switch (tier) {
-    case 'Enterprise':
-      return landingTokens.accentCritical;
-    case 'Pro':
-      return landingTokens.accentHigh;
-    case 'Free':
-      return landingTokens.accentLow;
-    default:
-      return landingTokens.inkMuted;
+    case 'Enterprise': return '#da1e28';
+    case 'Pro': return '#f57c00';
+    case 'Free': return '#24a148';
+    default: return '#6f6f6f';
   }
 }
 
@@ -68,17 +79,19 @@ export default function PlatformCoverage() {
       }}
     >
       {/* Section header */}
-      <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
+      <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '12px', textAlign: 'center' }}>
         One platform, every attack surface
       </p>
       <h2
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
           textAlign: 'center',
           fontSize: isMobile ? '32px' : '48px',
           maxWidth: '680px',
           marginLeft: 'auto',
           marginRight: 'auto',
+          marginBottom: '24px',
         }}
       >
         Full coverage across 8 modules
@@ -99,8 +112,11 @@ export default function PlatformCoverage() {
             <div
               key={mod.id}
               style={{
-                ...sectionStyles.card,
+                background: 'var(--ibm-surface-1)',
+                borderRadius: '0',
+                border: '1px solid var(--ibm-hairline)',
                 borderLeft: `4px solid ${mod.color}`,
+                padding: '24px',
                 opacity: visible ? 1 : 0,
                 transform: visible ? 'translateY(0)' : 'translateY(16px)',
                 transition: `opacity 0.4s ease ${i * 80}ms, transform 0.4s ease ${i * 80}ms, border-color 0.2s ease`,
@@ -119,24 +135,22 @@ export default function PlatformCoverage() {
                   style={{
                     fontSize: '16px',
                     fontWeight: 600,
-                    color: landingTokens.inkPrimary,
+                    color: 'var(--ibm-ink)',
                     margin: 0,
                   }}
                 >
                   {mod.title}
                 </h3>
-                <span style={sectionStyles.badge(color)}>
+                <span style={badgeStyle(color)}>
                   {mod.tier}
                 </span>
               </div>
 
               {/* Description */}
               <p
+                className="ibm-body-lg"
                 style={{
-                  fontSize: '13px',
-                  fontWeight: 300,
-                  lineHeight: 1.5,
-                  color: landingTokens.inkSecondary,
+                  color: 'var(--ibm-ink-muted)',
                   margin: 0,
                 }}
               >

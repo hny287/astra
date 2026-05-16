@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 import { stackData } from './landingData';
 
@@ -9,7 +8,7 @@ import { stackData } from './landingData';
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -43,17 +42,19 @@ export default function StackCoverage() {
       }}
     >
       {/* Section header */}
-      <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
+      <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '12px', textAlign: 'center' }}>
         Works with your stack
       </p>
       <h2
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
           textAlign: 'center',
           fontSize: isMobile ? '32px' : '48px',
           maxWidth: '640px',
           marginLeft: 'auto',
           marginRight: 'auto',
+          marginBottom: '24px',
         }}
       >
         Scans everything you use
@@ -85,7 +86,7 @@ export default function StackCoverage() {
                 fontWeight: 600,
                 textTransform: 'uppercase' as const,
                 letterSpacing: '0.06em',
-                color: landingTokens.inkMuted,
+                color: 'var(--ibm-ink-subtle)',
                 minWidth: isMobile ? undefined : '160px',
                 flexShrink: 0,
               }}
@@ -105,25 +106,25 @@ export default function StackCoverage() {
                 <span
                   key={item}
                   style={{
-                    fontFamily: landingTokens.fontMono,
+                    fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
                     fontSize: '13px',
                     fontWeight: 400,
                     padding: '6px 14px',
-                    borderRadius: '4px',
-                    border: `1px solid ${landingTokens.borderSubtle}`,
-                    color: landingTokens.inkSecondary,
-                    background: landingTokens.bgSurface2,
+                    borderRadius: '0',
+                    border: '1px solid var(--ibm-hairline)',
+                    color: 'var(--ibm-ink-muted)',
+                    background: 'var(--ibm-surface-2)',
                     transition: 'border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease',
                     cursor: 'default',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = landingTokens.accentPrimary;
-                    e.currentTarget.style.color = landingTokens.inkPrimary;
-                    e.currentTarget.style.boxShadow = `0 0 12px 2px ${landingTokens.accentPrimary}25`;
+                    e.currentTarget.style.borderColor = '#0f62fe';
+                    e.currentTarget.style.color = 'var(--ibm-ink)';
+                    e.currentTarget.style.boxShadow = '0 0 12px 2px rgba(15, 98, 254, 0.15)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = landingTokens.borderSubtle;
-                    e.currentTarget.style.color = landingTokens.inkSecondary;
+                    e.currentTarget.style.borderColor = 'var(--ibm-hairline)';
+                    e.currentTarget.style.color = 'var(--ibm-ink-muted)';
                     e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
