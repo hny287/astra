@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.27.0',
+    date: '2026-05-16',
+    title: 'Password management: self-service change and admin reset',
+    description: 'Users can now change their own password from the Profile settings page. Admins can reset any user\'s password from the User Management page. Both flows use bcrypt hashing with proper validation.',
+    categories: [
+      { label: 'Added', items: [
+        'PATCH /api/v1/auth/me — self-service password change (verifies current password)',
+        'Extended PATCH /api/v1/users/[id] — admin password reset (accepts password field alongside role)',
+        'Change Password card on Profile page with current/new/confirm fields',
+        'Reset Password modal on User Management page (admin-only)',
+      ]},
+    ],
+  },
+  {
     version: '2.26.0',
     date: '2026-05-16',
     title: 'Rule Engine: security, compliance, SLA, and business logic rules',

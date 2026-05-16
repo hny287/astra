@@ -26,6 +26,13 @@ export default function UserManagementPage() {
   const [addError, setAddError] = useState('');
   const [adding, setAdding] = useState(false);
 
+  // Reset password modal state
+  const [resetUser, setResetUser] = useState<User | null>(null);
+  const [resetPw, setResetPw] = useState('');
+  const [resetSaving, setResetSaving] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   const fetchUsers = useCallback(async () => {
     try {
       const res = await fetch('/api/v1/users');
@@ -77,6 +84,39 @@ export default function UserManagementPage() {
     if (!confirm('Delete this user?')) return;
     await fetch(`/api/v1/users/${userId}`, { method: 'DELETE' });
     fetchUsers();
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetUser || !resetPw) return;
+    setResetError('');
+    setResetSuccess(false);
+    if (resetPw.length < 8) {
+      setResetError('Password must be at least 8 characters');
+      return;
+    }
+    setResetSaving(true);
+    try {
+      const res = await fetch(`/api/v1/users/${resetUser.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: resetPw }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setResetError(data.error || 'Failed to reset password');
+      } else {
+        setResetSuccess(true);
+        setResetPw('');
+        setTimeout(() => {
+          setResetUser(null);
+          setResetSuccess(false);
+        }, 1500);
+      }
+    } catch {
+      setResetError('Failed to reset password');
+    }
+    setResetSaving(false);
   };
 
   const inputStyle: React.CSSProperties = {
@@ -148,7 +188,7 @@ export default function UserManagementPage() {
       )}
 
       <div style={{ border: '1px solid var(--ibm-hairline)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 80px', padding: '10px 16px', background: 'var(--ibm-surface-1)', borderBottom: '1px solid var(--ibm-hairline)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 140px', padding: '10px 16px', background: 'var(--ibm-surface-1)', borderBottom: '1px solid var(--ibm-hairline)' }}>
           <span className="ibm-label" style={{ color: 'var(--ibm-ink-muted)' }}>Name</span>
           <span className="ibm-label" style={{ color: 'var(--ibm-ink-muted)' }}>Email</span>
           <span className="ibm-label" style={{ color: 'var(--ibm-ink-muted)' }}>Role</span>
@@ -159,7 +199,7 @@ export default function UserManagementPage() {
         ) : users.map(u => {
           const rc = ROLE_COLORS[u.role] ?? ROLE_COLORS.VIEWER;
           return (
-            <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 80px', padding: '10px 16px', alignItems: 'center', borderBottom: '1px solid var(--ibm-hairline)' }}>
+            <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 140px', padding: '10px 16px', alignItems: 'center', borderBottom: '1px solid var(--ibm-hairline)' }}>
               <span className="ibm-body-sm" style={{ color: 'var(--ibm-ink)' }}>{u.name}</span>
               <span className="ibm-body-sm" style={{ color: 'var(--ibm-ink-muted)' }}>{u.email}</span>
               <select
@@ -176,14 +216,60 @@ export default function UserManagementPage() {
                 <option value="ANALYST">Analyst</option>
                 <option value="ADMIN">Admin</option>
               </select>
-              <button onClick={() => handleDelete(u.id)} style={{
-                background: 'transparent', border: 'none', color: 'var(--ibm-semantic-error)',
-                fontSize: '12px', fontFamily: "'IBM Plex Sans', sans-serif", cursor: 'pointer', textAlign: 'right',
-              }}>Delete</button>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button onClick={() => { setResetUser(u); setResetPw(''); setResetError(''); setResetSuccess(false); }} style={{
+                  background: 'transparent', border: 'none', color: 'var(--ibm-primary)',
+                  fontSize: '12px', fontFamily: "'IBM Plex Sans', sans-serif", cursor: 'pointer',
+                }}>Reset PW</button>
+                <button onClick={() => handleDelete(u.id)} style={{
+                  background: 'transparent', border: 'none', color: 'var(--ibm-semantic-error)',
+                  fontSize: '12px', fontFamily: "'IBM Plex Sans', sans-serif", cursor: 'pointer',
+                }}>Delete</button>
+              </div>
             </div>
           );
         })}
       </div>
+
+      {/* Reset Password Modal */}
+      {resetUser && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setResetUser(null); } }}>
+          <div style={{ background: 'var(--ibm-canvas)', border: '1px solid var(--ibm-hairline)', width: 400, padding: 24 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--ibm-ink)', fontFamily: "'IBM Plex Sans', sans-serif", marginBottom: 4 }}>
+              Reset Password
+            </h3>
+            <p className="ibm-body-sm" style={{ color: 'var(--ibm-ink-muted)', marginBottom: 24 }}>
+              Set a new password for <strong>{resetUser.name}</strong> ({resetUser.email})
+            </p>
+            <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label className="ibm-label" style={{ display: 'block', marginBottom: 6, color: 'var(--ibm-ink-muted)' }}>New Password</label>
+                <input type="password" value={resetPw} onChange={(e) => setResetPw(e.target.value)} required minLength={8} style={inputStyle}
+                  onFocus={(e) => { e.currentTarget.style.borderBottom = '2px solid var(--ibm-primary)'; }}
+                  onBlur={(e) => { e.currentTarget.style.borderBottom = '2px solid var(--ibm-hairline)'; }}
+                />
+                <span className="ibm-caption" style={{ color: 'var(--ibm-ink-subtle)', marginTop: 4, display: 'block' }}>Minimum 8 characters</span>
+              </div>
+              {resetError && <p className="ibm-body-sm" style={{ color: 'var(--ibm-semantic-error)' }}>{resetError}</p>}
+              {resetSuccess && <p className="ibm-body-sm" style={{ color: 'var(--ibm-semantic-success)' }}>Password reset successfully.</p>}
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setResetUser(null)} style={{
+                  background: 'var(--ibm-surface-1)', color: 'var(--ibm-ink)', border: '1px solid var(--ibm-hairline)',
+                  padding: '8px 16px', fontSize: '14px', fontFamily: "'IBM Plex Sans', sans-serif", cursor: 'pointer',
+                }}>Cancel</button>
+                <button type="submit" disabled={resetSaving} style={{
+                  background: resetSaving ? 'var(--ibm-surface-2)' : 'var(--ibm-primary)', color: resetSaving ? 'var(--ibm-ink-subtle)' : 'var(--ibm-on-primary)',
+                  border: 'none', padding: '8px 16px', fontSize: '14px', fontFamily: "'IBM Plex Sans', sans-serif",
+                  fontWeight: 600, cursor: resetSaving ? 'not-allowed' : 'pointer',
+                }}>
+                  {resetSaving ? 'Saving...' : 'Reset Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

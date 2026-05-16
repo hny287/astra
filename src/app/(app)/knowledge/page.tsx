@@ -152,6 +152,16 @@ export default function KnowledgePage() {
         <ChangelogSection entries={changelogData} />
       ) : section === 'roadmap' ? (
         <MarkdownSection content={content} loading={loading} />
+      ) : section === 'specs' ? (
+        <FileBrowserSection
+          tree={tree}
+          content={content}
+          loading={loading}
+          selectedFile={selectedFile}
+          onSelect={loadFile}
+          sectionLabel={SECTIONS.find(s => s.key === section)?.label || ''}
+          linkCard={{ href: '/unified-spec.html', title: 'Unified Platform Spec v5.0', description: '16-section interactive spec with Mermaid DFDs, pipeline graph, taxonomy, and competitive analysis' }}
+        />
       ) : (
         <FileBrowserSection
           tree={tree}
@@ -229,14 +239,30 @@ function MarkdownSection({ content, loading }: { content: string; loading: boole
   );
 }
 
-function FileBrowserSection({ tree, content, loading, selectedFile, onSelect, sectionLabel }: {
+function FileBrowserSection({ tree, content, loading, selectedFile, onSelect, sectionLabel, linkCard }: {
   tree: DocEntry[]; content: string; loading: boolean; selectedFile: string | null;
   onSelect: (path: string) => void; sectionLabel: string;
+  linkCard?: { href: string; title: string; description: string };
 }) {
   return (
     <div style={{ display: 'flex', gap: 24 }}>
       {/* Sidebar */}
       <div style={{ width: 260, flexShrink: 0, borderRight: '1px solid var(--ibm-hairline)', paddingRight: 24, maxHeight: '80vh', overflowY: 'auto' }}>
+        {linkCard && (
+          <a
+            href={linkCard.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'block', padding: '12px 16px', marginBottom: 16,
+              background: 'var(--ibm-blue-10)', borderLeft: '3px solid var(--ibm-primary)',
+              textDecoration: 'none', borderRadius: 0,
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ibm-primary)', fontFamily: "'IBM Plex Sans', sans-serif" }}>{linkCard.title}</span>
+            <span style={{ display: 'block', fontSize: 12, color: 'var(--ibm-ink-muted)', marginTop: 4, fontFamily: "'IBM Plex Sans', sans-serif" }}>{linkCard.description}</span>
+          </a>
+        )}
         <p className="ibm-caption" style={{ color: 'var(--ibm-ink-subtle)', marginBottom: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.32px' }}>
           {sectionLabel}
         </p>
