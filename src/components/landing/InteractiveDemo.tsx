@@ -1,24 +1,40 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 import { demoFindings, rawOutputExample, enrichedOutputExample } from './demoData';
 import { APP_NAME } from '@/lib/branding';
+import { SeverityDonutChart } from './landingCharts';
 
-// ─── Severity color mapping ────────────────────────────────────────
+// ─── Severity color mapping (Carbon semantic tokens) ─────────────
 const severityColor: Record<string, string> = {
-  CRITICAL: landingTokens.accentCritical,
-  HIGH: landingTokens.accentHigh,
-  MEDIUM: landingTokens.accentMedium,
-  LOW: landingTokens.accentLow,
+  CRITICAL: 'var(--ibm-semantic-error)',
+  HIGH: 'var(--ibm-semantic-warning)',
+  MEDIUM: 'var(--ibm-semantic-warning)',
+  LOW: 'var(--ibm-semantic-success)',
 };
+
+// ─── Badge helper ─────────────────────────────────────────────────
+function badgeStyle(color: string): React.CSSProperties {
+  return {
+    fontSize: '11px',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.06em',
+    padding: '3px 8px',
+    borderRadius: '0',
+    background: color + '20',
+    color,
+    border: '1px solid ' + color + '40',
+    display: 'inline-block',
+  };
+}
 
 // ─── Mobile breakpoint hook ────────────────────────────────────────
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -46,14 +62,14 @@ export default function InteractiveDemo() {
         style={{
           margin: 0,
           padding: '20px',
-          background: landingTokens.bgCanvas,
-          borderRadius: '8px',
-          border: `1px solid ${landingTokens.borderSubtle}`,
+          background: 'var(--ibm-canvas)',
+          borderRadius: '0',
+          border: '1px solid var(--ibm-hairline)',
           overflow: 'auto',
-          fontFamily: landingTokens.fontMono,
+          fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
           fontSize: '12px',
           lineHeight: 1.7,
-          color: landingTokens.inkSecondary,
+          color: 'var(--ibm-ink-muted)',
           maxHeight: '420px',
         }}
       >
@@ -66,7 +82,7 @@ export default function InteractiveDemo() {
                   width: '36px',
                   textAlign: 'right',
                   paddingRight: '16px',
-                  color: landingTokens.inkMuted,
+                  color: 'var(--ibm-ink-subtle)',
                   userSelect: 'none',
                   flexShrink: 0,
                 }}
@@ -88,7 +104,7 @@ export default function InteractiveDemo() {
         display: 'flex',
         flexDirection: 'column',
         gap: '20px',
-        fontFamily: landingTokens.fontSans,
+        fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
       }}
     >
       {/* Title */}
@@ -97,7 +113,7 @@ export default function InteractiveDemo() {
           style={{
             fontSize: '20px',
             fontWeight: 600,
-            color: landingTokens.inkPrimary,
+            color: 'var(--ibm-ink)',
             margin: 0,
             lineHeight: 1.3,
           }}
@@ -113,7 +129,7 @@ export default function InteractiveDemo() {
             fontSize: '14px',
             fontWeight: 300,
             lineHeight: 1.6,
-            color: landingTokens.inkSecondary,
+            color: 'var(--ibm-ink-muted)',
             margin: 0,
           }}
         >
@@ -129,7 +145,7 @@ export default function InteractiveDemo() {
             fontWeight: 600,
             textTransform: 'uppercase' as const,
             letterSpacing: '0.08em',
-            color: landingTokens.accentLow,
+            color: 'var(--ibm-semantic-success)',
             marginBottom: '8px',
           }}
         >
@@ -139,23 +155,23 @@ export default function InteractiveDemo() {
           style={{
             margin: 0,
             padding: '16px',
-            background: landingTokens.bgCanvas,
-            borderRadius: '8px',
-            border: `1px solid ${landingTokens.borderSubtle}`,
-            fontFamily: landingTokens.fontMono,
+            background: 'var(--ibm-canvas)',
+            borderRadius: '0',
+            border: '1px solid var(--ibm-hairline)',
+            fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
             fontSize: '12px',
             lineHeight: 1.7,
             overflow: 'auto',
-            color: landingTokens.inkSecondary,
+            color: 'var(--ibm-ink-muted)',
           }}
         >
           <code>
             {fixLines.map((line, i) => {
-              let lineColor: string = landingTokens.inkSecondary;
+              let lineColor: string = 'var(--ibm-ink-muted)';
               if (line.startsWith('+') || line.startsWith('```+')) {
-                lineColor = landingTokens.accentLow;
+                lineColor = 'var(--ibm-semantic-success)';
               } else if (line.startsWith('-') || line.startsWith('```-')) {
-                lineColor = landingTokens.accentCritical;
+                lineColor = 'var(--ibm-semantic-error)';
               }
               // Strip ```diff and ``` markers
               const cleaned = line.replace(/^```diff?$/, '').replace(/^```$/, '');
@@ -178,7 +194,7 @@ export default function InteractiveDemo() {
             fontWeight: 600,
             textTransform: 'uppercase' as const,
             letterSpacing: '0.08em',
-            color: landingTokens.inkSecondary,
+            color: 'var(--ibm-ink-muted)',
             marginBottom: '8px',
           }}
         >
@@ -189,8 +205,8 @@ export default function InteractiveDemo() {
             style={{
               flex: 1,
               height: '8px',
-              background: landingTokens.bgSurface3,
-              borderRadius: '4px',
+              background: 'var(--ibm-surface-2)',
+              borderRadius: '0',
               overflow: 'hidden',
             }}
           >
@@ -199,11 +215,11 @@ export default function InteractiveDemo() {
                 width: `${(enrichedOutputExample.exploitScore / 10) * 100}%`,
                 height: '100%',
                 background: enrichedOutputExample.exploitScore >= 7
-                  ? landingTokens.accentCritical
+                  ? 'var(--ibm-semantic-error)'
                   : enrichedOutputExample.exploitScore >= 4
-                    ? landingTokens.accentHigh
-                    : landingTokens.accentMedium,
-                borderRadius: '4px',
+                    ? 'var(--ibm-semantic-warning)'
+                    : 'var(--ibm-semantic-warning)',
+                borderRadius: '0',
                 transition: 'width 0.6s ease',
               }}
             />
@@ -212,8 +228,8 @@ export default function InteractiveDemo() {
             style={{
               fontSize: '14px',
               fontWeight: 600,
-              fontFamily: landingTokens.fontMono,
-              color: landingTokens.inkPrimary,
+              fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+              color: 'var(--ibm-ink)',
             }}
           >
             {enrichedOutputExample.exploitScore}/10
@@ -227,9 +243,13 @@ export default function InteractiveDemo() {
           <span
             key={c}
             style={{
-              ...sectionStyles.badge(landingTokens.accentPrimary),
+              ...badgeStyle('var(--ibm-primary)'),
               fontSize: '12px',
               padding: '4px 10px',
+              // Resolve CSS var for inline style — use raw hex fallback
+              background: '#0f62fe20',
+              color: '#0f62fe',
+              border: '1px solid #0f62fe40',
             }}
           >
             {c}
@@ -239,9 +259,12 @@ export default function InteractiveDemo() {
           <span
             key={o}
             style={{
-              ...sectionStyles.badge(landingTokens.accentHigh),
+              ...badgeStyle('var(--ibm-semantic-warning)'),
               fontSize: '12px',
               padding: '4px 10px',
+              background: '#f57c0020',
+              color: '#f57c00',
+              border: '1px solid #f57c0040',
             }}
           >
             {o}
@@ -252,9 +275,9 @@ export default function InteractiveDemo() {
       {/* Business context callout */}
       <div
         style={{
-          background: `${landingTokens.accentPrimary}10`,
-          border: `1px solid ${landingTokens.accentPrimary}30`,
-          borderRadius: '8px',
+          background: '#0f62fe10',
+          border: '1px solid #0f62fe30',
+          borderRadius: '0',
           padding: '16px',
         }}
       >
@@ -264,7 +287,7 @@ export default function InteractiveDemo() {
             fontWeight: 600,
             textTransform: 'uppercase' as const,
             letterSpacing: '0.08em',
-            color: landingTokens.accentPrimary,
+            color: '#0f62fe',
             marginBottom: '6px',
           }}
         >
@@ -275,7 +298,7 @@ export default function InteractiveDemo() {
             fontSize: '13px',
             fontWeight: 300,
             lineHeight: 1.5,
-            color: landingTokens.inkSecondary,
+            color: 'var(--ibm-ink-muted)',
             margin: 0,
           }}
         >
@@ -303,32 +326,37 @@ export default function InteractiveDemo() {
             alignItems: 'center',
             gap: '10px',
             padding: '10px 14px',
-            background: landingTokens.bgSurface2,
-            borderRadius: '6px',
-            border: `1px solid ${landingTokens.borderSubtle}`,
+            background: 'var(--ibm-surface-2)',
+            borderRadius: '0',
+            border: '1px solid var(--ibm-hairline)',
             transition: 'border-color 0.15s ease',
             cursor: 'default',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = landingTokens.borderMedium;
+            e.currentTarget.style.borderColor = 'var(--ibm-hairline-strong)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = landingTokens.borderSubtle;
+            e.currentTarget.style.borderColor = 'var(--ibm-hairline)';
           }}
         >
           <span
             style={{
-              ...sectionStyles.badge(severityColor[f.severity] || landingTokens.inkMuted),
+              ...badgeStyle(severityColor[f.severity] || 'var(--ibm-ink-subtle)'),
               flexShrink: 0,
+              // Use hex colors for badge backgrounds since CSS vars can't be concatenated
+              ...(f.severity === 'CRITICAL' ? { background: '#da1e2820', color: '#da1e28', border: '1px solid #da1e2840' } : {}),
+              ...(f.severity === 'HIGH' ? { background: '#f57c0020', color: '#f57c00', border: '1px solid #f57c0040' } : {}),
+              ...(f.severity === 'MEDIUM' ? { background: '#f1c21b20', color: '#f1c21b', border: '1px solid #f1c21b40' } : {}),
+              ...(f.severity === 'LOW' ? { background: '#24a14820', color: '#24a148', border: '1px solid #24a14840' } : {}),
             }}
           >
             {f.severity}
           </span>
           <span
             style={{
-              color: landingTokens.inkPrimary,
+              color: 'var(--ibm-ink)',
               fontSize: '13px',
-              fontFamily: landingTokens.fontSans,
+              fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
               fontWeight: 400,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -342,8 +370,8 @@ export default function InteractiveDemo() {
           <span
             style={{
               fontSize: '11px',
-              fontFamily: landingTokens.fontMono,
-              color: landingTokens.inkMuted,
+              fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+              color: 'var(--ibm-ink-subtle)',
               flexShrink: 0,
             }}
           >
@@ -352,9 +380,12 @@ export default function InteractiveDemo() {
           {!isMobile && (
           <span
             style={{
-              ...sectionStyles.badge(f.scanner === `${APP_NAME} AI` ? landingTokens.accentPrimary : landingTokens.inkMuted),
+              ...badgeStyle(f.scanner === `${APP_NAME} AI` ? '#0f62fe' : '#6f6f6f'),
               fontSize: '10px',
               flexShrink: 0,
+              ...(f.scanner === `${APP_NAME} AI`
+                ? { background: '#0f62fe20', color: '#0f62fe', border: '1px solid #0f62fe40' }
+                : { background: '#6f6f6f20', color: '#6f6f6f', border: '1px solid #6f6f6f40' }),
             }}
           >
             {f.scanner}
@@ -377,12 +408,14 @@ export default function InteractiveDemo() {
       }}
     >
       {/* Section header */}
-      <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
+      <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '12px', textAlign: 'center' }}>
         See it in action
       </p>
       <h2
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
+          marginBottom: '24px',
           textAlign: 'center',
           fontSize: isMobile ? '32px' : '48px',
         }}
@@ -401,9 +434,9 @@ export default function InteractiveDemo() {
         <div
           style={{
             display: 'inline-flex',
-            background: landingTokens.bgSurface2,
-            borderRadius: '8px',
-            border: `1px solid ${landingTokens.borderSubtle}`,
+            background: 'var(--ibm-surface-2)',
+            borderRadius: '0',
+            border: '1px solid var(--ibm-hairline)',
             padding: '4px',
             gap: '4px',
             flexWrap: isMobile ? 'wrap' : 'nowrap',
@@ -416,11 +449,11 @@ export default function InteractiveDemo() {
               padding: '10px 20px',
               fontSize: '13px',
               fontWeight: mode === 'raw' ? 600 : 400,
-              fontFamily: landingTokens.fontSans,
-              color: mode === 'raw' ? landingTokens.inkPrimary : landingTokens.inkSecondary,
-              background: mode === 'raw' ? landingTokens.accentPrimary : 'transparent',
+              fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
+              color: mode === 'raw' ? 'var(--ibm-ink)' : 'var(--ibm-ink-muted)',
+              background: mode === 'raw' ? 'var(--ibm-primary)' : 'transparent',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '0',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
@@ -433,11 +466,11 @@ export default function InteractiveDemo() {
               padding: '10px 20px',
               fontSize: '13px',
               fontWeight: mode === 'enriched' ? 600 : 400,
-              fontFamily: landingTokens.fontSans,
-              color: mode === 'enriched' ? landingTokens.inkPrimary : landingTokens.inkSecondary,
-              background: mode === 'enriched' ? landingTokens.accentPrimary : 'transparent',
+              fontFamily: "'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif",
+              color: mode === 'enriched' ? 'var(--ibm-ink)' : 'var(--ibm-ink-muted)',
+              background: mode === 'enriched' ? 'var(--ibm-primary)' : 'transparent',
               border: 'none',
-              borderRadius: '6px',
+              borderRadius: '0',
               cursor: 'pointer',
               transition: 'all 0.15s ease',
             }}
@@ -450,9 +483,9 @@ export default function InteractiveDemo() {
       {/* Demo panel */}
       <div
         style={{
-          background: landingTokens.bgSurface1,
-          borderRadius: '12px',
-          border: `1px solid ${landingTokens.borderSubtle}`,
+          background: 'var(--ibm-surface-1)',
+          borderRadius: '0',
+          border: '1px solid var(--ibm-hairline)',
           padding: isMobile ? '20px' : '28px',
           maxWidth: '800px',
           margin: '0 auto',
@@ -467,15 +500,15 @@ export default function InteractiveDemo() {
             marginBottom: '20px',
           }}
         >
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: landingTokens.accentCritical }} />
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: landingTokens.accentMedium }} />
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: landingTokens.accentLow }} />
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#da1e28' }} />
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f57c00' }} />
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#24a148' }} />
           <span
             style={{
               marginLeft: '12px',
               fontSize: '12px',
-              fontFamily: landingTokens.fontMono,
-              color: landingTokens.inkMuted,
+              fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
+              color: 'var(--ibm-ink-subtle)',
             }}
           >
             {mode === 'raw' ? 'trivy fs --format json' : 'astra deep-scan — enriched'}
@@ -494,7 +527,7 @@ export default function InteractiveDemo() {
             fontWeight: 600,
             textTransform: 'uppercase' as const,
             letterSpacing: '0.08em',
-            color: landingTokens.inkMuted,
+            color: 'var(--ibm-ink-subtle)',
             marginTop: '32px',
             marginBottom: '4px',
           }}
@@ -502,6 +535,11 @@ export default function InteractiveDemo() {
           Scan Findings
         </div>
         {renderFindingsList()}
+      </div>
+
+      {/* Severity donut chart */}
+      <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'center' }}>
+        <SeverityDonutChart />
       </div>
     </section>
   );

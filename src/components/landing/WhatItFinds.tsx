@@ -1,15 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { landingTokens, sectionStyles } from './landingStyles';
 import { useVisible } from './landingAnimations';
 import { findingCategories } from './landingData';
+import { CategoryBarChart, SeverityDonutChart } from './landingCharts';
+
+// ─── Badge helper ─────────────────────────────────────────────────
+function badgeStyle(color: string): React.CSSProperties {
+  return {
+    fontSize: '11px',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.06em',
+    padding: '3px 8px',
+    borderRadius: '0',
+    background: color + '20',
+    color,
+    border: '1px solid ' + color + '40',
+    display: 'inline-block',
+  };
+}
 
 // ─── Mobile breakpoint hook ────────────────────────────────────────
 function useIsMobile(): boolean {
   const [mobile, setMobile] = useState(false);
   useEffect(() => {
-    const check = () => setMobile(window.innerWidth < landingTokens.md);
+    const check = () => setMobile(window.innerWidth < 672);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
@@ -34,12 +50,14 @@ export default function WhatItFinds() {
       }}
     >
       {/* Section header */}
-      <p style={{ ...sectionStyles.eyebrow, textAlign: 'center' }}>
+      <p className="ibm-eyebrow" style={{ color: 'var(--ibm-primary)', marginBottom: '12px', textAlign: 'center' }}>
         What it finds
       </p>
       <h2
+        className="ibm-display-md"
         style={{
-          ...sectionStyles.headline,
+          color: 'var(--ibm-ink)',
+          marginBottom: '24px',
           textAlign: 'center',
           fontSize: isMobile ? '32px' : '48px',
           maxWidth: '640px',
@@ -63,7 +81,10 @@ export default function WhatItFinds() {
           <div
             key={cat.id}
             style={{
-              ...sectionStyles.card,
+              background: 'var(--ibm-surface-1)',
+              borderRadius: '0',
+              padding: '24px',
+              border: '1px solid var(--ibm-hairline)',
               borderLeft: `4px solid ${cat.color}`,
               opacity: visible ? 1 : 0,
               transform: visible ? 'translateY(0)' : 'translateY(16px)',
@@ -73,7 +94,7 @@ export default function WhatItFinds() {
               e.currentTarget.style.borderColor = cat.color;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = landingTokens.borderSubtle;
+              e.currentTarget.style.borderColor = 'var(--ibm-hairline)';
             }}
           >
             {/* Title + tag */}
@@ -89,13 +110,13 @@ export default function WhatItFinds() {
                 style={{
                   fontSize: '18px',
                   fontWeight: 600,
-                  color: landingTokens.inkPrimary,
+                  color: 'var(--ibm-ink)',
                   margin: 0,
                 }}
               >
                 {cat.title}
               </h3>
-              <span style={sectionStyles.badge(cat.color)}>
+              <span style={badgeStyle(cat.color)}>
                 {cat.tag}
               </span>
             </div>
@@ -113,8 +134,6 @@ export default function WhatItFinds() {
             >
               {cat.examples.map((example) => {
                 // Split example into finding text and file path
-                // Examples look like: "SQL injection in auth/login.ts:47"
-                // or "CVE-2024-1234 in lodash@4.17.21"
                 const colonIdx = example.lastIndexOf(':');
                 const hasFilePath = colonIdx > 0 && /\.\w{1,4}$/.test(example.slice(colonIdx + 1)) === false;
 
@@ -125,7 +144,7 @@ export default function WhatItFinds() {
                       fontSize: '13px',
                       fontWeight: 300,
                       lineHeight: 1.5,
-                      color: landingTokens.inkSecondary,
+                      color: 'var(--ibm-ink-muted)',
                       paddingLeft: '14px',
                       position: 'relative',
                     }}
@@ -145,7 +164,7 @@ export default function WhatItFinds() {
                     {hasFilePath ? (
                       <>
                         {example.slice(0, colonIdx + 1)}
-                        <span style={{ fontFamily: landingTokens.fontMono, fontSize: '12px' }}>
+                        <span style={{ fontFamily: "'IBM Plex Mono', 'Courier New', monospace", fontSize: '12px' }}>
                           {example.slice(colonIdx + 1)}
                         </span>
                       </>
@@ -158,6 +177,25 @@ export default function WhatItFinds() {
             </ul>
           </div>
         ))}
+      </div>
+
+      {/* Charts — two-column layout */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: '32px',
+          marginTop: '48px',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <CategoryBarChart />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <SeverityDonutChart />
+        </div>
       </div>
     </section>
   );
