@@ -177,7 +177,7 @@ function Nav({ m }: { m: boolean }) {
                   {l.label}
                 </a>
               ))}
-              <Link href="/api/auth/signin" style={{ fontSize: 14, fontWeight: 600, color: c.blue, textDecoration: 'none', letterSpacing: '0.16px' }}>
+              <Link href="/auth/signin" style={{ fontSize: 14, fontWeight: 600, color: c.blue, textDecoration: 'none', letterSpacing: '0.16px' }}>
                 Sign in →
               </Link>
             </div>
@@ -192,7 +192,7 @@ function Nav({ m }: { m: boolean }) {
       {m && open && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: c.canvas, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28 }} onClick={() => setOpen(false)}>
           {links.map(l => <a key={l.href} href={l.href} onClick={() => setOpen(false)} style={{ fontSize: 22, fontWeight: 300, color: c.ink2, textDecoration: 'none' }}>{l.label}</a>)}
-          <Link href="/api/auth/signin" onClick={() => setOpen(false)} style={{ fontSize: 22, fontWeight: 600, color: c.blue, textDecoration: 'none' }}>Sign in →</Link>
+          <Link href="/auth/signin" onClick={() => setOpen(false)} style={{ fontSize: 22, fontWeight: 600, color: c.blue, textDecoration: 'none' }}>Sign in →</Link>
         </div>
       )}
     </>
@@ -215,7 +215,7 @@ function HeroSection({ m }: { m: boolean }) {
             <p style={eyebrow}>AI-native application security</p>
             <h1 style={{ fontSize: m ? 36 : 72, fontWeight: 300, color: c.ink, lineHeight: 1.08, letterSpacing: '-0.5px', marginBottom: 24, maxWidth: 580 }}>
               Your scanners give you alerts.{' '}
-              <span style={{ color: c.blue }}>Astra tells you what to fix.</span>
+              <span style={{ color: c.blue }}>{APP_NAME} tells you what to fix.</span>
             </h1>
             <p style={{ fontSize: 18, fontWeight: 400, color: c.ink2, lineHeight: 1.6, marginBottom: 36, maxWidth: 480, letterSpacing: '0.16px' }}>
               Seven battle-tested scanners. AI that reasons across your entire codebase. Every finding enriched with a working fix, an exploit score, and the business context your team actually needs — not just another alert queue.
@@ -364,7 +364,7 @@ function PainSection({ m }: { m: boolean }) {
             {
               accent: c.blue,
               title: 'Business logic is invisible to pattern matchers',
-              body: "Your payment flow has a race condition. Your auth has a privilege escalation vector. Regex scanners are blind to both. Astra isn't.",
+              body: `Your payment flow has a race condition. Your auth has a privilege escalation vector. Regex scanners are blind to both. ${APP_NAME} isn't.`,
               code: '✓ Cross-file reasoning: auth bypass detected\n✓ Business logic flaw: order total manipulation\n✓ Exploit score: 8.4/10 — fix this first',
               codeColor: c.green,
             },
@@ -478,7 +478,7 @@ function HowItWorksSection({ m }: { m: boolean }) {
     {
       num: '01',
       title: 'Connect your repo',
-      body: 'Point Astra at any GitHub, GitLab, or Bitbucket repo — or drop a single docker run into your CI pipeline. Takes two minutes. No tokens, no agent installs.',
+      body: `Point ${APP_NAME} at any GitHub, GitLab, or Bitbucket repo — or drop a single docker run into your CI pipeline. Takes two minutes. No tokens, no agent installs.`,
       code: '$ astra scan github.com/acme/api\n→ cloning… detecting stack…',
       items: [] as string[],
     },
@@ -505,7 +505,7 @@ function HowItWorksSection({ m }: { m: boolean }) {
           <p style={eyebrow}>How it works</p>
           <h2 style={sectionH2(m)}>Set up in minutes.<br />Findings before your next standup.</h2>
           <p style={{ ...sectionSub, marginBottom: 0 }}>
-            No agents, no configuration files, no week-long onboarding. Point Astra at a repo and get enriched findings in hours.
+            No agents, no configuration files, no week-long onboarding. Point {APP_NAME} at a repo and get enriched findings in hours.
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: m ? 'column' : 'row', border: `1px solid ${c.hair}` }}>
@@ -587,7 +587,7 @@ function PrivacySection({ m }: { m: boolean }) {
             <div style={{ display: 'grid', gridTemplateColumns: m ? '1fr' : 'repeat(3, 1fr)', gap: 0, border: `1px solid ${c.hairStrong}`, marginBottom: 32 }}>
               {[
                 { title: 'What stays on-prem', body: 'All source code, all AI inference, all raw scanner output, all secrets and tokens' },
-                { title: 'What travels to Astra', body: 'Normalized findings only — file path, line number, severity, fix suggestion' },
+                { title: `What travels to ${APP_NAME}`, body: 'Normalized findings only — file path, line number, severity, fix suggestion' },
                 { title: 'AI model options', body: 'Air-gapped Ollama, AWS Bedrock, Azure OpenAI, Anthropic Claude, or any OpenAI-compatible endpoint' },
               ].map((item, i) => (
                 <div key={i} style={{ padding: 20, borderRight: (!m && i < 2) ? `1px solid ${c.hairStrong}` : undefined, borderBottom: (m && i < 2) ? `1px solid ${c.hairStrong}` : undefined }}>
@@ -698,7 +698,7 @@ function ByoSection({ m }: { m: boolean }) {
             <p style={{ ...eyebrow, textAlign: 'left' }}>Bring your own model</p>
             <h2 style={{ ...sectionH2(m), textAlign: 'left', marginBottom: 20 }}>Your data. Your model. Your choice.</h2>
             <p style={{ fontSize: 18, fontWeight: 400, color: c.ink2, lineHeight: 1.6, marginBottom: 28, letterSpacing: '0.16px' }}>
-              Astra is model-agnostic. Configure any OpenAI-compatible endpoint and assign different models to different pipeline stages — discovery, deep scan, cross-file reasoning, or the chat assistant.
+              {APP_NAME} is model-agnostic. Configure any OpenAI-compatible endpoint and assign different models to different pipeline stages — discovery, deep scan, cross-file reasoning, or the chat assistant.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
@@ -766,10 +766,10 @@ function CompetitionSection({ m }: { m: boolean }) {
                   <td style={{ padding: '14px 16px', borderBottom: `1px solid ${c.hair}`, color: c.ink, letterSpacing: '0.16px' }}>{row.feature}</td>
                   {compCols.map(col => {
                     const val    = row[col.key as keyof typeof row] as boolean;
-                    const isAstra = col.key === 'astra';
+                    const isSelf = col.key === 'astra';
                     return (
                       <td key={col.key} style={{ textAlign: 'center', padding: '14px 16px', borderBottom: `1px solid ${c.hair}` }}>
-                        <span style={{ fontSize: 18, color: val ? (isAstra ? c.blue : c.green) : c.ink3 }}>{val ? '✓' : '✗'}</span>
+                        <span style={{ fontSize: 18, color: val ? (isSelf ? c.blue : c.green) : c.ink3 }}>{val ? '✓' : '✗'}</span>
                       </td>
                     );
                   })}
@@ -797,7 +797,7 @@ function CtaFooterSection({ m }: { m: boolean }) {
             One scan. Every attack surface. Findings that tell you what to do — not just what went wrong.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
-            <a href="/api/auth/signin" style={{ display: 'inline-flex', alignItems: 'center', padding: '14px 28px', fontSize: 14, fontWeight: 600, background: '#fff', color: c.blue, textDecoration: 'none', borderRadius: 0, letterSpacing: '0.16px' }}>
+            <a href="/auth/signin" style={{ display: 'inline-flex', alignItems: 'center', padding: '14px 28px', fontSize: 14, fontWeight: 600, background: '#fff', color: c.blue, textDecoration: 'none', borderRadius: 0, letterSpacing: '0.16px' }}>
               Scan free now →
             </a>
             <a href="/knowledge?tab=docs" style={{ display: 'inline-flex', alignItems: 'center', padding: '14px 28px', fontSize: 14, fontWeight: 400, background: 'transparent', color: '#fff', textDecoration: 'none', borderRadius: 0, letterSpacing: '0.16px', border: '1px solid rgba(255,255,255,0.4)' }}>
