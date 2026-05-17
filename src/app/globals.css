@@ -75,6 +75,7 @@
   --ibm-primary-pressed: #002d8c;
   --ibm-on-primary: #ffffff;
   --ibm-inverse-canvas: #161616;
+  --ibm-inverse-surface-1: #393939;
   --ibm-inverse-ink: #ffffff;
   --ibm-inverse-ink-muted: #c6c6c6;
   --ibm-footer-bg: #161616;
@@ -329,15 +330,37 @@
 
 .ibm-label {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.33;
-  letter-spacing: 0.32px;
-  text-transform: uppercase;
+  letter-spacing: 0.16px;
+}
+
+.ibm-button {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.29;
+  letter-spacing: 0.16px;
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+@keyframes lpFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lpSlideIn {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes lpGlow {
+  0% { box-shadow: 0 0 0 0 rgba(15, 98, 254, 0.3); }
+  70% { box-shadow: 0 0 0 10px rgba(15, 98, 254, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(15, 98, 254, 0); }
 }
 
 /* Knowledge page markdown rendering */

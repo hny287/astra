@@ -84,7 +84,7 @@ export default function UserButton() {
             Settings
           </a>
           <button
-            onClick={() => signOut()}
+            onClick={() => signOut({ callbackUrl: window.location.origin })}
             className="ibm-body-sm"
             style={{
               display: 'block',

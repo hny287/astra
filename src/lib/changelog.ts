@@ -11,6 +11,152 @@ export interface ChangelogEntry {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.28.5',
+    date: '2026-05-17',
+    title: 'Landing page light Carbon redesign',
+    description: 'Complete redesign to light IBM Carbon theme with alternating white/gray section backgrounds, proper chart placement with headings, Carbon-style typography (weight 300 headings, 0px border radius), and clean grid layout.',
+    categories: [
+      {
+        label: 'Theme',
+        items: [
+          'Light IBM Carbon theme — white (#ffffff) and gray (#f4f4f4) alternating sections',
+          'IBM Blue 60 (#0f62fe) as primary accent replacing dark-theme electric blue',
+          'Carbon typography: display headings weight 300, body 400, labels 600',
+          'Carbon-style 0px border radius on all cards, buttons, and inputs',
+          'Dark footer (#161616) with light text — Carbon inverse pattern',
+          'CTA section uses blue-60 (#0f62fe) background with white text',
+        ],
+      },
+      {
+        label: 'Layout',
+        items: [
+          'Alternating bg/bgAlt sections create visual rhythm (white → gray → white → gray)',
+          'Cards on gray sections have white backgrounds; cards on white sections also white with thin borders',
+          'Charts properly placed with h3 headings and descriptive paragraphs',
+          'Terminal component keeps dark background (code/terminal aesthetic)',
+          'Code blocks in enriched demo view use #f4f4f4 background (light theme)',
+        ],
+      },
+      {
+        label: 'Charts',
+        items: [
+          'All 4 SVG charts rewritten for light theme — white background, dark text, light grid lines',
+          'Severity donut: light gray track ring, saturated severity colors',
+          'Category bars, remediation comparison, false positive rate: all use #e0e0e0 grid lines',
+          'Chart legend text uses #161616 (primary) and #525252 (secondary)',
+        ],
+      },
+      {
+        label: 'Tokens',
+        items: [
+          'landingLayout.ts: full light Carbon color system (bg #fff, bgAlt #f4f4f4, text #161616, accent #0f62fe)',
+          'landingCharts.tsx: light theme tokens matching layout palette',
+          'landingAnimations.ts: accent color updated to #0f62fe in keyframes',
+          'page.tsx: inline design tokens updated to light Carbon system',
+        ],
+      },
+    ],
+  },
+  {
+    version: '2.28.3',
+    date: '2026-05-16',
+    title: 'Carbon structural overhaul',
+    description: 'Structural redesign of landing page to match IBM Carbon design system: widened max-width to 1584px, fixed surface banding (surface-1 for alternating sections), converted CTA to full-width blue banner, changed secondary buttons to charcoal solid (Carbon button-secondary spec), standardized card elevation (canvas+hairline for cards on canvas, surface-1 for cards on surface-1 sections), extracted shared layout module (useBreakpoint, badgeStyle, tierColor, TRANSITION constant), standardized motion timing to 0.3s cubic-bezier, removed unused keyframes.',
+    categories: [
+      {
+        label: 'Layout',
+        items: [
+          'Max-width widened from 1200px to 1584px (Carbon max-grid breakpoint)',
+          'Section horizontal padding reduced from 24px to 16px (Carbon md token)',
+          'lp-section-dark background changed from var(--ibm-canvas) to var(--ibm-surface-1) — visible banding now',
+          'Side padding 16px on both desktop and mobile (was 24px desktop / 16px mobile)',
+        ],
+      },
+      {
+        label: 'Components',
+        items: [
+          'CTA section converted to full-width blue banner (background: var(--ibm-primary))',
+          'Primary CTA on blue banner: white background, blue text (Carbon cta-banner spec)',
+          'Secondary CTA on blue banner: white text, white border (tertiary-on-blue)',
+          'Hero secondary button: charcoal solid background (Carbon button-secondary spec)',
+          'Nav padding reduced from 24px to 16px',
+          'Footer column gap: 0 → 32px',
+          'Card backgrounds standardized: canvas+hairline on canvas sections, canvas+hairline on surface-1 sections',
+          'RbacEnterprise cards: surface-2 → surface-1 (correct Carbon elevation)',
+          'Pricing cards: highlighted surface-2 → surface-1, non-highlighted surface-1 → canvas+hairline',
+        ],
+      },
+      {
+        label: 'Architecture',
+        items: [
+          'Extracted landingLayout.ts shared module: MAX_WIDTH, BREAKPOINTS, SPACING, TRANSITION, useBreakpoint(), badgeStyle(), tierColor(), severityColor',
+          'Removed 11 local useIsMobile definitions, 3 useIsTablet definitions, 6 badgeStyle definitions, 3 tierColor definitions',
+          'Removed unused keyframes (lpPulse, lpGlow)',
+          'Standardized all scroll-reveal transitions from 0.5s ease to 0.3s cubic-bezier(0, 0, 0.38, 0.9)',
+        ],
+      },
+    ],
+  },
+  {
+    version: '2.28.2',
+    date: '2026-05-16',
+    title: 'Carbon-faithful landing page fixes',
+    description: 'Systematic fix of all IBM Carbon design system violations across 14 landing page components: display weight 300, sentence-case eyebrows, ink-muted labels, no box-shadows, dark inverse footer, Carbon button spec, primary blue only on CTAs/links.',
+    categories: [
+      {
+        label: 'Typography',
+        items: [
+          'Display headlines: fontWeight 600 → 300 (Carbon display type rule)',
+          'Card/panel titles: fontWeight 600 → 400 (Carbon card-title rule)',
+          'Buttons/CTAs: fontWeight 600 → 400, padding 12px 16px, fontSize 14px (Carbon button spec)',
+          'All badges/labels: fontWeight 600 → 400, removed textTransform uppercase, letterSpacing 0.06em → 0.16px',
+          'Section eyebrows: color var(--ibm-primary) → var(--ibm-ink-muted) (Carbon eyebrow rule)',
+          'Panel labels (Explanation, Fix, Business Impact, Pipeline stage, etc.): removed uppercase, weight 400, letterSpacing 0.16px',
+          'KPI stat numbers and prices: fontWeight 600 → 300',
+          'Footer column headings: removed uppercase, weight 400, letterSpacing 0.16px',
+        ],
+      },
+      {
+        label: 'Structural',
+        items: [
+          'Removed all box-shadows (Carbon forbids shadows for depth)',
+          'Removed gradient glow accent bar from AiAdvantage right panel',
+          'StackCoverage tag hover: removed boxShadow, border color now uses var(--ibm-hairline-strong)',
+          'AiAdvantage: removed #0f62fe border glow, replaced with var(--ibm-hairline)',
+          'AiAdvantage business context callout: background #0f62fe10 → var(--ibm-surface-1), border → var(--ibm-hairline)',
+        ],
+      },
+      {
+        label: 'Footer',
+        items: [
+          'Footer background: var(--ibm-surface-1) → var(--ibm-inverse-canvas)',
+          'All footer text: flipped to inverse variants (--ibm-inverse-ink, --ibm-inverse-ink-muted)',
+          'Footer borders: → var(--ibm-inverse-surface-1)',
+          'Footer logo: removed letterSpacing -0.02em, weight 400',
+        ],
+      },
+      {
+        label: 'Color',
+        items: [
+          'Primary blue (#0f62fe) removed from eyebrows, labels, decorative elements',
+          'Primary blue only on CTAs, links, and interactive active states',
+          'Cloud/Network bullet dots: #0f62fe → var(--ibm-ink-muted)',
+          'AiAdvantage panel labels: #0f62fe → var(--ibm-ink-muted)',
+          'KPI suffix color: #0f62fe → var(--ibm-ink-muted)',
+          'Competition check marks: weight 600 → 400',
+        ],
+      },
+      {
+        label: 'Charts',
+        items: [
+          'All 4 chart title labels: removed uppercase, weight 400, letterSpacing 0.16px',
+          'Severity donut center number: weight 600 → 300',
+          'False positive bar values: weight 600 → 400',
+        ],
+      },
+    ],
+  },
+  {
     version: '2.28.1',
     date: '2026-05-16',
     title: 'Frontpage Carbon redesign',

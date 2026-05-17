@@ -1,35 +1,39 @@
 // src/components/landing/landingCharts.tsx
 // Hand-built SVG chart components for the landing page.
-// Replaces @carbon/charts to avoid D3/SSR runtime issues.
-// Theme-aware via CSS variables.
+// Light IBM Carbon design system — high-contrast on white/light backgrounds.
+// All colors are hex literals for reliable SVG rendering.
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useBreakpoint } from './landingLayout';
 
-// ─── Mobile breakpoint hook ────────────────────────────────────────
-function useIsMobile(): boolean {
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setMobile(window.innerWidth < 672);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-  return mobile;
-}
+// ─── Color Tokens (Light Carbon) ──────────────────────────────────
+const c = {
+  bg:            '#ffffff',
+  bgAlt:         '#f4f4f4',
+  text:          '#161616',
+  textSecondary: '#525252',
+  textMuted:     '#a8a8a8',
+  accent:        '#0f62fe',
+  success:       '#198038',
+  warning:       '#d0a019',
+  error:         '#da1e28',
+  cyan:          '#0072c3',
+  purple:        '#6929c4',
+  gridLine:      '#e0e0e0',
+};
 
-// ─── Severity Donut ──────────────────────────────────────────────
+// ─── Severity Donut ───────────────────────────────────────────────
 const severityData = [
   { group: 'CRITICAL', value: 12, color: '#da1e28' },
-  { group: 'HIGH', value: 28, color: '#f57c00' },
-  { group: 'MEDIUM', value: 38, color: '#f1c21b' },
-  { group: 'LOW', value: 18, color: '#24a148' },
-  { group: 'INFO', value: 4, color: '#0093b7' },
+  { group: 'HIGH',     value: 28, color: '#d0a019' },
+  { group: 'MEDIUM',   value: 38, color: '#8a6f00' },
+  { group: 'LOW',      value: 18, color: '#198038' },
+  { group: 'INFO',      value:  4, color: '#0072c3' },
 ];
 
 export function SeverityDonutChart() {
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoint();
   const total = severityData.reduce((s, d) => s + d.value, 0);
   const cx = isMobile ? 120 : 140;
   const cy = 120;
@@ -55,10 +59,28 @@ export function SeverityDonutChart() {
 
   return (
     <div style={{ maxWidth: 480, width: '100%' }}>
-      <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--ibm-ink-subtle)', marginBottom: '12px', textAlign: 'center' }}>
+      <div
+        style={{
+          fontSize: '12px',
+          fontWeight: 400,
+          color: c.textSecondary,
+          marginBottom: '12px',
+          textAlign: 'center',
+        }}
+      >
         Severity distribution
       </div>
       <svg viewBox={`0 0 ${width} 240`} style={{ width: '100%', height: 'auto' }}>
+        {/* Background track ring */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke={c.gridLine}
+          strokeWidth={strokeWidth}
+        />
+        {/* Arc segments */}
         {arcs.map((arc) => (
           <path
             key={arc.group}
@@ -69,11 +91,22 @@ export function SeverityDonutChart() {
             strokeLinecap="butt"
           />
         ))}
-        {/* Center text */}
-        <text x={cx} y={cy - 8} textAnchor="middle" style={{ fontSize: '28px', fontWeight: 600, fill: 'var(--ibm-ink)' }}>
+        {/* Center number */}
+        <text
+          x={cx}
+          y={cy - 8}
+          textAnchor="middle"
+          style={{ fontSize: '28px', fontWeight: 300, fill: c.text }}
+        >
           {total.toLocaleString()}
         </text>
-        <text x={cx} y={cy + 16} textAnchor="middle" style={{ fontSize: '12px', fontWeight: 400, fill: 'var(--ibm-ink-subtle)' }}>
+        {/* Center label */}
+        <text
+          x={cx}
+          y={cy + 16}
+          textAnchor="middle"
+          style={{ fontSize: '12px', fontWeight: 400, fill: c.textSecondary }}
+        >
           Findings
         </text>
         {/* Legend */}
@@ -82,9 +115,21 @@ export function SeverityDonutChart() {
           const ly = 40 + i * 32;
           return (
             <g key={d.group}>
-              <rect x={lx} y={ly - 6} width={12} height={12} fill={d.color} />
-              <text x={lx + 18} y={ly + 4} style={{ fontSize: '13px', fill: 'var(--ibm-ink-muted)' }}>
-                {d.group} ({d.value})
+              <rect x={lx} y={ly - 6} width={12} height={12} fill={d.color} rx={2} />
+              <text
+                x={lx + 18}
+                y={ly + 4}
+                style={{ fontSize: '13px', fontWeight: 400, fill: c.text }}
+              >
+                {d.group}
+              </text>
+              <text
+                x={lx + 18}
+                y={ly + 4}
+                style={{ fontSize: '13px', fontWeight: 400, fill: c.textMuted }}
+                dx="68"
+              >
+                ({d.value})
               </text>
             </g>
           );
@@ -94,14 +139,14 @@ export function SeverityDonutChart() {
   );
 }
 
-// ─── Category Bar Chart ──────────────────────────────────────────
+// ─── Category Bar Chart ───────────────────────────────────────────
 const categoryData = [
-  { group: 'SAST', value: 424, color: '#0f62fe' },
-  { group: 'SCA', value: 274, color: '#4589ff' },
-  { group: 'Secrets', value: 224, color: '#da1e28' },
-  { group: 'IaC', value: 175, color: '#f1c21b' },
-  { group: 'Biz Logic', value: 100, color: '#f57c00' },
-  { group: 'Cloud', value: 50, color: '#0093b7' },
+  { group: 'SAST',      value: 424, color: '#0f62fe' },
+  { group: 'SCA',       value: 274, color: '#6929c4' },
+  { group: 'Secrets',   value: 224, color: '#da1e28' },
+  { group: 'IaC',       value: 175, color: '#d0a019' },
+  { group: 'Biz Logic', value: 100, color: '#0072c3' },
+  { group: 'Cloud',     value:  50, color: '#198038' },
 ];
 
 export function CategoryBarChart() {
@@ -114,20 +159,60 @@ export function CategoryBarChart() {
 
   return (
     <div style={{ maxWidth: 520, width: '100%' }}>
-      <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--ibm-ink-subtle)', marginBottom: '12px', textAlign: 'center' }}>
+      <div
+        style={{
+          fontSize: '12px',
+          fontWeight: 400,
+          color: c.textSecondary,
+          marginBottom: '12px',
+          textAlign: 'center',
+        }}
+      >
         Findings by category
       </div>
-      <svg viewBox={`0 0 ${labelWidth + chartWidth + 60} ${totalHeight}`} style={{ width: '100%', height: 'auto' }}>
+      <svg
+        viewBox={`0 0 ${labelWidth + chartWidth + 60} ${totalHeight}`}
+        style={{ width: '100%', height: 'auto' }}
+      >
+        {/* Vertical grid lines */}
+        {[0.25, 0.5, 0.75, 1].map((frac) => (
+          <line
+            key={frac}
+            x1={labelWidth}
+            y1={0}
+            x2={labelWidth}
+            y2={totalHeight - 24}
+            stroke={c.gridLine}
+            strokeWidth={1}
+            transform={`translate(${frac * chartWidth}, 0)`}
+          />
+        ))}
         {categoryData.map((d, i) => {
           const y = i * (barHeight + gap) + 4;
           const barW = (d.value / maxVal) * chartWidth;
           return (
             <g key={d.group}>
-              <text x={labelWidth - 8} y={y + barHeight / 2 + 4} textAnchor="end" style={{ fontSize: '12px', fill: 'var(--ibm-ink-muted)' }}>
+              <text
+                x={labelWidth - 8}
+                y={y + barHeight / 2 + 4}
+                textAnchor="end"
+                style={{ fontSize: '12px', fontWeight: 400, fill: c.textSecondary }}
+              >
                 {d.group}
               </text>
-              <rect x={labelWidth} y={y} width={barW} height={barHeight} fill={d.color} rx={0} />
-              <text x={labelWidth + barW + 8} y={y + barHeight / 2 + 4} style={{ fontSize: '12px', fill: 'var(--ibm-ink)' }}>
+              <rect
+                x={labelWidth}
+                y={y}
+                width={barW}
+                height={barHeight}
+                fill={d.color}
+                rx={2}
+              />
+              <text
+                x={labelWidth + barW + 8}
+                y={y + barHeight / 2 + 4}
+                style={{ fontSize: '12px', fontWeight: 400, fill: c.text }}
+              >
                 {d.value}
               </text>
             </g>
@@ -138,7 +223,7 @@ export function CategoryBarChart() {
   );
 }
 
-// ─── Remediation Comparison ──────────────────────────────────────
+// ─── Remediation Comparison ───────────────────────────────────────
 const remediationLabels = ['Triage', 'Fix', 'Verify'];
 const remediationWithout = [45, 240, 120];
 const remediationWith = [8, 40, 15];
@@ -147,42 +232,97 @@ export function RemediationComparisonChart() {
   const maxVal = Math.max(...remediationWithout);
   const barHeight = 24;
   const gap = 6;
-  const groupGap = 20;
   const labelWidth = 80;
   const chartWidth = 280;
 
+  const rowHeight = 2 * barHeight + gap + 4;
+  const svgHeight = remediationLabels.length * rowHeight + 48;
+
   return (
     <div style={{ maxWidth: 520, width: '100%' }}>
-      <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--ibm-ink-subtle)', marginBottom: '12px', textAlign: 'center' }}>
+      <div
+        style={{
+          fontSize: '12px',
+          fontWeight: 400,
+          color: c.textSecondary,
+          marginBottom: '12px',
+          textAlign: 'center',
+        }}
+      >
         Remediation time (minutes)
       </div>
       {/* Legend */}
       <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{ width: 12, height: 12, background: '#525252' }} />
-          <span style={{ fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>Without Astra</span>
+          <div style={{ width: 12, height: 12, background: c.textMuted, borderRadius: 2 }} />
+          <span style={{ fontSize: '12px', color: c.textMuted }}>Without Astra</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <div style={{ width: 12, height: 12, background: '#0f62fe' }} />
-          <span style={{ fontSize: '12px', color: 'var(--ibm-ink-muted)' }}>With Astra</span>
+          <div style={{ width: 12, height: 12, background: c.accent, borderRadius: 2 }} />
+          <span style={{ fontSize: '12px', color: c.textSecondary }}>With Astra</span>
         </div>
       </div>
-      <svg viewBox={`0 0 ${labelWidth + chartWidth + 60} ${remediationLabels.length * (2 * barHeight + gap + 4) + groupGap + 8}`} style={{ width: '100%', height: 'auto' }}>
+      <svg
+        viewBox={`0 0 ${labelWidth + chartWidth + 60} ${svgHeight}`}
+        style={{ width: '100%', height: 'auto' }}
+      >
+        {/* Vertical grid lines */}
+        {[0.25, 0.5, 0.75, 1].map((frac) => (
+          <line
+            key={frac}
+            x1={labelWidth}
+            y1={0}
+            x2={labelWidth}
+            y2={svgHeight}
+            stroke={c.gridLine}
+            strokeWidth={1}
+            transform={`translate(${frac * chartWidth}, 0)`}
+          />
+        ))}
         {remediationLabels.map((label, i) => {
-          const y = i * (2 * barHeight + gap + 4) + 4;
+          const y = i * rowHeight + 4;
           const wBar = (remediationWithout[i] / maxVal) * chartWidth;
           const aBar = (remediationWith[i] / maxVal) * chartWidth;
           return (
             <g key={label}>
-              <text x={labelWidth - 8} y={y + barHeight / 2 + 4} textAnchor="end" style={{ fontSize: '12px', fill: 'var(--ibm-ink-muted)' }}>
+              <text
+                x={labelWidth - 8}
+                y={y + barHeight / 2 + 4}
+                textAnchor="end"
+                style={{ fontSize: '12px', fontWeight: 400, fill: c.textSecondary }}
+              >
                 {label}
               </text>
-              <rect x={labelWidth} y={y} width={wBar} height={barHeight} fill="#525252" />
-              <text x={labelWidth + wBar + 8} y={y + barHeight / 2 + 4} style={{ fontSize: '12px', fill: 'var(--ibm-ink)' }}>
+              {/* Without Astra — muted bar */}
+              <rect
+                x={labelWidth}
+                y={y}
+                width={wBar}
+                height={barHeight}
+                fill={c.textMuted}
+                rx={2}
+              />
+              <text
+                x={labelWidth + wBar + 8}
+                y={y + barHeight / 2 + 4}
+                style={{ fontSize: '12px', fontWeight: 400, fill: c.text }}
+              >
                 {remediationWithout[i]}m
               </text>
-              <rect x={labelWidth} y={y + barHeight + 3} width={aBar} height={barHeight} fill="#0f62fe" />
-              <text x={labelWidth + aBar + 8} y={y + barHeight + 3 + barHeight / 2 + 4} style={{ fontSize: '12px', fill: 'var(--ibm-ink)' }}>
+              {/* With Astra — accent bar */}
+              <rect
+                x={labelWidth}
+                y={y + barHeight + 3}
+                width={aBar}
+                height={barHeight}
+                fill={c.accent}
+                rx={2}
+              />
+              <text
+                x={labelWidth + aBar + 8}
+                y={y + barHeight + 3 + barHeight / 2 + 4}
+                style={{ fontSize: '12px', fontWeight: 400, fill: c.text }}
+              >
                 {remediationWith[i]}m
               </text>
             </g>
@@ -193,10 +333,10 @@ export function RemediationComparisonChart() {
   );
 }
 
-// ─── False Positive Bar ──────────────────────────────────────────
+// ─── False Positive Bar ───────────────────────────────────────────
 const fpData = [
-  { group: 'Raw scanners', value: 62, color: '#da1e28' },
-  { group: 'After Astra enrichment', value: 8, color: '#24a148' },
+  { group: 'Raw scanners', value: 62, color: c.error },
+  { group: 'After Astra enrichment', value: 8, color: c.success },
 ];
 
 export function FalsePositiveBarChart() {
@@ -208,20 +348,60 @@ export function FalsePositiveBarChart() {
 
   return (
     <div style={{ maxWidth: 400, width: '100%' }}>
-      <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--ibm-ink-subtle)', marginBottom: '12px', textAlign: 'center' }}>
+      <div
+        style={{
+          fontSize: '12px',
+          fontWeight: 400,
+          color: c.textSecondary,
+          marginBottom: '12px',
+          textAlign: 'center',
+        }}
+      >
         False positive rate (%)
       </div>
-      <svg viewBox={`0 0 ${labelWidth + chartWidth + 60} ${fpData.length * (barHeight + gap) + 8}`} style={{ width: '100%', height: 'auto' }}>
+      <svg
+        viewBox={`0 0 ${labelWidth + chartWidth + 60} ${fpData.length * (barHeight + gap) + 8}`}
+        style={{ width: '100%', height: 'auto' }}
+      >
+        {/* Vertical grid lines */}
+        {[0.25, 0.5, 0.75, 1].map((frac) => (
+          <line
+            key={frac}
+            x1={labelWidth}
+            y1={0}
+            x2={labelWidth}
+            y2={fpData.length * (barHeight + gap) + 8}
+            stroke={c.gridLine}
+            strokeWidth={1}
+            transform={`translate(${frac * chartWidth}, 0)`}
+          />
+        ))}
         {fpData.map((d, i) => {
           const y = i * (barHeight + gap) + 4;
           const barW = (d.value / maxVal) * chartWidth;
           return (
             <g key={d.group}>
-              <text x={labelWidth - 8} y={y + barHeight / 2 + 4} textAnchor="end" style={{ fontSize: '13px', fill: 'var(--ibm-ink-muted)' }}>
+              <text
+                x={labelWidth - 8}
+                y={y + barHeight / 2 + 4}
+                textAnchor="end"
+                style={{ fontSize: '13px', fontWeight: 400, fill: c.textSecondary }}
+              >
                 {d.group}
               </text>
-              <rect x={labelWidth} y={y} width={barW} height={barHeight} fill={d.color} />
-              <text x={labelWidth + barW + 8} y={y + barHeight / 2 + 4} style={{ fontSize: '14px', fontWeight: 600, fill: d.color }}>
+              <rect
+                x={labelWidth}
+                y={y}
+                width={barW}
+                height={barHeight}
+                fill={d.color}
+                rx={2}
+              />
+              <text
+                x={labelWidth + barW + 8}
+                y={y + barHeight / 2 + 4}
+                style={{ fontSize: '14px', fontWeight: 400, fill: d.color }}
+              >
                 {d.value}%
               </text>
             </g>

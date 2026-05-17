@@ -53,29 +53,17 @@ export function useStagger(count: number, baseDelay = 80): (index: number) => nu
   return useCallback((index: number) => baseDelay * index, [count, baseDelay]);
 }
 
-// CSS keyframe definitions to inject once in the page
+// CSS keyframe definitions — light theme animations
 export const landingKeyframes = `
-@keyframes lpPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.15); }
-}
-
 @keyframes lpFadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes lpSlideIn {
-  from { opacity: 0; transform: translateX(-12px); }
+  from { opacity: 0; transform: translateX(-16px); }
   to { opacity: 1; transform: translateX(0); }
 }
-
-@keyframes lpGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(15, 98, 254, 0); }
-  50% { box-shadow: 0 0 16px 4px rgba(15, 98, 254, 0.3); }
-}
-
-/* lpGlow rgba values match #0f62fe (Carbon blue-60). Kept as rgba() for alpha channel. */
 
 @keyframes lpType {
   from { width: 0; }
@@ -83,7 +71,24 @@ export const landingKeyframes = `
 }
 
 @keyframes lpNodeLight {
-  0% { border-color: #393939; }
+  0% { border-color: #e0e0e0; }
   100% { border-color: #0f62fe; }
+}
+
+@keyframes lpGlow {
+  0% { box-shadow: 0 0 0 0 rgba(15, 98, 254, 0.3); }
+  70% { box-shadow: 0 0 0 10px rgba(15, 98, 254, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(15, 98, 254, 0); }
+}
+
+@keyframes lpPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes lpGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 `;

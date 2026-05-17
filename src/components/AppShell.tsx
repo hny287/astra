@@ -219,7 +219,7 @@ function UserMenu() {
         {initials}
       </div>
       <button
-        onClick={() => signOut()}
+        onClick={() => signOut({ callbackUrl: window.location.origin })}
         style={{
           background: 'transparent',
           border: '1px solid var(--ibm-hairline)',
